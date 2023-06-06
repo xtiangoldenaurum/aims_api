@@ -1,0 +1,17 @@
+2023-05-15 23:39:29.568 +08:00 [ERR] ERR500: Object reference not set to an instance of an object. @192.168.1.146:5001    at aims_api.Utilities.QryHelper.<>c__DisplayClass0_0.<GetUpdateQry>b__0() in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Utilities\QryHelper.cs:line 22
+   at System.Threading.Tasks.Task`1.InnerInvoke()
+   at System.Threading.Tasks.Task.<>c.<.cctor>b__272_0(Object obj)
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread threadPoolThread, ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at aims_api.Utilities.QryHelper.GetUpdateQry(Object data) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Utilities\QryHelper.cs:line 17
+   at CallSite.Target(Closure , CallSite , Object )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
+   at aims_api.Repositories.Implementation.UsrAccUserFieldRepository.UpdateUserAccUFieldMOD(IDbConnection db, IDbTransaction tran, String userAccountId, String modifiedBy, Object data) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Repositories\Implementation\UsrAccUserFieldRepository.cs:line 189
+   at CallSite.Target(Closure , CallSite , Object )
+   at System.Dynamic.UpdateDelegates.UpdateAndExecute1[T0,TRet](CallSite site, T0 arg0)
+   at aims_api.Repositories.Implementation.UserAccountRepository.UpdateUserAccount(UserAccountModelMod userAccount) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Repositories\Implementation\UserAccountRepository.cs:line 660
+   at aims_api.Cores.Implementation.UserAccountCore.UpdateUserAccount(UserAccountModelMod userAccount) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Cores\Implementation\UserAccountCore.cs:line 195
+   at aims_api.API.Controllers.UserAccountController.UpdateUserAccount(UserAccountModelMod userAccount) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.API\Controllers\UserAccountController.cs:line 303

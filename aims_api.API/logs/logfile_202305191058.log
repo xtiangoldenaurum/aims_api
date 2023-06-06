@@ -1,0 +1,11 @@
+2023-05-19 10:58:09.987 +08:00 [ERR] ERR500: Unknown column 'asileCode' in 'where clause' @192.168.2.114:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationRepository.GetDIstinctAisle() in D:\_development\_gassi\_aims\_aubrey\aims_api\aims_api.Repositories\Implementation\LocationRepository.cs:line 304
+   at aims_api.Cores.Implementation.LocationCore.GetDIstinctAisle() in D:\_development\_gassi\_aims\_aubrey\aims_api\aims_api.Cores\Implementation\LocationCore.cs:line 149
+   at aims_api.API.Controllers.LocationController.GetDIstinctAisle() in D:\_development\_gassi\_aims\_aubrey\aims_api\aims_api.API\Controllers\LocationController.cs:line 180

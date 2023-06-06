@@ -1,0 +1,8 @@
+2023-05-16 15:24:10.464 +08:00 [ERR] ERR500: Fatal error encountered during command execution. @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.WhTransferDetailRepository.LockWhTransDetails(IDbConnection db, IDbTransaction tran, String whTransId)
+   at aims_api.Repositories.Implementation.WhTransferRepository.UpdateWhTransferMod(WhTransferModelMod whTransfer)
+   at aims_api.Cores.Implementation.WhTransferCore.UpdateWhTransferMod(WhTransferModelMod whTransfer)
+   at aims_api.API.Controllers.WhTransferController.UpdateWhTransferMod(WhTransferModelMod whTransfer) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.API\Controllers\WhTransferController.cs:line 168

@@ -1,0 +1,12 @@
+2023-05-16 11:34:24.570 +08:00 [ERR] ERR500: Timeout expired.  The timeout period elapsed prior to completion of the operation or the server is not responding. @192.168.1.146:5001    at MySql.Data.MySqlClient.Interceptors.ExceptionInterceptor.Throw(Exception exception)
+   at MySql.Data.MySqlClient.MySqlConnection.HandleTimeoutOrThreadAbort(Exception ex)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteScalar()
+   at System.Data.Common.DbCommand.ExecuteScalarAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteScalarImplAsync[T](IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1210
+   at aims_api.Repositories.Implementation.PagingRepository.GetPageDetail(IDbConnection db, String strQry, DynamicParameters param, Int32 pageNum, Int32 pageItem, Int32 rowCount) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Repositories\Implementation\PagingRepository.cs:line 50
+   at aims_api.Repositories.Implementation.PODetailRepository.GetPODetailPageDetailMod(IDbConnection db, String poId, Int32 pageNum, Int32 pageItem, Int32 rowCount) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Repositories\Implementation\PODetailRepository.cs:line 115
+   at aims_api.Repositories.Implementation.PODetailRepository.GetPODetailByPoIDPagedMod(String poId, Int32 pageNum, Int32 pageItem) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Repositories\Implementation\PODetailRepository.cs:line 83
+   at aims_api.Cores.Implementation.PODetailCore.GetPODetailByPoIDPagedMod(String poId, Int32 pageNum, Int32 pageItem) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.Cores\Implementation\PODetailCore.cs:line 39
+   at aims_api.API.Controllers.PODetailController.GetPODetailByPoIDPagedMod(String poId, Int32 pageNum, Int32 pageItem) in D:\Working Project\AIMS\SOURCE CODE\_git\aims_api\aims_api.API\Controllers\PODetailController.cs:line 65

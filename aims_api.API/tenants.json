@@ -1,0 +1,34 @@
+[
+  {
+    "Id": 1,
+    "Subdomain": "192",
+    "SqlConnectionString": "Server=localhost;Port=3312;Database=aims_mariadb;Uid=root;Pwd=p@$$w0rd;", //itong connectionstring yung ginagamit niya even in testing of API in Postman, sample: http://192.168.1.130:5001/api/Area/deletearea
+    "Name": "192",
+    "DBName": "aims_mariadb",
+    "NotifByBranch": 1,
+    "SenderEmail": "no-reply@assetpro.com.ph",
+    "SenderKey": "gas2543077",
+    "SMTP": "smtp.hostinger.com",
+    "Port": 587,
+    "TagEPCConversion": "ToAscii",
+    "EPCViewConversion": "None",
+    "EPCPrintConversion": "ToHex",
+    "LogPostData": true
+  },
+  {
+    "Id": 2,
+    "Subdomain": "localhost:5001",
+    "SqlConnectionString": "Server=localhost;Port=3312;Database=aims_mariadb;Uid=root;Pwd=$$w0rd;",
+    "Name": "localhost",
+    "DBName": "aims_mariadb",
+    "NotifByBranch": 1,
+    "SenderEmail": "no-reply@assetpro.com.ph",
+    "SenderKey": "gas2543077",
+    "SMTP": "smtp.hostinger.com",
+    "Port": 587,
+    "TagEPCConversion": "ToAscii",
+    "EPCViewConversion": "None",
+    "EPCPrintConversion": "ToHex",
+    "LogPostData": true
+  }
+]

@@ -1,0 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace aims_api.Models
+{
+    public class InvCountStatusModel
+    {
+		public string? InvCountStatusId { get; set; }
+		public string? InvCountStatus { get; set; }
+		public string? Description { get; set; }
+    }
+}
