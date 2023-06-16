@@ -22,7 +22,7 @@ namespace aims_api.Cores.Implementation
         }
 
         public async Task<RequestResponse> GetSOPg(int pageNum, int pageItem)
-        {   
+        {
             var data = await SORepo.GetSOPg(pageNum, pageItem);
 
             if (data != null && data.Any())
@@ -106,7 +106,7 @@ namespace aims_api.Cores.Implementation
 
         public async Task<RequestResponse> DeleteSO(string soId)
         {
-			// place item in use validator here
+            // place item in use validator here
 
             bool res = await SORepo.DeleteSO(soId);
             if (res)
@@ -121,7 +121,7 @@ namespace aims_api.Cores.Implementation
         {
             await Task.Delay(1000);
 
-            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Utilities\template\Outbound\SO_Template.xlsx";
+            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Outbound\SO_Template.csv";
         }
         public async Task<RequestResponse> ExportSO()
         {

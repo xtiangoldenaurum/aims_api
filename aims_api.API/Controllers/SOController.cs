@@ -162,12 +162,13 @@ namespace aims_api.API.Controllers
         [HttpGet("downloadsotemplate")]
         public async Task<ActionResult> DownloadSOTemplate()
         {
+            //csv
             try
             {
                 var templatePath = await SOCore.DownloadSOTemplate();
-                var stream = new FileStream(templatePath, FileMode.Open);
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SO_Template.xlsx");
+                return File(fileBytes, "text/csv", "SO_Template.csv");
             }
             catch (Exception ex)
             {
@@ -175,6 +176,20 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
+            //xlsx
+            //try
+            //{
+            //    var templatePath = await SOCore.DownloadSOTemplate();
+            //    var stream = new FileStream(templatePath, FileMode.Open);
+
+            //    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SO_Template.xlsx");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+            //    return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+            //    throw;
+            //}
         }
 
         [HttpGet("exportso")]

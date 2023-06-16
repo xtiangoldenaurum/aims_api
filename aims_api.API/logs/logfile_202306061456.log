@@ -1,7 +1,0 @@
-2023-06-06 14:56:07.425 +08:00 [ERR] ERR500: Could not find a part of the path 'E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\bin\Debug\net6.0\aims_api.Utilities\template\Inbound\ReturnsTransfer_Template.xlsx'. @192.168.1.130:5001    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
-   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.FileStreamHelpers.ChooseStrategy(FileStream fileStream, String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
-   at System.IO.FileStream..ctor(String path, FileMode mode)
-   at aims_api.API.Controllers.ReturnsController.DownloadRetTransferTemplate() in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\ReturnsController.cs:line 286

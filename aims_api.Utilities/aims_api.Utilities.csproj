@@ -20,8 +20,4 @@
     <ProjectReference Include="..\aims_api.Models\aims_api.Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UploadFileFolder\" />
-  </ItemGroup>
-
 </Project>

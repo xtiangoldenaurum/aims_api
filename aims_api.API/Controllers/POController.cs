@@ -245,7 +245,7 @@ namespace aims_api.API.Controllers
             {
                 if (string.IsNullOrEmpty(poId))
                 {
-                    await DataValidator.AddErrorField("poIdx");
+                    await DataValidator.AddErrorField("poId");
                 }
                 if (string.IsNullOrEmpty(userAccountId))
                 {
@@ -299,12 +299,13 @@ namespace aims_api.API.Controllers
         [HttpGet("downloadpotemplate")]
         public async Task<ActionResult> DownloadPOTemplate()
         {
+            //csv
             try
             {
                 var templatePath = await POCore.DownloadPOTemplate();
-                var stream = new FileStream(templatePath, FileMode.Open);
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PO_Template.xlsx");
+                return File(fileBytes, "text/csv", "PO_Template.csv");
             }
             catch (Exception ex)
             {
@@ -312,6 +313,20 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
+            //xlsx
+            //try
+            //{
+            //    var templatePath = await POCore.DownloadPOTemplate();
+            //    var stream = new FileStream(templatePath, FileMode.Open);
+
+            //    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PO_Template.csv");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+            //    return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+            //    throw;
+            //}
         }
 
         [HttpGet("exportpo")]
@@ -327,6 +342,7 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
+
             //var data = await POCore.ExportPO(); // Fetch data from the repository
 
             //using (var package = new ExcelPackage())
@@ -343,7 +359,7 @@ namespace aims_api.API.Controllers
 
             //    // Populate data
             //    var row = 2;
-            //    foreach (var item in data)sn
+            //    foreach (var item in data)
             //    {
             //        worksheet.Cells[row, 1].Value = item.PoId;
             //        worksheet.Cells[row, 2].Value = item.OrderDate;
@@ -365,28 +381,27 @@ namespace aims_api.API.Controllers
             //}
         }
 
-        [HttpPost("importdata")]
-        public async Task<ActionResult> ImportPOData([FromForm] IFormFile file)
+        [HttpPost("createbulkpo")]
+        public async Task<ActionResult> CreateBulkPO(IFormFile file)
         {
             try
             {
                 if (Path.GetExtension(file.FileName) != ".csv" && Path.GetExtension(file.FileName) != ".xlsx")
                 {
-                    await DataValidator.AddErrorField("Invalid file type.");
+                    return BadRequest("Invalid File Type. Only CSV or XLSX files are allowed."); //Error: Bad Request(Request Body Message)
                 }
-
-                if (file == null)
+                if (file == null || file.Length <= 0)
                 {
                     await DataValidator.AddErrorField("file");
-                    //return BadRequest("Invalid file type. Only CSV or XLSX files are allowed."); //body response
                 }
-
                 if (DataValidator.Invalid)
                 {
-                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Only CSV or XLSX files are allowed.", DataValidator.ErrorFields));
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await POCore.ImportPOData(file));
+                string path = "UploadFileFolder/" + file.FileName;
+
+                return Ok(await POCore.CreateBulkPO(file, path));
             }
             catch (Exception ex)
             {
@@ -394,65 +409,27 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
+            finally
+            {
+                // Delete uploaded files
+                //string directoryPath = "UploadFileFolder/";
+                //if (Directory.Exists(directoryPath))
+                //{
+                //    string[] uploadFiles = Directory.GetFiles(directoryPath);
+                //    foreach (string uploadFile in uploadFiles)
+                //    {
+                //        System.IO.File.Delete(uploadFile);
+                //        Console.WriteLine($"{uploadFile} is deleted.");
+                //    }
+                //}
+                // Delete uploaded files
+                string[] uploadFiles = Directory.GetFiles("UploadFileFolder/");
+                foreach (string uploadFile in uploadFiles)
+                {
+                    System.IO.File.Delete(uploadFile);
+                    Console.WriteLine($"{uploadFile} is deleted.");
+                }
+            }
         }
-
-        //[HttpPost("importpodata")]
-        //public async Task<ActionResult> ImportPOData(IFormFile file)
-        //{
-        //    try
-        //    {
-        //        List<POModel> pos;
-        //        if (file == null || (Path.GetExtension(file.FileName) != ".csv" && Path.GetExtension(file.FileName) != ".xlsx"))
-        //        {
-        //            return BadRequest("Invalid file type. Only CSV or XLSX files are allowed."); //body response
-        //        }
-        //        if(file.Headers)
-
-        //        pos = file(file);
-
-        //        foreach (var po in pos)
-        //        {
-        //            if (IsRecordValid(po))
-        //            {
-        //                if (!RecordExists(po))
-        //                {
-        //                    //_repository.AddData(po);
-        //                }
-        //                else
-        //                {
-        //                    // Handle duplicate record
-        //                }
-        //            }
-        //            else
-        //            {
-        //                // Handle invalid record
-        //            }
-        //        }
-
-        //        return Ok("Data imported successfully.");
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
-        //        return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
-        //        throw;
-        //    }
-
-        //}
-
-        //private List<POModel> ReadExcel(IFormFile file)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private bool IsRecordValid(POModel pos)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //private bool RecordExists(POModel pos)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
 }

@@ -236,7 +236,7 @@ namespace aims_api.Cores.Implementation
         {
             await Task.Delay(1000);
 
-            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Utilities\template\Inbound\ReturnsTransfer_Template.xlsx";
+            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\ReturnsTransfer_Template.csv";
         }
 
         public async Task<RequestResponse> ExportReturnsTransfer()

@@ -277,15 +277,16 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("downloadreturnstransfertemplate")]
+        [HttpGet("downloadreturnstransfer")]
         public async Task<ActionResult> DownloadRetTransferTemplate()
         {
+            //csv
             try
             {
                 var templatePath = await ReturnsCore.DownloadRetTransferTemplate();
-                var stream = new FileStream(templatePath, FileMode.Open);
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReturnsTransfer_Template.xlsx");
+                return File(fileBytes, "text/csv", "ReturnsTransfer_Template.csv");
             }
             catch (Exception ex)
             {
@@ -293,6 +294,20 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
+            //xlsx
+            //try
+            //{
+            //    var templatePath = await ReturnsCore.DownloadRetTransferTemplate();
+            //    var stream = new FileStream(templatePath, FileMode.Open);
+
+            //    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReturnsTransfer_Template.xlsx");
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+            //    return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+            //    throw;
+            //}
         }
 
         [HttpGet("exportreturnstransfer")]

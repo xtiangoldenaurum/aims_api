@@ -3,11 +3,13 @@ using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Repositories.Interface;
 using aims_api.Utilities;
+using CsvHelper;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,8 +34,8 @@ namespace aims_api.Cores.Implementation
             bool skip = false;
 
             // do filtered query
-            if (!string.IsNullOrEmpty(filter.SupplierId) || 
-                !string.IsNullOrEmpty(filter.CarrierId) || 
+            if (!string.IsNullOrEmpty(filter.SupplierId) ||
+                !string.IsNullOrEmpty(filter.CarrierId) ||
                 filter.OrderDate != null ||
                 !string.IsNullOrEmpty(filter.PoStatusId))
             {
@@ -76,7 +78,7 @@ namespace aims_api.Cores.Implementation
         }
 
         public async Task<RequestResponse> GetPOPg(int pageNum, int pageItem)
-        {   
+        {
             var data = await PORepo.GetPOPg(pageNum, pageItem);
 
             if (data != null && data.Any())
@@ -186,7 +188,7 @@ namespace aims_api.Cores.Implementation
 
         public async Task<RequestResponse> DeletePO(string poId)
         {
-			// place item in use validator here
+            // place item in use validator here
 
             bool res = await PORepo.DeletePO(poId);
             if (res)
@@ -227,7 +229,7 @@ namespace aims_api.Cores.Implementation
         {
             await Task.Delay(1000);
 
-            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Utilities\template\Inbound\PO_Template.xlsx";
+            return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\PO_Template.csv";
         }
 
         public async Task<RequestResponse> ExportPO()
@@ -236,10 +238,10 @@ namespace aims_api.Cores.Implementation
 
             if (data != null && data.Any())
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
+                return new RequestResponse(ResponseCode.SUCCESS, "PO Record found.", data);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "No record found.");
+            return new RequestResponse(ResponseCode.FAILED, "No PO found.");
 
             //var data = await PORepo.ExportPO();
 
@@ -278,18 +280,17 @@ namespace aims_api.Cores.Implementation
             //    return response;
             //}
         }
-
-        public async Task<RequestResponse> ImportPOData(IFormFile file)
+        public async Task<RequestResponse> CreateBulkPO(IFormFile file, string path)
         {
-            var res = await PORepo.ImportPOData(file);
-            string resMsg = await EnumHelper.GetDescription(res);
+            var res = await PORepo.CreateBulkPO(file, path);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
 
-            if (res == POTranResultCode.SUCCESS)
+            if (res.POIds != null & res.ResultCode == POTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.POIds);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
         }
     }
 }

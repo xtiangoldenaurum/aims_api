@@ -1,6 +1,7 @@
 using aims_api.Enums;
 using aims_api.Models;
 using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -34,8 +35,8 @@ namespace aims_api.Repositories.Interface
         Task<CancelPOResultCode> CancelPO(string poId, string userAccountId);
         Task<CancelPOResultCode> ForceCancelPO(string poId, string userAccountId);
         Task<IEnumerable<POModel>> ExportPO();
-        void CreatePO(POModel pos);
-        //Task<IEnumerable<POModel>> ImportPOData(IFormFile file);
-        Task<POTranResultCode> ImportPOData(IFormFile file);
+        Task<POCreateTranResult> CreateBulkPO(IFormFile file, string path);
+        bool ValidateCsvHeader(string headerLine);
+        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

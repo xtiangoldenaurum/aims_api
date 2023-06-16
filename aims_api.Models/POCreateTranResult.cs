@@ -11,5 +11,6 @@ namespace aims_api.Models
     {
         public POTranResultCode ResultCode { get; set; }
         public string? POId { get; set; }
+        public string[] POIds { get; set; }
     }
 }

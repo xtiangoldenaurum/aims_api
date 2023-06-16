@@ -1,6 +1,7 @@
 using aims_api.Models;
 using aims_api.Utilities;
 using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> ForceCancelPO(string poId, string userAccountId);
         Task<string> DownloadPOTemplate();
         Task<RequestResponse> ExportPO();
-        Task<RequestResponse> ImportPOData(IFormFile file);
+        Task<RequestResponse> CreateBulkPO(IFormFile file, string path);
+
     }
 }
