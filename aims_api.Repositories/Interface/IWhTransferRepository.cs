@@ -1,5 +1,7 @@
 using aims_api.Enums;
 using aims_api.Models;
+using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -29,6 +31,9 @@ namespace aims_api.Repositories.Interface
         Task<CancelWhTransResultCode> CancelWhTransfer(string whTransId, string userAccountId);
         Task<CancelWhTransResultCode> ForceCancelWhTransfer(string whTransId, string userAccountId);
         Task<IEnumerable<string>> GetDistinctWhTransFrom();
-        Task<IEnumerable<WhTransferModel>> ExportWhTransfer();
+        Task<IEnumerable<WhTransferModel>> GetExportWhTransfer();
+        Task<WhTransCreateTranResult> CreateBulkWhTransfer(IFormFile file, string path);
+        bool ValidateCsvHeader(string headerLine);
+        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

@@ -1050,7 +1050,7 @@ namespace aims_api.Repositories.Implementation
 
             return await db.ExecuteScalarAsync<int>(strQry, param);
         }
-        public async Task<IEnumerable<POModel>> ExportPO()
+        public async Task<IEnumerable<POModel>> GetExportPO()
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
             {

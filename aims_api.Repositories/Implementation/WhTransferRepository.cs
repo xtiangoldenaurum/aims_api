@@ -5,10 +5,15 @@ using aims_api.Repositories.Interface;
 using aims_api.Repositories.Sub;
 using aims_api.Utilities.Interface;
 using Dapper;
+using ExcelDataReader;
+using LumenWorks.Framework.IO.Csv;
+using Microsoft.AspNetCore.Http;
 using MySql.Data.MySqlClient;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -943,7 +948,8 @@ namespace aims_api.Repositories.Implementation
 
         private async Task<bool> ChkWhTransDtlsCanFClose(IEnumerable<WhTransferDetailModel>? whTransDetails)
         {
-            return await Task.Run(() => {
+            return await Task.Run(() =>
+            {
                 // check if wh transfer contains force close-able details
                 var dtlCreateCnt = whTransDetails.Where(x => x.WhTransLineStatusId == (POLneStatus.CREATED).ToString()).Count();
                 var dtlPrtRcvCnt = whTransDetails.Where(x => x.WhTransLineStatusId == (POLneStatus.PRTRCV).ToString()).Count();
@@ -997,7 +1003,7 @@ namespace aims_api.Repositories.Implementation
             }
         }
 
-        public async Task<IEnumerable<WhTransferModel>> ExportWhTransfer()
+        public async Task<IEnumerable<WhTransferModel>> GetExportWhTransfer()
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
@@ -1005,6 +1011,756 @@ namespace aims_api.Repositories.Implementation
                 string strQry = "SELECT * FROM whtransfer";
                 return await db.QueryAsync<WhTransferModel>(strQry, commandType: CommandType.Text);
             }
+        }
+
+        public async Task<WhTransCreateTranResult> CreateBulkWhTransfer(IFormFile file, string path)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
+            {
+                await file.CopyToAsync(stream); //icopy sa path yung inupload
+            }
+
+            List<WhTransferModelMod> Parameters = new List<WhTransferModelMod>();
+
+            if (file.FileName.ToLower().Contains(".csv"))
+            {
+                DataTable value = new DataTable();
+                //Install Library : LumenWorksCsvReader 
+
+                using (var csvReader = new CsvReader(new StreamReader(File.OpenRead(path)), true))
+                {
+                    value.Load(csvReader);
+                };
+
+                for (int i = 0; i < value.Rows.Count; i++)
+                {
+                    WhTransferModelMod rows = new WhTransferModelMod();
+                    rows.whTransferHeader = new WhTransferModel();
+                    rows.WhTransDetails = new List<WhTransferDetailModel>();
+                    WhTransferDetailModel detail = new WhTransferDetailModel();
+
+                    // get PO id number
+                    var whTransId = await IdNumberRepo.GetNextIdNum("RCVTRANS");
+                    rows.whTransferHeader.WhTransferId = whTransId;
+
+                    rows.whTransferHeader.RefNumber = value.Rows[i][0] != null ? Convert.ToString(value.Rows[i][0]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
+                    {
+                        return new WhTransCreateTranResult()
+                        {
+                            ResultCode = WhTransferTranResultCode.MISSINGREFNUMONE
+                        };
+                    }
+
+                    rows.whTransferHeader.RefNumber2 = value.Rows[i][1] != null ? Convert.ToString(value.Rows[i][1]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
+                    {
+                        rows.whTransferHeader.RefNumber2 = null;
+                    }
+
+                    string? transferDateValue = value.Rows[i][2]?.ToString();
+                    if (string.IsNullOrEmpty(transferDateValue))
+                    {
+                        return new WhTransCreateTranResult()
+                        {
+                            ResultCode = WhTransferTranResultCode.TRANSFERDATEISREQUIRED
+                        };
+                    }
+                    else
+                    {
+                        DateTime transferDate;
+                        if (!DateTime.TryParseExact(transferDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out transferDate))
+                        {
+                            transferDate = DateTime.MinValue;
+                        }
+                        rows.whTransferHeader.TransferDate = transferDate;
+                    }
+
+                    string? arrivalDateValue = value.Rows[i][3]?.ToString();
+                    if (string.IsNullOrEmpty(arrivalDateValue))
+                    {
+                        rows.whTransferHeader.ArrivalDate = null;
+                    }
+                    else
+                    {
+                        DateTime arrivalDate;
+                        if (!DateTime.TryParseExact(arrivalDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate))
+                        {
+                            arrivalDate = DateTime.MinValue;
+                        }
+                        rows.whTransferHeader.ArrivalDate = arrivalDate;
+                    }
+
+                    // check if expected arrival date is valid
+                    if (rows.whTransferHeader.ArrivalDate != null)
+                    {
+                        if (rows.whTransferHeader.TransferDate > rows.whTransferHeader.ArrivalDate)
+                        {
+                            return new WhTransCreateTranResult()
+                            {
+                                ResultCode = WhTransferTranResultCode.INVALIDTRANSFERDATE
+                            };
+                        }
+                    }
+
+                    string? arrivalDate2Value = value.Rows[i][4]?.ToString();
+                    if (string.IsNullOrEmpty(arrivalDate2Value))
+                    {
+                        rows.whTransferHeader.ArrivalDate2 = null;
+                    }
+                    else
+                    {
+                        DateTime arrivalDate2;
+                        if (!DateTime.TryParseExact(arrivalDate2Value, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate2))
+                        {
+                            arrivalDate2 = DateTime.MinValue;
+                        }
+                        rows.whTransferHeader.ArrivalDate2 = arrivalDate2;
+                    }
+
+                    //check if expected arrival2 date is valid
+                    if (rows.whTransferHeader.ArrivalDate2 != null)
+                    {
+                        if (rows.whTransferHeader.TransferDate > rows.whTransferHeader.ArrivalDate2)
+                        {
+                            return new WhTransCreateTranResult()
+                            {
+                                ResultCode = WhTransferTranResultCode.INVALIDTRANSFERDATE
+                            };
+                        }
+                    }
+
+                    rows.whTransferHeader.Remarks = value.Rows[i][7] != null ? Convert.ToString(value.Rows[i][7]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.Remarks))
+                    {
+                        rows.whTransferHeader.Remarks = null;
+                    }
+                    rows.whTransferHeader.WhFromId = value.Rows[i][8] != null ? Convert.ToString(value.Rows[i][8]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromId))
+                    {
+                        rows.whTransferHeader.WhFromId = null;
+                    }
+                    rows.whTransferHeader.WhFrom = value.Rows[i][9] != null ? Convert.ToString(value.Rows[i][9]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.WhFrom))
+                    {
+                        rows.whTransferHeader.WhFrom = null;
+                    }
+                    rows.whTransferHeader.WhFromAddress = value.Rows[i][10] != null ? Convert.ToString(value.Rows[i][10]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromAddress))
+                    {
+                        rows.whTransferHeader.WhFromAddress = null;
+                    }
+                    rows.whTransferHeader.WhFromContact = value.Rows[i][11] != null ? Convert.ToString(value.Rows[i][11]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromContact))
+                    {
+                        rows.whTransferHeader.WhFromContact = null;
+                    }
+                    rows.whTransferHeader.WhFromEmail = value.Rows[i][12] != null ? Convert.ToString(value.Rows[i][12]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromEmail))
+                    {
+                        rows.whTransferHeader.WhFromEmail = null;
+                    }
+                    rows.whTransferHeader.CarrierId = value.Rows[i][13] != null ? Convert.ToString(value.Rows[i][13]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierId))
+                    {
+                        rows.whTransferHeader.CarrierId = null;
+                    }
+                    rows.whTransferHeader.CarrierName = value.Rows[i][14] != null ? Convert.ToString(value.Rows[i][14]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierName))
+                    {
+                        rows.whTransferHeader.CarrierName = null;
+                    }
+                    rows.whTransferHeader.CarrierAddress = value.Rows[i][15] != null ? Convert.ToString(value.Rows[i][15]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierAddress))
+                    {
+                        rows.whTransferHeader.CarrierAddress = null;
+                    }
+                    rows.whTransferHeader.CarrierContact = value.Rows[i][16] != null ? Convert.ToString(value.Rows[i][16]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierContact))
+                    {
+                        rows.whTransferHeader.CarrierContact = null;
+                    }
+                    rows.whTransferHeader.CarrierEmail = value.Rows[i][17] != null ? Convert.ToString(value.Rows[i][17]) : null;
+                    if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierEmail))
+                    {
+                        rows.whTransferHeader.CarrierEmail = null;
+                    }
+                    DateTime currentDateTime = DateTime.Now;
+                    rows.whTransferHeader.WhTransStatusId = WhTransferStatus.CREATED.ToString();
+                    rows.whTransferHeader.WhTransferStatus = "Created";
+                    rows.whTransferHeader.DateCreated = currentDateTime;
+                    rows.whTransferHeader.DateModified = currentDateTime;
+                    rows.whTransferHeader.CreatedBy = value.Rows[i][18] != null ? Convert.ToString(value.Rows[i][18]) : null;
+                    rows.whTransferHeader.ModifiedBy = value.Rows[i][19] != null ? Convert.ToString(value.Rows[i][19]) : null;
+
+                    // Populate PODetailModel
+                    detail.Sku = value.Rows[i][5] != null ? Convert.ToString(value.Rows[i][5]) : null;
+                    detail.ExpectedQty = Convert.ToInt32(value.Rows[i][6]);
+                    detail.DateCreated = currentDateTime;
+                    detail.DateModified = currentDateTime;
+                    detail.CreatedBy = value.Rows[i][18] != null ? Convert.ToString(value.Rows[i][18]) : null;
+                    detail.ModifiedBy = value.Rows[i][19] != null ? Convert.ToString(value.Rows[i][19]) : null;
+                    detail.Remarks = value.Rows[i][7] != null ? Convert.ToString(value.Rows[i][7]) : null;
+
+                    // Add the detail to the PODetails collection
+                    ((List<WhTransferDetailModel>)rows.WhTransDetails).Add(detail);
+
+                    Parameters.Add(rows);
+                }
+
+                if (Parameters.Count > 0)
+                {
+                    using (IDbConnection db = new MySqlConnection(ConnString))
+                    {
+                        db.Open();
+
+                        foreach (WhTransferModelMod rows in Parameters)
+                        {
+                            var parameters = new
+                            {
+                                whTransId = rows.whTransferHeader.WhTransferId,
+                                refNumber = rows.whTransferHeader.RefNumber,
+                                refNumber2 = rows.whTransferHeader.RefNumber2,
+                                transferDate = rows.whTransferHeader.TransferDate,
+                                arrivalDate = rows.whTransferHeader.ArrivalDate,
+                                arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
+                                remarks = rows.whTransferHeader.Remarks,
+                                whFromId = rows.whTransferHeader.WhFromId,
+                                whFrom = rows.whTransferHeader.WhFrom,
+                                WhFromAddress = rows.whTransferHeader.WhFromAddress,
+                                whFromContact = rows.whTransferHeader.WhFromContact,
+                                whFromEmail = rows.whTransferHeader.WhFromEmail,
+                                carrierId = rows.whTransferHeader.CarrierId,
+                                carrierName = rows.whTransferHeader.CarrierName,
+                                carrierAddress = rows.whTransferHeader.CarrierAddress,
+                                carrierContact = rows.whTransferHeader.CarrierContact,
+                                carrierEmail = rows.whTransferHeader.CarrierEmail,
+                                poStatusId = rows.whTransferHeader.WhTransStatusId,
+                                poStatus = rows.whTransferHeader.WhTransferStatus,
+                                dateCreated = rows.whTransferHeader.DateCreated,
+                                dateModified = rows.whTransferHeader.DateModified,
+                                createdBy = rows.whTransferHeader.CreatedBy,
+                                modifyBy = rows.whTransferHeader.ModifiedBy
+                            };
+
+                            // check if PO primary reference number are unique
+                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
+                            {
+                                var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
+                                if (poCount > 0)
+                                {
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
+                                    };
+                                }
+                            }
+
+                            // check if PO secondary reference number are unique
+                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
+                            {
+                                var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                if (poCount > 0)
+                                {
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
+                                    };
+                                }
+                            }
+
+                            // create header
+                            var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
+
+                            if (headCreated)
+                            {
+                                // init po user fields default data
+                                var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
+                                if (!initPOUFld)
+                                {
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
+                                    };
+                                }
+
+                                // insert po user fields values
+                                if (rows.WhTransferUfields != null)
+                                {
+                                    var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
+                                    if (!uFieldsCreated)
+                                    {
+                                        return new WhTransCreateTranResult()
+                                        {
+                                            ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
+                                        };
+                                    }
+                                }
+
+                                // create detail
+                                if (rows.WhTransDetails.Any())
+                                {
+                                    var details = rows.WhTransDetails.ToList();
+
+                                    for (int i = 0; i < details.Count(); i++)
+                                    {
+                                        var detail = details[i];
+
+                                        // check if similar SKU exists under this PO
+                                        var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
+                                        if (skuExists)
+                                        {
+                                            return new WhTransCreateTranResult()
+                                            {
+                                                ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                            };
+                                        }
+
+                                        // set detail id, status and header po id
+                                        detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
+                                        detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
+                                        detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+
+                                        // create detail
+                                        bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
+
+                                        // return false if either of detail failed to save
+                                        if (!dtlSaved)
+                                        {
+                                            return new WhTransCreateTranResult()
+                                            {
+                                                ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
+                                            };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        return new WhTransCreateTranResult()
+                        {
+                            ResultCode = WhTransferTranResultCode.SUCCESS,
+                            WhTransferIds = Parameters.Select(p => p.whTransferHeader.WhTransferId).ToArray()
+                        };
+                    }
+                }
+            }
+
+            if (file.FileName.ToLower().Contains(".xlsx"))
+            {
+                DataSet dataSet;
+
+                using (var stream = file.OpenReadStream())
+                {
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+
+                        // Validate the XLSX header
+                        if (await ValidateXlsxHeader(worksheet))
+                        {
+                            FileStream filestream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+                            IExcelDataReader reader = ExcelReaderFactory.CreateReader(filestream);
+                            dataSet = reader.AsDataSet(
+                                new ExcelDataSetConfiguration()
+                                {
+                                    UseColumnDataType = false,
+                                    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                                    {
+                                        UseHeaderRow = true
+                                    }
+
+                                });
+
+                            for (int i = 0; i < dataSet.Tables[0].Rows.Count; i++)
+                            {
+                                WhTransferModelMod rows = new WhTransferModelMod();
+                                rows.whTransferHeader = new WhTransferModel();
+                                rows.WhTransDetails = new List<WhTransferDetailModel>();
+                                WhTransferDetailModel detail = new WhTransferDetailModel();
+
+                                // get PO id number
+                                var whTransId = await IdNumberRepo.GetNextIdNum("RCVTRANS");
+                                rows.whTransferHeader.WhTransferId = whTransId;
+
+                                rows.whTransferHeader.RefNumber = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[0]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
+                                {
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.MISSINGREFNUMONE
+                                    };
+                                }
+
+                                rows.whTransferHeader.RefNumber2 = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[1]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
+                                {
+                                    rows.whTransferHeader.RefNumber2 = null;
+                                }
+
+                                string? transferDateValue = dataSet.Tables[0].Rows[i].ItemArray[2]?.ToString();
+                                if (string.IsNullOrEmpty(transferDateValue))
+                                {
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.TRANSFERDATEISREQUIRED
+                                    };
+                                }
+                                else
+                                {
+                                    DateTime transferDate;
+                                    if (!DateTime.TryParseExact(transferDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out transferDate))
+                                    {
+                                        transferDate = DateTime.MinValue;
+                                    }
+                                    rows.whTransferHeader.TransferDate = transferDate;
+                                }
+
+                                string? arrivalDateValue = dataSet.Tables[0].Rows[i].ItemArray[3]?.ToString();
+                                if (string.IsNullOrEmpty(arrivalDateValue))
+                                {
+                                    rows.whTransferHeader.ArrivalDate = null;
+                                }
+                                else
+                                {
+                                    DateTime arrivalDate;
+                                    if (!DateTime.TryParseExact(arrivalDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate))
+                                    {
+                                        arrivalDate = DateTime.MinValue;
+                                    }
+                                    rows.whTransferHeader.ArrivalDate = arrivalDate;
+                                }
+
+                                // check if expected arrival date is valid
+                                if (rows.whTransferHeader.ArrivalDate != null)
+                                {
+                                    if (rows.whTransferHeader.TransferDate > rows.whTransferHeader.ArrivalDate)
+                                    {
+                                        return new WhTransCreateTranResult()
+                                        {
+                                            ResultCode = WhTransferTranResultCode.INVALIDTRANSFERDATE
+                                        };
+                                    }
+                                }
+                                string? arrivalDate2Value = dataSet.Tables[0].Rows[i].ItemArray[4]?.ToString();
+                                if (string.IsNullOrEmpty(arrivalDate2Value))
+                                {
+                                    rows.whTransferHeader.ArrivalDate2 = null;
+                                }
+                                else
+                                {
+                                    DateTime arrivalDate2;
+                                    if (!DateTime.TryParseExact(arrivalDate2Value, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate2))
+                                    {
+                                        arrivalDate2 = DateTime.MinValue;
+                                    }
+                                    rows.whTransferHeader.ArrivalDate2 = arrivalDate2;
+                                }
+
+                                //check if expected arrival2 date is valid
+                                if (rows.whTransferHeader.ArrivalDate2 != null)
+                                {
+                                    if (rows.whTransferHeader.TransferDate > rows.whTransferHeader.ArrivalDate2)
+                                    {
+                                        return new WhTransCreateTranResult()
+                                        {
+                                            ResultCode = WhTransferTranResultCode.INVALIDTRANSFERDATE
+                                        };
+                                    }
+                                }
+
+                                rows.whTransferHeader.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.Remarks))
+                                {
+                                    rows.whTransferHeader.Remarks = null;
+                                }
+                                rows.whTransferHeader.WhFromId = dataSet.Tables[0].Rows[i].ItemArray[8] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[8]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromId))
+                                {
+                                    rows.whTransferHeader.WhFromId = null;
+                                }
+                                rows.whTransferHeader.WhFrom = dataSet.Tables[0].Rows[i].ItemArray[9] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[9]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.WhFrom))
+                                {
+                                    rows.whTransferHeader.WhFrom = null;
+                                }
+                                rows.whTransferHeader.WhFromAddress = dataSet.Tables[0].Rows[i].ItemArray[10] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[10]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromAddress))
+                                {
+                                    rows.whTransferHeader.WhFromAddress = null;
+                                }
+                                rows.whTransferHeader.WhFromContact = dataSet.Tables[0].Rows[i].ItemArray[11] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[11]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromContact))
+                                {
+                                    rows.whTransferHeader.WhFromContact = null;
+                                }
+                                rows.whTransferHeader.WhFromEmail = dataSet.Tables[0].Rows[i].ItemArray[12] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[12]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.WhFromEmail))
+                                {
+                                    rows.whTransferHeader.WhFromEmail = null;
+                                }
+                                rows.whTransferHeader.CarrierId = dataSet.Tables[0].Rows[i].ItemArray[13] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[13]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierId))
+                                {
+                                    rows.whTransferHeader.CarrierId = null;
+                                }
+                                rows.whTransferHeader.CarrierName = dataSet.Tables[0].Rows[i].ItemArray[14] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[14]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierName))
+                                {
+                                    rows.whTransferHeader.CarrierName = null;
+                                }
+                                rows.whTransferHeader.CarrierAddress = dataSet.Tables[0].Rows[i].ItemArray[15] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[15]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierAddress))
+                                {
+                                    rows.whTransferHeader.CarrierAddress = null;
+                                }
+                                rows.whTransferHeader.CarrierContact = dataSet.Tables[0].Rows[i].ItemArray[16] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[16]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierContact))
+                                {
+                                    rows.whTransferHeader.CarrierContact = null;
+                                }
+                                rows.whTransferHeader.CarrierEmail = dataSet.Tables[0].Rows[i].ItemArray[17] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[17]) : null;
+                                if (string.IsNullOrEmpty(rows.whTransferHeader.CarrierEmail))
+                                {
+                                    rows.whTransferHeader.CarrierEmail = null;
+                                }
+                                DateTime currentDateTime = DateTime.Now;
+                                rows.whTransferHeader.WhTransStatusId = POStatus.CREATED.ToString();
+                                rows.whTransferHeader.WhTransferStatus = "Created";
+                                rows.whTransferHeader.DateCreated = currentDateTime;
+                                rows.whTransferHeader.DateModified = currentDateTime;
+                                rows.whTransferHeader.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[18] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[18]) : null;
+                                rows.whTransferHeader.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[19] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[19]) : null;
+
+                                // Populate PODetailModel
+                                detail.Sku = dataSet.Tables[0].Rows[i].ItemArray[5] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[5]) : null;
+                                detail.ExpectedQty = Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[6]);
+                                detail.DateCreated = currentDateTime;
+                                detail.DateModified = currentDateTime;
+                                detail.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[18] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[18]) : null;
+                                detail.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[19] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[19]) : null;
+                                detail.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
+
+                                // Add the detail to the PODetails collection
+                                ((List<WhTransferDetailModel>)rows.WhTransDetails).Add(detail);
+
+                                Parameters.Add(rows);
+                            }
+
+                            filestream.Close();
+
+                            if (Parameters.Count > 0)
+                            {
+                                using (IDbConnection db = new MySqlConnection(ConnString))
+                                {
+                                    db.Open();
+
+                                    foreach (WhTransferModelMod rows in Parameters)
+                                    {
+                                        var parameters = new
+                                        {
+                                            whTransId = rows.whTransferHeader.WhTransferId,
+                                            refNumber = rows.whTransferHeader.RefNumber,
+                                            refNumber2 = rows.whTransferHeader.RefNumber2,
+                                            transferDate = rows.whTransferHeader.TransferDate,
+                                            arrivalDate = rows.whTransferHeader.ArrivalDate,
+                                            arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
+                                            remarks = rows.whTransferHeader.Remarks,
+                                            whFromId = rows.whTransferHeader.WhFromId,
+                                            whFrom = rows.whTransferHeader.WhFrom,
+                                            WhFromAddress = rows.whTransferHeader.WhFromAddress,
+                                            whFromContact = rows.whTransferHeader.WhFromContact,
+                                            whFromEmail = rows.whTransferHeader.WhFromEmail,
+                                            carrierId = rows.whTransferHeader.CarrierId,
+                                            carrierName = rows.whTransferHeader.CarrierName,
+                                            carrierAddress = rows.whTransferHeader.CarrierAddress,
+                                            carrierContact = rows.whTransferHeader.CarrierContact,
+                                            carrierEmail = rows.whTransferHeader.CarrierEmail,
+                                            poStatusId = rows.whTransferHeader.WhTransStatusId,
+                                            poStatus = rows.whTransferHeader.WhTransferStatus,
+                                            dateCreated = rows.whTransferHeader.DateCreated,
+                                            dateModified = rows.whTransferHeader.DateModified,
+                                            createdBy = rows.whTransferHeader.CreatedBy,
+                                            modifyBy = rows.whTransferHeader.ModifiedBy
+                                        };
+
+                                        // check if PO primary reference number are unique
+                                        if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
+                                        {
+                                            var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
+                                            if (poCount > 0)
+                                            {
+                                                return new WhTransCreateTranResult()
+                                                {
+                                                    ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
+                                                };
+                                            }
+                                        }
+
+                                        // check if PO secondary reference number are unique
+                                        if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
+                                        {
+                                            var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                            if (poCount > 0)
+                                            {
+                                                return new WhTransCreateTranResult()
+                                                {
+                                                    ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
+                                                };
+                                            }
+                                        }
+
+                                        // create header
+                                        var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
+
+                                        if (headCreated)
+                                        {
+                                            // init po user fields default data
+                                            var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
+                                            if (!initPOUFld)
+                                            {
+                                                return new WhTransCreateTranResult()
+                                                {
+                                                    ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
+                                                };
+                                            }
+
+                                            // insert po user fields values
+                                            if (rows.WhTransferUfields != null)
+                                            {
+                                                var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
+                                                if (!uFieldsCreated)
+                                                {
+                                                    return new WhTransCreateTranResult()
+                                                    {
+                                                        ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
+                                                    };
+                                                }
+                                            }
+
+                                            // create detail
+                                            if (rows.WhTransDetails.Any())
+                                            {
+                                                var details = rows.WhTransDetails.ToList();
+
+                                                for (int i = 0; i < details.Count(); i++)
+                                                {
+                                                    var detail = details[i];
+
+                                                    // check if similar SKU exists under this PO
+                                                    var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
+                                                    if (skuExists)
+                                                    {
+                                                        return new WhTransCreateTranResult()
+                                                        {
+                                                            ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                                        };
+                                                    }
+
+                                                    // set detail id, status and header po id
+                                                    detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
+                                                    detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
+                                                    detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+
+                                                    // create detail
+                                                    bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
+
+                                                    // return false if either of detail failed to save
+                                                    if (!dtlSaved)
+                                                    {
+                                                        return new WhTransCreateTranResult()
+                                                        {
+                                                            ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    return new WhTransCreateTranResult()
+                                    {
+                                        ResultCode = WhTransferTranResultCode.SUCCESS,
+                                        WhTransferIds = Parameters.Select(p => p.whTransferHeader.WhTransferId).ToArray()
+                                    };
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return new WhTransCreateTranResult()
+                            {
+                                ResultCode = WhTransferTranResultCode.INVALIDHEADER
+                            };
+                        }
+                    }
+                }
+            }
+
+            return new WhTransCreateTranResult()
+            {
+                ResultCode = WhTransferTranResultCode.FAILED
+            };
+        }
+
+        public bool ValidateCsvHeader(string headerLine)
+        {
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+                                         "Arrival Date", "Arrival Date 2", "SKU",
+                                         "Expected Qty", "Remarks", "Warehouse Id",
+                                         "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
+                                         "Warehouse From Email", "Carrier Id", "Carrier Name",
+                                         "Carrier Address", "Carrier Contact", "Carrier Email",
+                                         "Created By", "Modified By"
+                                       };
+
+            string[] actualHeaders = headerLine.Split(',');
+
+            if (actualHeaders.Length != expectedHeaders.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < actualHeaders.Length; i++)
+            {
+                if (actualHeaders[i].Trim() != expectedHeaders[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
+        {
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+                                         "Arrival Date", "Arrival Date 2", "SKU",
+                                         "Expected Qty", "Remarks", "Warehouse Id",
+                                         "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
+                                         "Warehouse From Email", "Carrier Id", "Carrier Name",
+                                         "Carrier Address", "Carrier Contact", "Carrier Email",
+                                         "Created By", "Modified By"
+                                       };
+
+            int columnCount = await Task.Run(() => worksheet.Dimension.Columns);
+
+            if (columnCount != expectedHeaders.Length)
+            {
+                return false;
+            }
+
+            for (int column = 1; column <= columnCount; column++)
+            {
+                string? headerCell = await Task.Run(() => worksheet.Cells[1, column].Value?.ToString());
+
+                if (headerCell?.Trim() != expectedHeaders[column - 1])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

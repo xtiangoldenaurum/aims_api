@@ -3,6 +3,7 @@ using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Repositories.Interface;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace aims_api.Cores.Implementation
     {
         private ISORepository SORepo { get; set; }
         private ISOUserFieldRepository SOUFieldRepo { get; set; }
-        public SOCore(ISORepository soRepo, ISOUserFieldRepository sOUFieldRepo)
+        public EnumHelper EnumHelper { get; set; }
+        public SOCore(ISORepository soRepo, ISOUserFieldRepository sOUFieldRepo, EnumHelper enumHelper)
         {
             SORepo = soRepo;
             SOUFieldRepo = sOUFieldRepo;
+            EnumHelper = enumHelper;
         }
 
         public async Task<RequestResponse> GetSOPg(int pageNum, int pageItem)
@@ -117,15 +120,15 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "Failed to delete record.");
         }
 
-        public async Task<string> DownloadSOTemplate()
+        public async Task<string> GetSOTemplate()
         {
             await Task.Delay(1000);
 
             return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Outbound\SO_Template.csv";
         }
-        public async Task<RequestResponse> ExportSO()
+        public async Task<RequestResponse> GetExportSO()
         {
-            var data = await SORepo.ExportSO();
+            var data = await SORepo.GetExportSO();
 
             if (data != null && data.Any())
             {
@@ -133,6 +136,19 @@ namespace aims_api.Cores.Implementation
             }
 
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
+        }
+
+        public async Task<RequestResponse> CreateBulkSO(IFormFile file, string path)
+        {
+            var res = await SORepo.CreateBulkSO(file, path);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+
+            if (res.SOIds != null & res.ResultCode == SOTranResultCode.SUCCESS)
+            {
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.SOIds);
+            }
+
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
         }
     }
 }

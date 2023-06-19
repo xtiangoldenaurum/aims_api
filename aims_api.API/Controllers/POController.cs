@@ -296,13 +296,13 @@ namespace aims_api.API.Controllers
         }
 
 
-        [HttpGet("downloadpotemplate")]
-        public async Task<ActionResult> DownloadPOTemplate()
+        [HttpGet("getpotemplate")]
+        public async Task<ActionResult> GetPOTemplate()
         {
             //csv
             try
             {
-                var templatePath = await POCore.DownloadPOTemplate();
+                var templatePath = await POCore.GetPOTemplate();
                 var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
                 return File(fileBytes, "text/csv", "PO_Template.csv");
@@ -329,12 +329,12 @@ namespace aims_api.API.Controllers
             //}
         }
 
-        [HttpGet("exportpo")]
-        public async Task<ActionResult> ExportPO()
+        [HttpGet("getexportpo")]
+        public async Task<ActionResult> GetExportPO()
         {
             try
             {
-                return Ok(await POCore.ExportPO());
+                return Ok(await POCore.GetExportPO());
             }
             catch (Exception ex)
             {
@@ -411,17 +411,6 @@ namespace aims_api.API.Controllers
             }
             finally
             {
-                // Delete uploaded files
-                //string directoryPath = "UploadFileFolder/";
-                //if (Directory.Exists(directoryPath))
-                //{
-                //    string[] uploadFiles = Directory.GetFiles(directoryPath);
-                //    foreach (string uploadFile in uploadFiles)
-                //    {
-                //        System.IO.File.Delete(uploadFile);
-                //        Console.WriteLine($"{uploadFile} is deleted.");
-                //    }
-                //}
                 // Delete uploaded files
                 string[] uploadFiles = Directory.GetFiles("UploadFileFolder/");
                 foreach (string uploadFile in uploadFiles)

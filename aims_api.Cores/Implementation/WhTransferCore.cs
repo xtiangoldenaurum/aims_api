@@ -3,6 +3,7 @@ using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Repositories.Interface;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -220,16 +221,16 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<string> DownloadWhTransferTemplate()
+        public async Task<string> GetWhTransferTemplate()
         {
             await Task.Delay(1000);
 
             return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\WhTransfer_Template.csv";
         }
 
-        public async Task<RequestResponse> ExportWhTransfer()
+        public async Task<RequestResponse> GetExportWhTransfer()
         {
-            var data = await WhTransferRepo.ExportWhTransfer();
+            var data = await WhTransferRepo.GetExportWhTransfer();
 
             if (data != null && data.Any())
             {
@@ -237,6 +238,19 @@ namespace aims_api.Cores.Implementation
             }
 
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
+        }
+
+        public async Task<RequestResponse> CreateBulkWhTransfer(IFormFile file, string path)
+        {
+            var res = await WhTransferRepo.CreateBulkWhTransfer(file, path);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+
+            if (res.WhTransferId != null & res.ResultCode == WhTransferTranResultCode.SUCCESS)
+            {
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.WhTransferId);
+            }
+
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
         }
     }
 }

@@ -277,13 +277,13 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("downloadreturnstransfer")]
-        public async Task<ActionResult> DownloadRetTransferTemplate()
+        [HttpGet("getreturnstransfer")]
+        public async Task<ActionResult> GetReturnsTransferTemplate()
         {
             //csv
             try
             {
-                var templatePath = await ReturnsCore.DownloadRetTransferTemplate();
+                var templatePath = await ReturnsCore.GetReturnsTransferTemplate();
                 var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
                 return File(fileBytes, "text/csv", "ReturnsTransfer_Template.csv");
@@ -294,34 +294,60 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
-            //xlsx
-            //try
-            //{
-            //    var templatePath = await ReturnsCore.DownloadRetTransferTemplate();
-            //    var stream = new FileStream(templatePath, FileMode.Open);
-
-            //    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReturnsTransfer_Template.xlsx");
-            //}
-            //catch (Exception ex)
-            //{
-            //    Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
-            //    return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
-            //    throw;
-            //}
         }
 
-        [HttpGet("exportreturnstransfer")]
-        public async Task<ActionResult> ExportReturnsTransfer()
+        [HttpGet("getexportreturnstransfer")]
+        public async Task<ActionResult> GetExportReturnsTransfer()
         {
             try
             {
-                return Ok(await ReturnsCore.ExportReturnsTransfer());
+                return Ok(await ReturnsCore.GetExportReturnsTransfer());
             }
             catch (Exception ex)
             {
                 Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
+            }
+        }
+
+        [HttpPost("createbulkso")]
+        public async Task<ActionResult> CreateBulkReturns(IFormFile file)
+        {
+            try
+            {
+                if (Path.GetExtension(file.FileName) != ".csv" && Path.GetExtension(file.FileName) != ".xlsx")
+                {
+                    return BadRequest("Invalid File Type. Only CSV or XLSX files are allowed."); //Error: Bad Request(Request Body Message)
+                }
+                if (file == null || file.Length <= 0)
+                {
+                    await DataValidator.AddErrorField("file");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                string path = "UploadFileFolder/" + file.FileName;
+
+                return Ok(await ReturnsCore.CreateBulkReturns(file, path));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+            finally
+            {
+                // Delete uploaded files
+                string[] uploadFiles = Directory.GetFiles("UploadFileFolder/");
+                foreach (string uploadFile in uploadFiles)
+                {
+                    System.IO.File.Delete(uploadFile);
+                    Console.WriteLine($"{uploadFile} is deleted.");
+                }
             }
         }
     }

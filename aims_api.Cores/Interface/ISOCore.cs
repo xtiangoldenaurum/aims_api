@@ -1,5 +1,6 @@
 using aims_api.Models;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,8 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> CreateSO(SOModel so);
         Task<RequestResponse> UpdateSO(SOModel so);
         Task<RequestResponse> DeleteSO(string soId);
-        Task<string> DownloadSOTemplate();
-        Task<RequestResponse> ExportSO();
+        Task<string> GetSOTemplate();
+        Task<RequestResponse> GetExportSO();
+        Task<RequestResponse> CreateBulkSO(IFormFile file, string path);
     }
 }

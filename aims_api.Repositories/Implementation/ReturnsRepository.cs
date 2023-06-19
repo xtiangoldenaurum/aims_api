@@ -5,10 +5,15 @@ using aims_api.Repositories.Interface;
 using aims_api.Repositories.Sub;
 using aims_api.Utilities.Interface;
 using Dapper;
+using ExcelDataReader;
+using LumenWorks.Framework.IO.Csv;
+using Microsoft.AspNetCore.Http;
 using MySql.Data.MySqlClient;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -728,7 +733,7 @@ namespace aims_api.Repositories.Implementation
                                 }
                             }
                         }
-                        
+
                         return ReturnsTranResultCode.SUCCESS;
                     }
                 }
@@ -1000,7 +1005,7 @@ namespace aims_api.Repositories.Implementation
             }
         }
 
-        public async Task<IEnumerable<ReturnsModel>> ExportReturnsTransfer()
+        public async Task<IEnumerable<ReturnsModel>> GetExportReturnsTransfer()
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
@@ -1008,6 +1013,756 @@ namespace aims_api.Repositories.Implementation
                 string strQry = "SELECT * FROM returns";
                 return await db.QueryAsync<ReturnsModel>(strQry, commandType: CommandType.Text);
             }
+        }
+
+        public async Task<ReturnsCreateTranResult> CreateBulkReturns(IFormFile file, string path)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
+            {
+                await file.CopyToAsync(stream); //icopy sa path yung inupload
+            }
+
+            List<ReturnsModelMod> Parameters = new List<ReturnsModelMod>();
+
+            if (file.FileName.ToLower().Contains(".csv"))
+            {
+                DataTable value = new DataTable();
+                //Install Library : LumenWorksCsvReader 
+
+                using (var csvReader = new CsvReader(new StreamReader(File.OpenRead(path)), true))
+                {
+                    value.Load(csvReader);
+                };
+
+                for (int i = 0; i < value.Rows.Count; i++)
+                {
+                    ReturnsModelMod rows = new ReturnsModelMod();
+                    rows.ReturnsHeader = new ReturnsModel();
+                    rows.ReturnsDetails = new List<ReturnsDetailModel>();
+                    ReturnsDetailModel detail = new ReturnsDetailModel();
+
+                    // get PO id number
+                    var retId = await IdNumberRepo.GetNextIdNum("RCVRET");
+                    rows.ReturnsHeader.ReturnsId = retId;
+
+                    rows.ReturnsHeader.RefNumber = value.Rows[i][0] != null ? Convert.ToString(value.Rows[i][0]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
+                    {
+                        return new ReturnsCreateTranResult()
+                        {
+                            ResultCode = ReturnsTranResultCode.MISSINGREFNUMONE
+                        };
+                    }
+
+                    rows.ReturnsHeader.RefNumber2 = value.Rows[i][1] != null ? Convert.ToString(value.Rows[i][1]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
+                    {
+                        rows.ReturnsHeader.RefNumber2 = null;
+                    }
+
+                    string? returnDateValue = value.Rows[i][2]?.ToString();
+                    if (string.IsNullOrEmpty(returnDateValue))
+                    {
+                        return new ReturnsCreateTranResult()
+                        {
+                            ResultCode = ReturnsTranResultCode.RETURNDATEISREQUIRED
+                        };
+                    }
+                    else
+                    {
+                        DateTime returnDate;
+                        if (!DateTime.TryParseExact(returnDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out returnDate))
+                        {
+                            returnDate = DateTime.MinValue;
+                        }
+                        rows.ReturnsHeader.ReturnDate = returnDate;
+                    }
+
+                    string? arrivalDateValue = value.Rows[i][3]?.ToString();
+                    if (string.IsNullOrEmpty(arrivalDateValue))
+                    {
+                        rows.ReturnsHeader.ArrivalDate = null;
+                    }
+                    else
+                    {
+                        DateTime arrivalDate;
+                        if (!DateTime.TryParseExact(arrivalDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate))
+                        {
+                            arrivalDate = DateTime.MinValue;
+                        }
+                        rows.ReturnsHeader.ArrivalDate = arrivalDate;
+                    }
+
+                    // check if expected arrival date is valid
+                    if (rows.ReturnsHeader.ArrivalDate != null)
+                    {
+                        if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate)
+                        {
+                            return new ReturnsCreateTranResult()
+                            {
+                                ResultCode = ReturnsTranResultCode.INVALIDRETURNDATE
+                            };
+                        }
+                    }
+
+                    string? arrivalDate2Value = value.Rows[i][4]?.ToString();
+                    if (string.IsNullOrEmpty(arrivalDate2Value))
+                    {
+                        rows.ReturnsHeader.ArrivalDate2 = null;
+                    }
+                    else
+                    {
+                        DateTime arrivalDate2;
+                        if (!DateTime.TryParseExact(arrivalDate2Value, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate2))
+                        {
+                            arrivalDate2 = DateTime.MinValue;
+                        }
+                        rows.ReturnsHeader.ArrivalDate2 = arrivalDate2;
+                    }
+
+                    //check if expected arrival2 date is valid
+                    if (rows.ReturnsHeader.ArrivalDate2 != null)
+                    {
+                        if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate2)
+                        {
+                            return new ReturnsCreateTranResult()
+                            {
+                                ResultCode = ReturnsTranResultCode.INVALIDRETURNDATE
+                            };
+                        }
+                    }
+
+                    rows.ReturnsHeader.Remarks = value.Rows[i][7] != null ? Convert.ToString(value.Rows[i][7]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.Remarks))
+                    {
+                        rows.ReturnsHeader.Remarks = null;
+                    }
+                    rows.ReturnsHeader.StoreId = value.Rows[i][8] != null ? Convert.ToString(value.Rows[i][8]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreId))
+                    {
+                        rows.ReturnsHeader.StoreId = null;
+                    }
+                    rows.ReturnsHeader.StoreFrom = value.Rows[i][9] != null ? Convert.ToString(value.Rows[i][9]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreFrom))
+                    {
+                        rows.ReturnsHeader.StoreFrom = null;
+                    }
+                    rows.ReturnsHeader.StoreAddress = value.Rows[i][10] != null ? Convert.ToString(value.Rows[i][10]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreAddress))
+                    {
+                        rows.ReturnsHeader.StoreAddress = null;
+                    }
+                    rows.ReturnsHeader.StoreContact = value.Rows[i][11] != null ? Convert.ToString(value.Rows[i][11]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreContact))
+                    {
+                        rows.ReturnsHeader.StoreContact = null;
+                    }
+                    rows.ReturnsHeader.StoreEmail = value.Rows[i][12] != null ? Convert.ToString(value.Rows[i][12]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreEmail))
+                    {
+                        rows.ReturnsHeader.StoreEmail = null;
+                    }
+                    rows.ReturnsHeader.CarrierId = value.Rows[i][13] != null ? Convert.ToString(value.Rows[i][13]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierId))
+                    {
+                        rows.ReturnsHeader.CarrierId = null;
+                    }
+                    rows.ReturnsHeader.CarrierName = value.Rows[i][14] != null ? Convert.ToString(value.Rows[i][14]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierName))
+                    {
+                        rows.ReturnsHeader.CarrierName = null;
+                    }
+                    rows.ReturnsHeader.CarrierAddress = value.Rows[i][15] != null ? Convert.ToString(value.Rows[i][15]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierAddress))
+                    {
+                        rows.ReturnsHeader.CarrierAddress = null;
+                    }
+                    rows.ReturnsHeader.CarrierContact = value.Rows[i][16] != null ? Convert.ToString(value.Rows[i][16]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierContact))
+                    {
+                        rows.ReturnsHeader.CarrierContact = null;
+                    }
+                    rows.ReturnsHeader.CarrierEmail = value.Rows[i][17] != null ? Convert.ToString(value.Rows[i][17]) : null;
+                    if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierEmail))
+                    {
+                        rows.ReturnsHeader.CarrierEmail = null;
+                    }
+                    DateTime currentDateTime = DateTime.Now;
+                    rows.ReturnsHeader.ReturnsStatusId = ReturnsStatus.CREATED.ToString();
+                    rows.ReturnsHeader.ReturnStatus = "Created";
+                    rows.ReturnsHeader.DateCreated = currentDateTime;
+                    rows.ReturnsHeader.DateModified = currentDateTime;
+                    rows.ReturnsHeader.CreatedBy = value.Rows[i][18] != null ? Convert.ToString(value.Rows[i][18]) : null;
+                    rows.ReturnsHeader.ModifiedBy = value.Rows[i][19] != null ? Convert.ToString(value.Rows[i][19]) : null;
+
+                    // Populate PODetailModel
+                    detail.Sku = value.Rows[i][5] != null ? Convert.ToString(value.Rows[i][5]) : null;
+                    detail.ExpectedQty = Convert.ToInt32(value.Rows[i][6]);
+                    detail.DateCreated = currentDateTime;
+                    detail.DateModified = currentDateTime;
+                    detail.CreatedBy = value.Rows[i][18] != null ? Convert.ToString(value.Rows[i][18]) : null;
+                    detail.ModifiedBy = value.Rows[i][19] != null ? Convert.ToString(value.Rows[i][19]) : null;
+                    detail.Remarks = value.Rows[i][7] != null ? Convert.ToString(value.Rows[i][7]) : null;
+
+                    // Add the detail to the PODetails collection
+                    ((List<ReturnsDetailModel>)rows.ReturnsDetails).Add(detail);
+
+                    Parameters.Add(rows);
+                }
+
+                if (Parameters.Count > 0)
+                {
+                    using (IDbConnection db = new MySqlConnection(ConnString))
+                    {
+                        db.Open();
+
+                        foreach (ReturnsModelMod rows in Parameters)
+                        {
+                            var parameters = new
+                            {
+                                poId = rows.ReturnsHeader.ReturnsId,
+                                refNumber = rows.ReturnsHeader.RefNumber,
+                                refNumber2 = rows.ReturnsHeader.RefNumber2,
+                                orderDate = rows.ReturnsHeader.ReturnDate,
+                                arrivalDate = rows.ReturnsHeader.ArrivalDate,
+                                arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
+                                remarks = rows.ReturnsHeader.Remarks,
+                                storeId = rows.ReturnsHeader.StoreId,
+                                storeFrom = rows.ReturnsHeader.StoreFrom,
+                                storeAddress = rows.ReturnsHeader.StoreAddress,
+                                storeContact = rows.ReturnsHeader.StoreContact,
+                                storeEmail = rows.ReturnsHeader.StoreEmail,
+                                carrierId = rows.ReturnsHeader.CarrierId,
+                                carrierName = rows.ReturnsHeader.CarrierName,
+                                carrierAddress = rows.ReturnsHeader.CarrierAddress,
+                                carrierContact = rows.ReturnsHeader.CarrierContact,
+                                carrierEmail = rows.ReturnsHeader.CarrierEmail,
+                                returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
+                                returnStatus = rows.ReturnsHeader.ReturnStatus,
+                                dateCreated = rows.ReturnsHeader.DateCreated,
+                                dateModified = rows.ReturnsHeader.DateModified,
+                                createdBy = rows.ReturnsHeader.CreatedBy,
+                                modifyBy = rows.ReturnsHeader.ModifiedBy
+                            };
+
+                            // check if PO primary reference number are unique
+                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
+                            {
+                                var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
+                                if (poCount > 0)
+                                {
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
+                                    };
+                                }
+                            }
+
+                            // check if PO secondary reference number are unique
+                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
+                            {
+                                var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
+                                if (poCount > 0)
+                                {
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
+                                    };
+                                }
+                            }
+
+                            // create header
+                            var headCreated = await CreateReturns(db, rows.ReturnsHeader);
+
+                            if (headCreated)
+                            {
+                                // init po user fields default data
+                                var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
+                                if (!initPOUFld)
+                                {
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
+                                    };
+                                }
+
+                                // insert po user fields values
+                                if (rows.ReturnsUfields != null)
+                                {
+                                    var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
+                                    if (!uFieldsCreated)
+                                    {
+                                        return new ReturnsCreateTranResult()
+                                        {
+                                            ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
+                                        };
+                                    }
+                                }
+
+                                // create detail
+                                if (rows.ReturnsDetails.Any())
+                                {
+                                    var details = rows.ReturnsDetails.ToList();
+
+                                    for (int i = 0; i < details.Count(); i++)
+                                    {
+                                        var detail = details[i];
+
+                                        // check if similar SKU exists under this PO
+                                        var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
+                                        if (skuExists)
+                                        {
+                                            return new ReturnsCreateTranResult()
+                                            {
+                                                ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                            };
+                                        }
+
+                                        // set detail id, status and header po id
+                                        detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
+                                        detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
+                                        detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+
+                                        // create detail
+                                        bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
+
+                                        // return false if either of detail failed to save
+                                        if (!dtlSaved)
+                                        {
+                                            return new ReturnsCreateTranResult()
+                                            {
+                                                ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
+                                            };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        return new ReturnsCreateTranResult()
+                        {
+                            ResultCode = ReturnsTranResultCode.SUCCESS,
+                            ReturnsIds = Parameters.Select(p => p.ReturnsHeader.ReturnsId).ToArray()
+                        };
+                    }
+                }
+            }
+
+            if (file.FileName.ToLower().Contains(".xlsx"))
+            {
+                DataSet dataSet;
+
+                using (var stream = file.OpenReadStream())
+                {
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+
+                        // Validate the XLSX header
+                        if (await ValidateXlsxHeader(worksheet))
+                        {
+                            FileStream filestream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+                            IExcelDataReader reader = ExcelReaderFactory.CreateReader(filestream);
+                            dataSet = reader.AsDataSet(
+                                new ExcelDataSetConfiguration()
+                                {
+                                    UseColumnDataType = false,
+                                    ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                                    {
+                                        UseHeaderRow = true
+                                    }
+
+                                });
+
+                            for (int i = 0; i < dataSet.Tables[0].Rows.Count; i++)
+                            {
+                                ReturnsModelMod rows = new ReturnsModelMod();
+                                rows.ReturnsHeader = new ReturnsModel();
+                                rows.ReturnsDetails = new List<ReturnsDetailModel>();
+                                PODetailModel detail = new PODetailModel();
+
+                                // get PO id number
+                                var retId = await IdNumberRepo.GetNextIdNum("RCVRET");
+                                rows.ReturnsHeader.ReturnsId = retId;
+
+                                rows.ReturnsHeader.RefNumber = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[0]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
+                                {
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.MISSINGREFNUMONE
+                                    };
+                                }
+
+                                rows.ReturnsHeader.RefNumber2 = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[1]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
+                                {
+                                    rows.ReturnsHeader.RefNumber2 = null;
+                                }
+
+                                string? returnDateValue = dataSet.Tables[0].Rows[i].ItemArray[2]?.ToString();
+                                if (string.IsNullOrEmpty(returnDateValue))
+                                {
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.RETURNDATEISREQUIRED
+                                    };
+                                }
+                                else
+                                {
+                                    DateTime returnDate;
+                                    if (!DateTime.TryParseExact(returnDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out returnDate))
+                                    {
+                                        returnDate = DateTime.MinValue;
+                                    }
+                                    rows.ReturnsHeader.ReturnDate = returnDate;
+                                }
+
+                                string? arrivalDateValue = dataSet.Tables[0].Rows[i].ItemArray[3]?.ToString();
+                                if (string.IsNullOrEmpty(arrivalDateValue))
+                                {
+                                    rows.ReturnsHeader.ArrivalDate = null;
+                                }
+                                else
+                                {
+                                    DateTime arrivalDate;
+                                    if (!DateTime.TryParseExact(arrivalDateValue, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate))
+                                    {
+                                        arrivalDate = DateTime.MinValue;
+                                    }
+                                    rows.ReturnsHeader.ArrivalDate = arrivalDate;
+                                }
+
+                                // check if expected arrival date is valid
+                                if (rows.ReturnsHeader.ArrivalDate != null)
+                                {
+                                    if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate)
+                                    {
+                                        return new ReturnsCreateTranResult()
+                                        {
+                                            ResultCode = ReturnsTranResultCode.INVALIDRETURNDATE
+                                        };
+                                    }
+                                }
+                                string? arrivalDate2Value = dataSet.Tables[0].Rows[i].ItemArray[4]?.ToString();
+                                if (string.IsNullOrEmpty(arrivalDate2Value))
+                                {
+                                    rows.ReturnsHeader.ArrivalDate2 = null;
+                                }
+                                else
+                                {
+                                    DateTime arrivalDate2;
+                                    if (!DateTime.TryParseExact(arrivalDate2Value, "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture, DateTimeStyles.None, out arrivalDate2))
+                                    {
+                                        arrivalDate2 = DateTime.MinValue;
+                                    }
+                                    rows.ReturnsHeader.ArrivalDate2 = arrivalDate2;
+                                }
+
+                                //check if expected arrival2 date is valid
+                                if (rows.ReturnsHeader.ArrivalDate2 != null)
+                                {
+                                    if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate2)
+                                    {
+                                        return new ReturnsCreateTranResult()
+                                        {
+                                            ResultCode = ReturnsTranResultCode.INVALIDRETURNDATE
+                                        };
+                                    }
+                                }
+
+                                rows.ReturnsHeader.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.Remarks))
+                                {
+                                    rows.ReturnsHeader.Remarks = null;
+                                }
+                                rows.ReturnsHeader.StoreId = dataSet.Tables[0].Rows[i].ItemArray[8] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[8]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreId))
+                                {
+                                    rows.ReturnsHeader.StoreId = null;
+                                }
+                                rows.ReturnsHeader.StoreFrom = dataSet.Tables[0].Rows[i].ItemArray[9] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[9]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreFrom))
+                                {
+                                    rows.ReturnsHeader.StoreFrom = null;
+                                }
+                                rows.ReturnsHeader.StoreAddress = dataSet.Tables[0].Rows[i].ItemArray[10] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[10]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreAddress))
+                                {
+                                    rows.ReturnsHeader.StoreAddress = null;
+                                }
+                                rows.ReturnsHeader.StoreContact = dataSet.Tables[0].Rows[i].ItemArray[11] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[11]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreContact))
+                                {
+                                    rows.ReturnsHeader.StoreContact = null;
+                                }
+                                rows.ReturnsHeader.StoreEmail = dataSet.Tables[0].Rows[i].ItemArray[12] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[12]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.StoreEmail))
+                                {
+                                    rows.ReturnsHeader.StoreEmail = null;
+                                }
+                                rows.ReturnsHeader.CarrierId = dataSet.Tables[0].Rows[i].ItemArray[13] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[13]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierId))
+                                {
+                                    rows.ReturnsHeader.CarrierId = null;
+                                }
+                                rows.ReturnsHeader.CarrierName = dataSet.Tables[0].Rows[i].ItemArray[14] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[14]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierName))
+                                {
+                                    rows.ReturnsHeader.CarrierName = null;
+                                }
+                                rows.ReturnsHeader.CarrierAddress = dataSet.Tables[0].Rows[i].ItemArray[15] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[15]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierAddress))
+                                {
+                                    rows.ReturnsHeader.CarrierAddress = null;
+                                }
+                                rows.ReturnsHeader.CarrierContact = dataSet.Tables[0].Rows[i].ItemArray[16] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[16]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierContact))
+                                {
+                                    rows.ReturnsHeader.CarrierContact = null;
+                                }
+                                rows.ReturnsHeader.CarrierEmail = dataSet.Tables[0].Rows[i].ItemArray[17] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[17]) : null;
+                                if (string.IsNullOrEmpty(rows.ReturnsHeader.CarrierEmail))
+                                {
+                                    rows.ReturnsHeader.CarrierEmail = null;
+                                }
+                                DateTime currentDateTime = DateTime.Now;
+                                rows.ReturnsHeader.ReturnsStatusId = POStatus.CREATED.ToString();
+                                rows.ReturnsHeader.ReturnStatus = "Created";
+                                rows.ReturnsHeader.DateCreated = currentDateTime;
+                                rows.ReturnsHeader.DateModified = currentDateTime;
+                                rows.ReturnsHeader.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[18] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[18]) : null;
+                                rows.ReturnsHeader.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[19] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[19]) : null;
+
+                                // Populate PODetailModel
+                                detail.Sku = dataSet.Tables[0].Rows[i].ItemArray[5] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[5]) : null;
+                                detail.orderQty = Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[6]);
+                                detail.DateCreated = currentDateTime;
+                                detail.DateModified = currentDateTime;
+                                detail.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[18] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[18]) : null;
+                                detail.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[19] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[19]) : null;
+                                detail.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
+
+                                // Add the detail to the PODetails collection
+                                ((List<PODetailModel>)rows.ReturnsDetails).Add(detail);
+
+                                Parameters.Add(rows);
+                            }
+
+                            filestream.Close();
+
+                            if (Parameters.Count > 0)
+                            {
+                                using (IDbConnection db = new MySqlConnection(ConnString))
+                                {
+                                    db.Open();
+
+                                    foreach (ReturnsModelMod rows in Parameters)
+                                    {
+                                        var parameters = new
+                                        {
+                                            poId = rows.ReturnsHeader.ReturnsId,
+                                            refNumber = rows.ReturnsHeader.RefNumber,
+                                            refNumber2 = rows.ReturnsHeader.RefNumber2,
+                                            orderDate = rows.ReturnsHeader.ReturnDate,
+                                            arrivalDate = rows.ReturnsHeader.ArrivalDate,
+                                            arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
+                                            remarks = rows.ReturnsHeader.Remarks,
+                                            storeId = rows.ReturnsHeader.StoreId,
+                                            storeFrom = rows.ReturnsHeader.StoreFrom,
+                                            storeAddress = rows.ReturnsHeader.StoreAddress,
+                                            storeContact = rows.ReturnsHeader.StoreContact,
+                                            storeEmail = rows.ReturnsHeader.StoreEmail,
+                                            carrierId = rows.ReturnsHeader.CarrierId,
+                                            carrierName = rows.ReturnsHeader.CarrierName,
+                                            carrierAddress = rows.ReturnsHeader.CarrierAddress,
+                                            carrierContact = rows.ReturnsHeader.CarrierContact,
+                                            carrierEmail = rows.ReturnsHeader.CarrierEmail,
+                                            returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
+                                            returnStatus = rows.ReturnsHeader.ReturnStatus,
+                                            dateCreated = rows.ReturnsHeader.DateCreated,
+                                            dateModified = rows.ReturnsHeader.DateModified,
+                                            createdBy = rows.ReturnsHeader.CreatedBy,
+                                            modifyBy = rows.ReturnsHeader.ModifiedBy
+                                        };
+
+                                        // check if PO primary reference number are unique
+                                        if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
+                                        {
+                                            var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
+                                            if (poCount > 0)
+                                            {
+                                                return new ReturnsCreateTranResult()
+                                                {
+                                                    ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
+                                                };
+                                            }
+                                        }
+
+                                        // check if PO secondary reference number are unique
+                                        if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
+                                        {
+                                            var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
+                                            if (poCount > 0)
+                                            {
+                                                return new ReturnsCreateTranResult()
+                                                {
+                                                    ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
+                                                };
+                                            }
+                                        }
+
+                                        // create header
+                                        var headCreated = await CreateReturns(db, rows.ReturnsHeader);
+
+                                        if (headCreated)
+                                        {
+                                            // init po user fields default data
+                                            var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
+                                            if (!initPOUFld)
+                                            {
+                                                return new ReturnsCreateTranResult()
+                                                {
+                                                    ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
+                                                };
+                                            }
+
+                                            // insert po user fields values
+                                            if (rows.ReturnsUfields != null)
+                                            {
+                                                var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
+                                                if (!uFieldsCreated)
+                                                {
+                                                    return new ReturnsCreateTranResult()
+                                                    {
+                                                        ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
+                                                    };
+                                                }
+                                            }
+
+                                            // create detail
+                                            if (rows.ReturnsDetails.Any())
+                                            {
+                                                var details = rows.ReturnsDetails.ToList();
+
+                                                for (int i = 0; i < details.Count(); i++)
+                                                {
+                                                    var detail = details[i];
+
+                                                    // check if similar SKU exists under this PO
+                                                    var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
+                                                    if (skuExists)
+                                                    {
+                                                        return new ReturnsCreateTranResult()
+                                                        {
+                                                            ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                                        };
+                                                    }
+
+                                                    // set detail id, status and header po id
+                                                    detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
+                                                    detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
+                                                    detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+
+                                                    // create detail
+                                                    bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
+
+                                                    // return false if either of detail failed to save
+                                                    if (!dtlSaved)
+                                                    {
+                                                        return new ReturnsCreateTranResult()
+                                                        {
+                                                            ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    return new ReturnsCreateTranResult()
+                                    {
+                                        ResultCode = ReturnsTranResultCode.SUCCESS,
+                                        ReturnsIds = Parameters.Select(p => p.ReturnsHeader.ReturnsId).ToArray()
+                                    };
+                                }
+                            }
+                        }
+                        else
+                        {
+                            return new ReturnsCreateTranResult()
+                            {
+                                ResultCode = ReturnsTranResultCode.INVALIDHEADER
+                            };
+                        }
+                    }
+                }
+            }
+
+            return new ReturnsCreateTranResult()
+            {
+                ResultCode = ReturnsTranResultCode.FAILED
+            };
+        }
+
+        public bool ValidateCsvHeader(string headerLine)
+        {
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+                                         "Arrival Date", "Arrival Date 2", "SKU",
+                                         "Order Qty", "Remarks", "Store Id",
+                                         "Store From", "Store Address", "Store Contact",
+                                         "Store Email", "Carrier Id", "Carrier Name",
+                                         "Carrier Address", "Carrier Contact", "Carrier Email",
+                                         "Created By", "Modified By"
+                                       };
+
+            string[] actualHeaders = headerLine.Split(',');
+
+            if (actualHeaders.Length != expectedHeaders.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < actualHeaders.Length; i++)
+            {
+                if (actualHeaders[i].Trim() != expectedHeaders[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
+        {
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+                                         "Arrival Date", "Arrival Date 2", "SKU",
+                                         "Order Qty", "Remarks", "Store Id",
+                                         "Store From", "Store Address", "Store Contact",
+                                         "Store Email", "Carrier Id", "Carrier Name",
+                                         "Carrier Address", "Carrier Contact", "Carrier Email",
+                                         "Created By", "Modified By"
+                                       };
+
+            int columnCount = await Task.Run(() => worksheet.Dimension.Columns);
+
+            if (columnCount != expectedHeaders.Length)
+            {
+                return false;
+            }
+
+            for (int column = 1; column <= columnCount; column++)
+            {
+                string? headerCell = await Task.Run(() => worksheet.Cells[1, column].Value?.ToString());
+
+                if (headerCell?.Trim() != expectedHeaders[column - 1])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

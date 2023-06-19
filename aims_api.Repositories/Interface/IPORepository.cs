@@ -34,7 +34,7 @@ namespace aims_api.Repositories.Interface
         Task<bool> DeletePO(string poId);
         Task<CancelPOResultCode> CancelPO(string poId, string userAccountId);
         Task<CancelPOResultCode> ForceCancelPO(string poId, string userAccountId);
-        Task<IEnumerable<POModel>> ExportPO();
+        Task<IEnumerable<POModel>> GetExportPO();
         Task<POCreateTranResult> CreateBulkPO(IFormFile file, string path);
         bool ValidateCsvHeader(string headerLine);
         Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);

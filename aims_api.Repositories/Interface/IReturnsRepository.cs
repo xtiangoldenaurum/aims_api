@@ -1,5 +1,7 @@
 using aims_api.Enums;
 using aims_api.Models;
+using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -29,6 +31,9 @@ namespace aims_api.Repositories.Interface
         Task<CancelRetResultCode> CancelReturns(string returnsId, string userAccountId);
         Task<CancelRetResultCode> ForceCancelReturns(string returnsId, string userAccountId);
         Task<IEnumerable<string>> GetDistinctStoreFrom();
-        Task<IEnumerable<ReturnsModel>> ExportReturnsTransfer();
+        Task<IEnumerable<ReturnsModel>> GetExportReturnsTransfer();
+        Task<ReturnsCreateTranResult> CreateBulkReturns(IFormFile file, string path);
+        bool ValidateCsvHeader(string headerLine);
+        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

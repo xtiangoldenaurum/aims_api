@@ -1,5 +1,6 @@
 using aims_api.Models;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,8 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> CancelReturns(string returnsId, string userAccountId);
         Task<RequestResponse> ForceCancelReturns(string returnsId, string userAccountId);
         Task<RequestResponse> GetDistinctStoreFrom();
-        Task<string> DownloadRetTransferTemplate();
-        Task<RequestResponse> ExportReturnsTransfer();
+        Task<string> GetReturnsTransferTemplate();
+        Task<RequestResponse> GetExportReturnsTransfer();
+        Task<RequestResponse> CreateBulkReturns(IFormFile file, string path);
     }
 }

@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace aims_api.Models
 {
-    public class POCreateTranResult
+    public class SOCreateTranResult
     {
-        public POTranResultCode ResultCode { get; set; }
-        public string? POId { get; set; }
-        public string[]? POIds { get; set; }
+        public SOTranResultCode ResultCode { get; set; }
+        public string? SOId { get; set; }
+        public string[]? SOIds { get; set; }
     }
 }

@@ -25,8 +25,8 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> DeletePO(string poId);
         Task<RequestResponse> CancelPO(string poId, string userAccountId);
         Task<RequestResponse> ForceCancelPO(string poId, string userAccountId);
-        Task<string> DownloadPOTemplate();
-        Task<RequestResponse> ExportPO();
+        Task<string> GetPOTemplate();
+        Task<RequestResponse> GetExportPO();
         Task<RequestResponse> CreateBulkPO(IFormFile file, string path);
 
     }

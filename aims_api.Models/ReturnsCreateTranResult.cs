@@ -11,5 +11,6 @@ namespace aims_api.Models
     {
         public ReturnsTranResultCode ResultCode { get; set; }
         public string? ReturnsId { get; set; }
+        public string[]? ReturnsIds { get; set; }
     }
 }

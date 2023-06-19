@@ -11,5 +11,6 @@ namespace aims_api.Models
     {
         public WhTransferTranResultCode ResultCode { get; set; }
         public string? WhTransferId { get; set; }
+        public string[]? WhTransferIds { get; set; }
     }
 }

@@ -225,16 +225,16 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
         }
 
-        public async Task<string> DownloadPOTemplate()
+        public async Task<string> GetPOTemplate()
         {
             await Task.Delay(1000);
 
             return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\PO_Template.csv";
         }
 
-        public async Task<RequestResponse> ExportPO()
+        public async Task<RequestResponse> GetExportPO()
         {
-            var data = await PORepo.ExportPO();
+            var data = await PORepo.GetExportPO();
 
             if (data != null && data.Any())
             {

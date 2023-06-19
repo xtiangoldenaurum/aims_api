@@ -1,5 +1,6 @@
 using aims_api.Models;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,8 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> CancelReturns(string whTransId, string userAccountId);
         Task<RequestResponse> ForceCancelWhTransfer(string whTransId, string userAccountId);
         Task<RequestResponse> GetDistinctWhTransFrom();
-        Task<string> DownloadWhTransferTemplate();
-        Task<RequestResponse> ExportWhTransfer();
+        Task<string> GetWhTransferTemplate();
+        Task<RequestResponse> GetExportWhTransfer();
+        Task<RequestResponse> CreateBulkWhTransfer(IFormFile file, string path);
     }
 }

@@ -19,9 +19,17 @@ namespace aims_api.Enums
         FAILED,
         [Description("Primary reference number is in use.")]
         INVALIDREFNUMONE,
+        [Description("Primary reference number is required.")]
+        MISSINGREFNUMONE,
         [Description("Secondary reference number is in use.")]
         INVALIDREFNUMTWO,
         [Description("Failed to process WH Transfer user fields value.")]
-        USRFIELDSAVEFAILED
+        USRFIELDSAVEFAILED,
+        [Description("Transfer Date should be later than Arrival Dates.")]
+        INVALIDTRANSFERDATE,
+        [Description("Invalid Header, Use the Template.")]
+        INVALIDHEADER,
+        [Description("Transfer Date is required.")]
+        TRANSFERDATEISREQUIRED
     }
 }

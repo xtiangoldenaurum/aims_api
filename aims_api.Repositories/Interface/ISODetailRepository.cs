@@ -15,6 +15,7 @@ namespace aims_api.Repositories.Interface
         Task<SODetailModel> GetSODetailById(string soLineId);
         Task<bool> SODetailExists(string soLineId);
         Task<bool> CreateSODetail(SODetailModel soDetail);
+        Task<bool> CreateSODetailMod(IDbConnection db, SODetailModel soDetail);
         Task<bool> UpdateSODetail(SODetailModel soDetail);
         Task<bool> DeleteSODetail(string soLineId);
     }

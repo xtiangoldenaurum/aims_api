@@ -7,15 +7,15 @@ using System.ComponentModel;
 
 namespace aims_api.Enums
 {
-    public enum ReturnsTranResultCode
+    public enum SOTranResultCode
     {
-        [Description("Returns transacted successfully.")]
+        [Description("SO transacted successfully.")]
         SUCCESS,
-        [Description("Similar SKU already exists in current Returns.")]
+        [Description("Similar SKU already exists in current SO.")]
         SKUCONFLICT,
-        [Description("Failed to save Returns detail.")]
-        RETLINESAVEFAILED,
-        [Description("Failed to process current Returns.")]
+        [Description("Failed to save SO detail.")]
+        POLINESAVEFAILED,
+        [Description("Failed to process current SO.")]
         FAILED,
         [Description("Primary reference number is in use.")]
         INVALIDREFNUMONE,
@@ -23,13 +23,13 @@ namespace aims_api.Enums
         MISSINGREFNUMONE,
         [Description("Secondary reference number is in use.")]
         INVALIDREFNUMTWO,
-        [Description("Failed to process Returns user fields value.")]
+        [Description("Failed to process SO user fields value.")]
         USRFIELDSAVEFAILED,
-        [Description("Return Date should be later than Arrival Dates.")]
-        INVALIDRETURNDATE,
+        [Description("Arrival Dates should be later than Order Date.")]
+        INVALIDARRIVALDATE,
         [Description("Invalid Header, Use the Template.")]
         INVALIDHEADER,
-        [Description("Return Date is required.")]
-        RETURNDATEISREQUIRED
+        [Description("Order Date is required.")]
+        ORDERDATEISREQUIRED
     }
 }

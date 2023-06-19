@@ -3,6 +3,7 @@ using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Repositories.Interface;
 using aims_api.Utilities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,8 +31,8 @@ namespace aims_api.Cores.Implementation
 
             // do filtered query
             if (!string.IsNullOrEmpty(filter.StoreId) ||
-                !string.IsNullOrEmpty(filter.CarrierId) || 
-                filter.ReturnDate != null || 
+                !string.IsNullOrEmpty(filter.CarrierId) ||
+                filter.ReturnDate != null ||
                 !string.IsNullOrEmpty(filter.ReturnsStatusId))
             {
                 data = await ReturnsRepo.GetReturnsFilteredPaged(filter, pageNum, pageItem);
@@ -73,7 +74,7 @@ namespace aims_api.Cores.Implementation
         }
 
         public async Task<RequestResponse> GetReturnsPg(int pageNum, int pageItem)
-        {   
+        {
             var data = await ReturnsRepo.GetReturnsPaged(pageNum, pageItem);
 
             if (data != null && data.Pagination != null)
@@ -183,7 +184,7 @@ namespace aims_api.Cores.Implementation
 
         public async Task<RequestResponse> DeleteReturns(string returnsId)
         {
-			// place item in use validator here
+            // place item in use validator here
 
             bool res = await ReturnsRepo.DeleteReturns(returnsId);
             if (res)
@@ -232,16 +233,16 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<string> DownloadRetTransferTemplate()
+        public async Task<string> GetReturnsTransferTemplate()
         {
             await Task.Delay(1000);
 
             return @"E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\ReturnsTransfer_Template.csv";
         }
 
-        public async Task<RequestResponse> ExportReturnsTransfer()
+        public async Task<RequestResponse> GetExportReturnsTransfer()
         {
-            var data = await ReturnsRepo.ExportReturnsTransfer();
+            var data = await ReturnsRepo.GetExportReturnsTransfer();
 
             if (data != null && data.Any())
             {
@@ -249,6 +250,19 @@ namespace aims_api.Cores.Implementation
             }
 
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
+        }
+
+        public async Task<RequestResponse> CreateBulkReturns(IFormFile file, string path)
+        {
+            var res = await ReturnsRepo.CreateBulkReturns(file, path);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+
+            if (res.ReturnsId != null & res.ResultCode == ReturnsTranResultCode.SUCCESS)
+            {
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.ReturnsId);
+            }
+
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
         }
     }
 }
