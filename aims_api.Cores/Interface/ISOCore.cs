@@ -15,8 +15,10 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> GetSOPgSrch(string searchKey, int pageNum, int pageItem);
         Task<RequestResponse> GetSOById(string soId);
         Task<RequestResponse> GetSOByIdMod(string soId);
-        Task<RequestResponse> CreateSO(SOModel so);
-        Task<RequestResponse> UpdateSO(SOModel so);
+        Task<RequestResponse> CreateSOMod(SOModelMod so);
+        Task<RequestResponse> UpdateSOMod(SOModelMod so);
+        //Task<RequestResponse> CreateSO(SOModel so);
+        //Task<RequestResponse> UpdateSO(SOModel so);
         Task<RequestResponse> DeleteSO(string soId);
         Task<string> GetSOTemplate();
         Task<RequestResponse> GetExportSO();

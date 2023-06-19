@@ -238,10 +238,10 @@ namespace aims_api.Cores.Implementation
 
             if (data != null && data.Any())
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "PO Record found.", data);
+                return new RequestResponse(ResponseCode.SUCCESS, "Record of PO.", data);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "No PO found.");
+            return new RequestResponse(ResponseCode.FAILED, "No Record of PO.");
 
             //var data = await PORepo.ExportPO();
 

@@ -78,34 +78,59 @@ namespace aims_api.Cores.Implementation
 
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
-
-        public async Task<RequestResponse> CreateSO(SOModel so)
+        public async Task<RequestResponse> CreateSOMod(SOModelMod so)
         {
-            bool soExists = await SORepo.SOExists(so.SoId);
-            if (soExists)
+            var res = await SORepo.CreateSOMod(so);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+
+            if (res.ResultCode == SOTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.FAILED, "Similar SoId exists.");
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.SOId);
             }
 
-            bool res = await SORepo.CreateSO(so);
-            if (res)
-            {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record created successfully.");
-            }
-
-            return new RequestResponse(ResponseCode.FAILED, "Failed to create record.");
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
         }
 
-        public async Task<RequestResponse> UpdateSO(SOModel so)
+        public async Task<RequestResponse> UpdateSOMod(SOModelMod so)
         {
-            bool res = await SORepo.UpdateSO(so);
-            if (res)
+            var res = await SORepo.UpdateSOMod(so);
+            string resMsg = await EnumHelper.GetDescription(res);
+
+            if (res == SOTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record updated successfully.");
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "Failed to update record.");
+            return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
         }
+
+        //public async Task<RequestResponse> CreateSO(SOModel so)
+        //{
+        //    bool soExists = await SORepo.SOExists(so.SoId);
+        //    if (soExists)
+        //    {
+        //        return new RequestResponse(ResponseCode.FAILED, "Similar SoId exists.");
+        //    }
+
+        //    bool res = await SORepo.CreateSOMod(so);
+        //    if (res)
+        //    {
+        //        return new RequestResponse(ResponseCode.SUCCESS, "Record created successfully.");
+        //    }
+
+        //    return new RequestResponse(ResponseCode.FAILED, "Failed to create record.");
+        //}
+
+        //public async Task<RequestResponse> UpdateSO(SOModel so)
+        //{
+        //    bool res = await SORepo.UpdateSO(so);
+        //    if (res)
+        //    {
+        //        return new RequestResponse(ResponseCode.SUCCESS, "Record updated successfully.");
+        //    }
+
+        //    return new RequestResponse(ResponseCode.FAILED, "Failed to update record.");
+        //}
 
         public async Task<RequestResponse> DeleteSO(string soId)
         {
@@ -132,10 +157,10 @@ namespace aims_api.Cores.Implementation
 
             if (data != null && data.Any())
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
+                return new RequestResponse(ResponseCode.SUCCESS, "Record os SO.", data);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "No record found.");
+            return new RequestResponse(ResponseCode.FAILED, "No Record of SO.");
         }
 
         public async Task<RequestResponse> CreateBulkSO(IFormFile file, string path)

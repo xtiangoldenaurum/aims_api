@@ -14,7 +14,7 @@ namespace aims_api.Enums
         [Description("Similar SKU already exists in current SO.")]
         SKUCONFLICT,
         [Description("Failed to save SO detail.")]
-        POLINESAVEFAILED,
+        SOLINESAVEFAILED,
         [Description("Failed to process current SO.")]
         FAILED,
         [Description("Primary reference number is in use.")]

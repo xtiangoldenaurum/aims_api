@@ -9,50 +9,50 @@ using System.Threading.Tasks;
 
 namespace aims_api.Repositories.AuditBuilder
 {
-    internal class ReturnsDetailAudit
+    internal class SODetailAudit
     {
-        public async Task<AuditTrailModel> BuildRetDtlAuditADD(ReturnsDetailModel retDetail, TranType tranTyp)
+        public async Task<AuditTrailModel> BuildSODtlAuditADD(SODetailModel soDetail, TranType tranTyp)
         {
             string actTyp = "ADD";
-            string data = JsonSerializer.Serialize(retDetail);
+            string data = JsonSerializer.Serialize(soDetail);
 
             return await Task.Run(() => {
                 return new AuditTrailModel()
                 {
                     AuditDate = DateTime.Now,
-                    UserAccountId = retDetail.CreatedBy,
+                    UserAccountId = soDetail.CreatedBy,
                     ActionTypeId = actTyp,
                     TransactionTypeId = (tranTyp).ToString(),
-                    RecordId = retDetail.ReturnsLineId,
+                    RecordId = soDetail.SoLineId,
                     Data = data,
-                    Remarks = "Returns Detail Created"
+                    Remarks = "SO Detail Created"
                 };
             });
         }
 
-        public async Task<AuditTrailModel> BuildRetDtlAuditMOD(ReturnsDetailModel retDetail, TranType tranTyp)
+        public async Task<AuditTrailModel> BuildSODtlAuditMOD(SODetailModel soDetail, TranType tranTyp)
         {
             string actTyp = "MOD";
-            string data = JsonSerializer.Serialize(retDetail);
+            string data = JsonSerializer.Serialize(soDetail);
 
             return await Task.Run(() => {
                 return new AuditTrailModel()
                 {
                     AuditDate = DateTime.Now,
-                    UserAccountId = retDetail.ModifiedBy,
+                    UserAccountId = soDetail.ModifiedBy,
                     ActionTypeId = actTyp,
                     TransactionTypeId = (tranTyp).ToString(),
-                    RecordId = retDetail.ReturnsLineId,
+                    RecordId = soDetail.SoLineId,
                     Data = data,
-                    Remarks = "Returns Detail Modified"
+                    Remarks = "SO Detail Modified"
                 };
             });
         }
 
-        public async Task<AuditTrailModel> BuildTranAuditDEL(ReturnsDetailModel retDetail, string userAccountId, TranType tranTyp)
+        public async Task<AuditTrailModel> BuildTranAuditDEL(SODetailModel soDetail, string userAccountId, TranType tranTyp)
         {
             string actTyp = "DEL";
-            string data = JsonSerializer.Serialize(retDetail);
+            string data = JsonSerializer.Serialize(soDetail);
 
             return await Task.Run(() => {
                 return new AuditTrailModel()
@@ -61,9 +61,9 @@ namespace aims_api.Repositories.AuditBuilder
                     UserAccountId = userAccountId,
                     ActionTypeId = actTyp,
                     TransactionTypeId = (tranTyp).ToString(),
-                    RecordId = retDetail.ReturnsLineId,
+                    RecordId = soDetail.SoLineId,
                     Data = data,
-                    Remarks = "Returns Detail Deleted"
+                    Remarks = "SO Detail Deleted"
                 };
             });
         }

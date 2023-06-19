@@ -311,7 +311,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("createbulkso")]
+        [HttpPost("createbulkreturns")]
         public async Task<ActionResult> CreateBulkReturns(IFormFile file)
         {
             try
@@ -329,7 +329,7 @@ namespace aims_api.API.Controllers
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                string path = "UploadFileFolder/" + file.FileName;
+                string? path = "UploadFileFolder/" + file.FileName;
 
                 return Ok(await ReturnsCore.CreateBulkReturns(file, path));
             }

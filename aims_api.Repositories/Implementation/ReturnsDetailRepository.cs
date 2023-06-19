@@ -337,7 +337,7 @@ namespace aims_api.Repositories.Implementation
             if (res > 0)
             {
                 // log audit
-                var audit = await AuditBuilder.BuildPODtlAuditADD(returnsDetail, TranType.RCVRET);
+                var audit = await AuditBuilder.BuildRetDtlAuditADD(returnsDetail, TranType.RCVRET);
 
                 if (await AuditTrailRepo.CreateAuditTrail(db, audit))
                 {
@@ -364,7 +364,7 @@ namespace aims_api.Repositories.Implementation
             if (res > 0)
             {
                 // log audit
-                var audit = await AuditBuilder.BuildPODtlAuditMOD(returnsDetail, tranTyp);
+                var audit = await AuditBuilder.BuildRetDtlAuditMOD(returnsDetail, tranTyp);
 
                 if (await AuditTrailRepo.CreateAuditTrail(db, audit))
                 {

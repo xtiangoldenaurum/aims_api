@@ -1096,7 +1096,7 @@ namespace aims_api.Repositories.Implementation
                     // check if expected arrival date is valid
                     if (rows.ReturnsHeader.ArrivalDate != null)
                     {
-                        if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate)
+                        if (rows.ReturnsHeader.ReturnDate > rows.ReturnsHeader.ArrivalDate)
                         {
                             return new ReturnsCreateTranResult()
                             {
@@ -1123,7 +1123,7 @@ namespace aims_api.Repositories.Implementation
                     //check if expected arrival2 date is valid
                     if (rows.ReturnsHeader.ArrivalDate2 != null)
                     {
-                        if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate2)
+                        if (rows.ReturnsHeader.ReturnDate > rows.ReturnsHeader.ArrivalDate2)
                         {
                             return new ReturnsCreateTranResult()
                             {
@@ -1188,7 +1188,7 @@ namespace aims_api.Repositories.Implementation
                         rows.ReturnsHeader.CarrierEmail = null;
                     }
                     DateTime currentDateTime = DateTime.Now;
-                    rows.ReturnsHeader.ReturnsStatusId = ReturnsStatus.CREATED.ToString();
+                    rows.ReturnsHeader.ReturnsStatusId = ReturnStatus.CREATED.ToString();
                     rows.ReturnsHeader.ReturnStatus = "Created";
                     rows.ReturnsHeader.DateCreated = currentDateTime;
                     rows.ReturnsHeader.DateModified = currentDateTime;
@@ -1380,7 +1380,7 @@ namespace aims_api.Repositories.Implementation
                                 ReturnsModelMod rows = new ReturnsModelMod();
                                 rows.ReturnsHeader = new ReturnsModel();
                                 rows.ReturnsDetails = new List<ReturnsDetailModel>();
-                                PODetailModel detail = new PODetailModel();
+                                ReturnsDetailModel detail = new ReturnsDetailModel();
 
                                 // get PO id number
                                 var retId = await IdNumberRepo.GetNextIdNum("RCVRET");
@@ -1437,7 +1437,7 @@ namespace aims_api.Repositories.Implementation
                                 // check if expected arrival date is valid
                                 if (rows.ReturnsHeader.ArrivalDate != null)
                                 {
-                                    if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate)
+                                    if (rows.ReturnsHeader.ReturnDate > rows.ReturnsHeader.ArrivalDate)
                                     {
                                         return new ReturnsCreateTranResult()
                                         {
@@ -1463,7 +1463,7 @@ namespace aims_api.Repositories.Implementation
                                 //check if expected arrival2 date is valid
                                 if (rows.ReturnsHeader.ArrivalDate2 != null)
                                 {
-                                    if (rows.ReturnsHeader.ReturnDate < rows.ReturnsHeader.ArrivalDate2)
+                                    if (rows.ReturnsHeader.ReturnDate > rows.ReturnsHeader.ArrivalDate2)
                                     {
                                         return new ReturnsCreateTranResult()
                                         {
@@ -1537,7 +1537,7 @@ namespace aims_api.Repositories.Implementation
 
                                 // Populate PODetailModel
                                 detail.Sku = dataSet.Tables[0].Rows[i].ItemArray[5] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[5]) : null;
-                                detail.orderQty = Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[6]);
+                                detail.ExpectedQty = Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[6]);
                                 detail.DateCreated = currentDateTime;
                                 detail.DateModified = currentDateTime;
                                 detail.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[18] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[18]) : null;
@@ -1545,7 +1545,7 @@ namespace aims_api.Repositories.Implementation
                                 detail.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
 
                                 // Add the detail to the PODetails collection
-                                ((List<PODetailModel>)rows.ReturnsDetails).Add(detail);
+                                ((List<ReturnsDetailModel>)rows.ReturnsDetails).Add(detail);
 
                                 Parameters.Add(rows);
                             }
@@ -1562,10 +1562,10 @@ namespace aims_api.Repositories.Implementation
                                     {
                                         var parameters = new
                                         {
-                                            poId = rows.ReturnsHeader.ReturnsId,
+                                            returnId = rows.ReturnsHeader.ReturnsId,
                                             refNumber = rows.ReturnsHeader.RefNumber,
                                             refNumber2 = rows.ReturnsHeader.RefNumber2,
-                                            orderDate = rows.ReturnsHeader.ReturnDate,
+                                            returnDate = rows.ReturnsHeader.ReturnDate,
                                             arrivalDate = rows.ReturnsHeader.ArrivalDate,
                                             arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
                                             remarks = rows.ReturnsHeader.Remarks,
@@ -1587,11 +1587,11 @@ namespace aims_api.Repositories.Implementation
                                             modifyBy = rows.ReturnsHeader.ModifiedBy
                                         };
 
-                                        // check if PO primary reference number are unique
+                                        // check if Return primary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
                                         {
-                                            var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
-                                            if (poCount > 0)
+                                            var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
+                                            if (returnCount > 0)
                                             {
                                                 return new ReturnsCreateTranResult()
                                                 {
@@ -1600,11 +1600,11 @@ namespace aims_api.Repositories.Implementation
                                             }
                                         }
 
-                                        // check if PO secondary reference number are unique
+                                        // check if Return secondary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
                                         {
-                                            var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
-                                            if (poCount > 0)
+                                            var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
+                                            if (returnCount > 0)
                                             {
                                                 return new ReturnsCreateTranResult()
                                                 {

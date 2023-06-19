@@ -234,10 +234,10 @@ namespace aims_api.Cores.Implementation
 
             if (data != null && data.Any())
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
+                return new RequestResponse(ResponseCode.SUCCESS, "Record of Warehouse Transfer.", data);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "No record found.");
+            return new RequestResponse(ResponseCode.FAILED, "No Record of Warehouse Transfer.");
         }
 
         public async Task<RequestResponse> CreateBulkWhTransfer(IFormFile file, string path)
@@ -245,9 +245,9 @@ namespace aims_api.Cores.Implementation
             var res = await WhTransferRepo.CreateBulkWhTransfer(file, path);
             string resMsg = await EnumHelper.GetDescription(res.ResultCode);
 
-            if (res.WhTransferId != null & res.ResultCode == WhTransferTranResultCode.SUCCESS)
+            if (res.WhTransferIds != null & res.ResultCode == WhTransferTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.WhTransferId);
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.WhTransferIds);
             }
 
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());

@@ -1243,11 +1243,11 @@ namespace aims_api.Repositories.Implementation
                                 modifyBy = rows.whTransferHeader.ModifiedBy
                             };
 
-                            // check if PO primary reference number are unique
+                            // check if WhTransfer primary reference number are unique
                             if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
                             {
-                                var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
-                                if (poCount > 0)
+                                var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
+                                if (whTransCount > 0)
                                 {
                                     return new WhTransCreateTranResult()
                                     {
@@ -1256,11 +1256,11 @@ namespace aims_api.Repositories.Implementation
                                 }
                             }
 
-                            // check if PO secondary reference number are unique
+                            // check if WhTransfer secondary reference number are unique
                             if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
                             {
-                                var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
-                                if (poCount > 0)
+                                var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                if (whTransCount > 0)
                                 {
                                     return new WhTransCreateTranResult()
                                     {
@@ -1526,7 +1526,7 @@ namespace aims_api.Repositories.Implementation
                                     rows.whTransferHeader.CarrierEmail = null;
                                 }
                                 DateTime currentDateTime = DateTime.Now;
-                                rows.whTransferHeader.WhTransStatusId = POStatus.CREATED.ToString();
+                                rows.whTransferHeader.WhTransStatusId = WhTransferStatus.CREATED.ToString();
                                 rows.whTransferHeader.WhTransferStatus = "Created";
                                 rows.whTransferHeader.DateCreated = currentDateTime;
                                 rows.whTransferHeader.DateModified = currentDateTime;
@@ -1585,7 +1585,7 @@ namespace aims_api.Repositories.Implementation
                                             modifyBy = rows.whTransferHeader.ModifiedBy
                                         };
 
-                                        // check if PO primary reference number are unique
+                                        // check if WhTransfer primary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
                                         {
                                             var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
@@ -1598,11 +1598,11 @@ namespace aims_api.Repositories.Implementation
                                             }
                                         }
 
-                                        // check if PO secondary reference number are unique
+                                        // check if WhTransfer secondary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
                                         {
-                                            var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
-                                            if (poCount > 0)
+                                            var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                            if (whTransCount > 0)
                                             {
                                                 return new WhTransCreateTranResult()
                                                 {

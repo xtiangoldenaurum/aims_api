@@ -164,7 +164,6 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<bool> CreateSO(IDbConnection db, SOModel so)
         {
-
             // define po status
             so.SoStatusId = (SOStatus.CREATED).ToString();
 
@@ -241,11 +240,266 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        public async Task<bool> UpdateSO(SOModel so)
+        public async Task<SOCreateTranResult> CreateSOMod(SOModelMod so)
+        {
+            // get SO id number
+            var soId = await IdNumberRepo.GetNextIdNum("SO");
+
+            if (!string.IsNullOrEmpty(soId) &&
+                so.SOHeader != null &&
+                so.SODetails != null)
+            {
+                using (IDbConnection db = new MySqlConnection(ConnString))
+                {
+                    db.Open();
+
+                    // check if expected arrival date is valid
+                    if (so.SOHeader.ArrivalDate != null)
+                    {
+                        if (so.SOHeader.OrderCreateDate > so.SOHeader.ArrivalDate)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.INVALIDARRIVALDATE
+                            };
+                        }
+                    }
+
+                    // check if expected arrival2 date is valid
+                    if (so.SOHeader.ArrivalDate2 != null)
+                    {
+                        if (so.SOHeader.OrderCreateDate > so.SOHeader.ArrivalDate2)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.INVALIDARRIVALDATE
+                            };
+                        }
+                    }
+
+                    // check if SO primary reference number are unique
+                    if (!string.IsNullOrEmpty(so.SOHeader.RefNumber))
+                    {
+                        var soCount = await ReferenceNumExists(db, so.SOHeader.RefNumber);
+                        if (soCount > 0)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.INVALIDREFNUMONE
+                            };
+                        }
+                    }
+
+                    // check if SO secondary reference number are unique
+                    if (!string.IsNullOrEmpty(so.SOHeader.RefNumber2))
+                    {
+                        var poCount = await ReferenceNumExists(db, so.SOHeader.RefNumber2);
+                        if (poCount > 0)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.INVALIDREFNUMTWO
+                            };
+                        }
+                    }
+
+                    // create header
+                    so.SOHeader.SoId = soId;
+                    var headCreated = await CreateSO(db, so.SOHeader);
+
+                    if (headCreated)
+                    {
+                        // init po user fields default data
+                        var initPOUFld = await SOUFieldRepo.InitSOUField(db, soId);
+                        if (!initPOUFld)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.USRFIELDSAVEFAILED
+                            };
+                        }
+
+                        // insert so user fields values
+                        if (so.SOUfields != null)
+                        {
+                            var uFieldsCreated = await SOUFieldRepo.UpdateSOUField(db, soId, so.SOHeader.CreatedBy, so.SOUfields);
+                            if (!uFieldsCreated)
+                            {
+                                return new SOCreateTranResult()
+                                {
+                                    ResultCode = SOTranResultCode.USRFIELDSAVEFAILED
+                                };
+                            }
+                        }
+
+                        // create detail
+                        if (so.SODetails.Any())
+                        {
+                            var details = so.SODetails.ToList();
+
+                            for (int i = 0; i < details.Count(); i++)
+                            {
+                                var detail = details[i];
+
+                                // check if similar SKU exists under this SO
+                                var skuExists = await SKUExistsInSO(db, detail.Sku, soId);
+                                if (skuExists)
+                                {
+                                    return new SOCreateTranResult()
+                                    {
+                                        ResultCode = SOTranResultCode.SKUCONFLICT
+                                    };
+                                }
+
+                                // set detail id, status and header so id
+                                detail.SoLineId = $"{soId}-{i + 1}";
+                                detail.SoLineStatusId = (SOLneStatus.CREATED).ToString();
+                                detail.SoId = soId;
+
+                                // create detail
+                                bool dtlSaved = await SODetailRepo.CreateSODetailMod(db, detail);
+
+                                // return false if either of detail failed to save
+                                if (!dtlSaved)
+                                {
+                                    return new SOCreateTranResult()
+                                    {
+                                        ResultCode = SOTranResultCode.SOLINESAVEFAILED
+                                    };
+                                }
+                            }
+                        }
+
+                        return new SOCreateTranResult()
+                        {
+                            ResultCode = SOTranResultCode.SUCCESS,
+                            SOId = soId
+                        };
+                    }
+                }
+            }
+
+            return new SOCreateTranResult()
+            {
+                ResultCode = SOTranResultCode.FAILED
+            };
+        }
+
+        public async Task<SOTranResultCode> UpdateSOMod(SOModelMod so)
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
-                string strQry = @"update SO set 
+                db.Open();
+
+                // check if SO primary reference number are unique
+                if (!string.IsNullOrEmpty(so.SOHeader.RefNumber))
+                {
+                    var soCount = await ReferenceNumExists(db, so.SOHeader.RefNumber, so.SOHeader.SoId);
+                    if (soCount > 0)
+                    {
+                        return SOTranResultCode.INVALIDREFNUMONE;
+                    }
+                }
+
+                // check if SO secondary reference number are unique
+                if (!string.IsNullOrEmpty(so.SOHeader.RefNumber2))
+                {
+                    var poCount = await ReferenceNumExists(db, so.SOHeader.RefNumber2, so.SOHeader.SoId);
+                    if (poCount > 0)
+                    {
+                        return SOTranResultCode.INVALIDREFNUMTWO;
+                    }
+                }
+
+                // update header
+                var modHeader = await UpdateSO(db, so.SOHeader, TranType.SO);
+
+                if (modHeader)
+                {
+                    // update po user fields values
+                    if (so.SOUfields != null)
+                    {
+                        var uFieldsCreated = await SOUFieldRepo.UpdateSOUFieldMOD(db, so.SOHeader.SoId, so.SOHeader.ModifiedBy, so.SOUfields);
+                        if (!uFieldsCreated)
+                        {
+                            return SOTranResultCode.USRFIELDSAVEFAILED;
+                        }
+                    }
+
+                    // update detail
+                    if (so.SODetails != null && so.SODetails.Any())
+                    {
+                        var details = so.SODetails.ToList();
+
+                        // get last po detail line number
+                        var poDetailsFromDb = await SODetailRepo.LockSODetails(db, so.SOHeader.SoId);
+                        var lastPOLneId = poDetailsFromDb.OrderByDescending(x => x.SoLineId).Select(y => y.SoLineId).FirstOrDefault();
+                        int lastLneNum = 0;
+
+                        if (!string.IsNullOrEmpty(lastPOLneId))
+                        {
+                            lastLneNum = Convert.ToInt32(lastPOLneId.Substring(lastPOLneId.LastIndexOf('-') + 1));
+                        }
+                        else
+                        {
+                            lastLneNum = 0;
+                        }
+
+                        for (int i = 0; i < details.Count(); i++)
+                        {
+                            var detail = details[i];
+                            bool dtlSaved = false;
+
+                            if (detail.SoLineId == null)
+                            {
+                                // check if similar SKU exists under this SO
+                                var skuExists = await SKUExistsInSO(db, detail.Sku, so.SOHeader.SoId);
+                                if (skuExists)
+                                {
+                                    return SOTranResultCode.SKUCONFLICT;
+                                }
+
+                                // detail concidered as new
+                                // set detail id, status and header po id
+                                lastLneNum += 1;
+                                detail.SoLineId = $"{so.SOHeader.SoId}-{lastLneNum}";
+                                detail.SoLineStatusId = (SOLneStatus.CREATED).ToString();
+                                detail.SoId = so.SOHeader.SoId;
+
+                                // create detail
+                                dtlSaved = await SODetailRepo.CreateSODetailMod(db, detail);
+                            }
+                            else
+                            {
+                                // update existing details
+                                var prevDetail = await SODetailRepo.GetSODetailByIdMod(db, detail.SoLineId);
+
+                                if (prevDetail.SoLineStatusId == (SOLneStatus.CREATED).ToString())
+                                {
+                                    if (prevDetail != detail)
+                                    {
+                                        dtlSaved = await SODetailRepo.UpdateSODetailMod(db, detail, TranType.PO);
+                                    }
+                                }
+                            }
+
+                            // return false if either of detail failed to save
+                            if (!dtlSaved)
+                            {
+                                return SOTranResultCode.SOLINESAVEFAILED;
+                            }
+                        }
+                    }
+                    return SOTranResultCode.SUCCESS;
+                }
+            }
+
+            return SOTranResultCode.FAILED;
+        }
+
+        public async Task<bool> UpdateSO(IDbConnection db, SOModel so, TranType tranTyp)
+        {
+            string strQry = @"update SO set 
 														soTypeId = @soTypeId, 
 														refNumber = @refNumber, 
 														refNumber2 = @refNumber2, 
@@ -274,9 +528,14 @@ namespace aims_api.Repositories.Implementation
 														remarks = @remarks where 
 														soId = @soId";
 
-                int res = await db.ExecuteAsync(strQry, so);
+            int res = await db.ExecuteAsync(strQry, so);
 
-                if (res > 0)
+            if (res > 0)
+            {
+                // log audit
+                var audit = await AuditBuilder.BuildTranAuditMOD(so, tranTyp);
+
+                if (await AuditTrailRepo.CreateAuditTrail(db, audit))
                 {
                     return true;
                 }
@@ -363,7 +622,7 @@ namespace aims_api.Repositories.Implementation
                     SOModelMod rows = new SOModelMod();
                     rows.SOHeader = new SOModel();
                     rows.SODetails = new List<SODetailModel>();
-                    PODetailModel detail = new PODetailModel();
+                    SODetailModel detail = new SODetailModel();
 
                     // get PO id number
                     var poId = await IdNumberRepo.GetNextIdNum("SO");
@@ -547,7 +806,7 @@ namespace aims_api.Repositories.Implementation
                     rows.SOHeader.CreatedBy = value.Rows[i][23] != null ? Convert.ToString(value.Rows[i][23]) : null;
                     rows.SOHeader.ModifiedBy = value.Rows[i][24] != null ? Convert.ToString(value.Rows[i][24]) : null;
 
-                    // Populate PODetailModel
+                    // Populate SODetailModel
                     detail.Sku = value.Rows[i][5] != null ? Convert.ToString(value.Rows[i][5]) : null;
                     detail.orderQty = Convert.ToInt32(value.Rows[i][6]);
                     detail.DateCreated = currentDateTime;
@@ -557,7 +816,7 @@ namespace aims_api.Repositories.Implementation
                     detail.Remarks = value.Rows[i][7] != null ? Convert.ToString(value.Rows[i][7]) : null;
 
                     // Add the detail to the PODetails collection
-                    ((List<PODetailModel>)rows.SODetails).Add(detail);
+                    ((List<SODetailModel>)rows.SODetails).Add(detail);
 
                     Parameters.Add(rows);
                 }
@@ -572,10 +831,10 @@ namespace aims_api.Repositories.Implementation
                         {
                             var parameters = new
                             {
-                                poId = rows.SOHeader.SoId,
+                                soId = rows.SOHeader.SoId,
                                 refNumber = rows.SOHeader.RefNumber,
                                 refNumber2 = rows.SOHeader.RefNumber2,
-                                orderDate = rows.SOHeader.OrderCreateDate,
+                                orderCreateDate = rows.SOHeader.OrderCreateDate,
                                 arrivalDate = rows.SOHeader.ArrivalDate,
                                 arrivalDate2 = rows.SOHeader.ArrivalDate2,
                                 remarks = rows.SOHeader.Remarks,
@@ -618,8 +877,8 @@ namespace aims_api.Repositories.Implementation
                             // check if SO secondary reference number are unique
                             if (!string.IsNullOrEmpty(rows.SOHeader.RefNumber2))
                             {
-                                var poCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber2);
-                                if (poCount > 0)
+                                var soCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber2);
+                                if (soCount > 0)
                                 {
                                     return new SOCreateTranResult()
                                     {
@@ -688,7 +947,7 @@ namespace aims_api.Repositories.Implementation
                                         {
                                             return new SOCreateTranResult()
                                             {
-                                                ResultCode = SOTranResultCode.POLINESAVEFAILED
+                                                ResultCode = SOTranResultCode.SOLINESAVEFAILED
                                             };
                                         }
                                     }
@@ -739,9 +998,9 @@ namespace aims_api.Repositories.Implementation
                                 rows.SODetails = new List<SODetailModel>();
                                 SODetailModel detail = new SODetailModel();
 
-                                // get PO id number
-                                var poId = await IdNumberRepo.GetNextIdNum("PO");
-                                rows.SOHeader.SoId = poId;
+                                // get SO id number
+                                var soId = await IdNumberRepo.GetNextIdNum("SO");
+                                rows.SOHeader.SoId = soId;
 
                                 rows.SOHeader.RefNumber = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[0]) : null;
                                 if (string.IsNullOrEmpty(rows.SOHeader.RefNumber))
@@ -946,10 +1205,10 @@ namespace aims_api.Repositories.Implementation
                                     {
                                         var parameters = new
                                         {
-                                            poId = rows.SOHeader.SoId,
+                                            soId = rows.SOHeader.SoId,
                                             refNumber = rows.SOHeader.RefNumber,
                                             refNumber2 = rows.SOHeader.RefNumber2,
-                                            orderDate = rows.SOHeader.OrderCreateDate,
+                                            orderCreateDate = rows.SOHeader.OrderCreateDate,
                                             arrivalDate = rows.SOHeader.ArrivalDate,
                                             arrivalDate2 = rows.SOHeader.ArrivalDate2,
                                             remarks = rows.SOHeader.Remarks,
@@ -979,8 +1238,8 @@ namespace aims_api.Repositories.Implementation
                                         // check if SO primary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.SOHeader.RefNumber))
                                         {
-                                            var poCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber);
-                                            if (poCount > 0)
+                                            var soCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber);
+                                            if (soCount > 0)
                                             {
                                                 return new SOCreateTranResult()
                                                 {
@@ -1062,7 +1321,7 @@ namespace aims_api.Repositories.Implementation
                                                     {
                                                         return new SOCreateTranResult()
                                                         {
-                                                            ResultCode = SOTranResultCode.POLINESAVEFAILED
+                                                            ResultCode = SOTranResultCode.SOLINESAVEFAILED
                                                         };
                                                     }
                                                 }
@@ -1133,10 +1392,10 @@ namespace aims_api.Repositories.Implementation
                                          "Arrival Date", "Arrival Date 2", "SKU",
                                          "Order Qty", "Remarks", "Consignee Id",
                                          "Consignee Name", "Consignee Address", "Consignee Contact",
-                                         "Consignee Email", "Supplier Id","Supplier Name", 
-                                         "Supplier Address", "Supplier Contact", "Supplier Email", 
-                                         "Carrier Id", "Carrier Name", "Carrier Address", 
-                                         "Carrier Contact", "Carrier Email", "Created By", 
+                                         "Consignee Email", "Supplier Id","Supplier Name",
+                                         "Supplier Address", "Supplier Contact", "Supplier Email",
+                                         "Carrier Id", "Carrier Name", "Carrier Address",
+                                         "Carrier Contact", "Carrier Email", "Created By",
                                          "Modified By"
                                        };
 

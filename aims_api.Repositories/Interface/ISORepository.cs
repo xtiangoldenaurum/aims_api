@@ -1,3 +1,4 @@
+using aims_api.Enums;
 using aims_api.Models;
 using Microsoft.AspNetCore.Http;
 using OfficeOpenXml;
@@ -16,8 +17,10 @@ namespace aims_api.Repositories.Interface
         Task<IEnumerable<SOModel>> GetSOPgSrch(string searchKey, int pageNum, int pageItem);
         Task<SOModel> GetSOById(string soId);
         Task<bool> SOExists(string soId);
+        Task<SOCreateTranResult> CreateSOMod(SOModelMod so);
         Task<bool> CreateSO(IDbConnection db, SOModel so);
-        Task<bool> UpdateSO(SOModel so);
+        Task<SOTranResultCode> UpdateSOMod(SOModelMod so);
+        //Task<bool> UpdateSO(SOModel so);
         Task<bool> DeleteSO(string soId);
         Task<IEnumerable<SOModel>> GetExportSO();
         Task<SOCreateTranResult> CreateBulkSO(IFormFile file, string path);

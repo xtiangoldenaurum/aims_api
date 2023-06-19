@@ -246,10 +246,10 @@ namespace aims_api.Cores.Implementation
 
             if (data != null && data.Any())
             {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
+                return new RequestResponse(ResponseCode.SUCCESS, "Record of Return Transfer.", data);
             }
 
-            return new RequestResponse(ResponseCode.FAILED, "No record found.");
+            return new RequestResponse(ResponseCode.FAILED, "No Record of Return.");
         }
 
         public async Task<RequestResponse> CreateBulkReturns(IFormFile file, string path)
@@ -257,9 +257,9 @@ namespace aims_api.Cores.Implementation
             var res = await ReturnsRepo.CreateBulkReturns(file, path);
             string resMsg = await EnumHelper.GetDescription(res.ResultCode);
 
-            if (res.ReturnsId != null & res.ResultCode == ReturnsTranResultCode.SUCCESS)
+            if (res.ReturnsIds != null & res.ResultCode == ReturnsTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.ReturnsId);
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.ReturnsIds);
             }
 
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());

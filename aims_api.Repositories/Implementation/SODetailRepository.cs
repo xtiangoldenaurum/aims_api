@@ -1,4 +1,6 @@
+using aims_api.Enums;
 using aims_api.Models;
+using aims_api.Repositories.AuditBuilder;
 using aims_api.Repositories.Interface;
 using aims_api.Utilities.Interface;
 using Dapper;
@@ -15,10 +17,16 @@ namespace aims_api.Repositories.Implementation
     public class SODetailRepository : ISODetailRepository
     {
         private string ConnString;
+        IAuditTrailRepository AuditTrailRepo;
+        SODetailAudit AuditBuilder;
 
-        public SODetailRepository(ITenantProvider tenantProvider)
+        public SODetailRepository(ITenantProvider tenantProvider,
+                                  IAuditTrailRepository auditTrailRepo
+                                 )
         {
             ConnString = tenantProvider.GetTenant().SqlConnectionString;
+            AuditTrailRepo = auditTrailRepo;
+            AuditBuilder = new SODetailAudit();
         }
 
         public async Task<IEnumerable<SODetailModel>> GetSODetailPg(int pageNum, int pageItem)
@@ -80,6 +88,63 @@ namespace aims_api.Repositories.Implementation
             }
         }
 
+        public async Task<SODetailModel> GetSODetailByIdMod(IDbConnection db, string soLineId)
+        {
+            string strQry = @"select * from SODetail where 
+													soLineId = @soLineId";
+
+            var param = new DynamicParameters();
+            param.Add("@soLineId", soLineId);
+            return await db.QuerySingleOrDefaultAsync<SODetailModel>(strQry, param, commandType: CommandType.Text);
+        }
+
+        public async Task<SODetailModel> LockSODetail(IDbConnection db, string soLineId)
+        {
+            string strQry = @"SELECT * FROM sodetail WHERE soLineId = @soLineId FOR UPDATE;";
+
+            var param = new DynamicParameters();
+            param.Add("@soLineId", soLineId);
+
+            return await db.QuerySingleOrDefaultAsync<SODetailModel>(strQry, param);
+        }
+
+        public async Task<IEnumerable<SODetailModel>> LockSODetails(IDbConnection db, string soId)
+        {
+            string strQry = @"SELECT * FROM sodetail WHERE soId = @soId FOR UPDATE;";
+
+            var param = new DynamicParameters();
+            param.Add("@soId", soId);
+
+            return await db.QueryAsync<SODetailModel>(strQry, param);
+        }
+
+        public async Task<bool> UpdateSODetailMod(IDbConnection db, SODetailModel soDetail, TranType tranTyp)
+        {
+            string strQry = @"update SODetail set 
+							                        soId = @soId, 
+							                        sku = @sku, 
+							                        orderQty = @orderQty, 
+							                        soLineStatusId = @soLineStatusId, 
+							                        modifiedBy = @modifiedBy, 
+							                        remarks = @remarks where 
+							                        soLineId = @soLineId";
+
+            int res = await db.ExecuteAsync(strQry, soDetail);
+
+            if (res > 0)
+            {
+                // log audit
+                var audit = await AuditBuilder.BuildSODtlAuditMOD(soDetail, tranTyp);
+
+                if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public async Task<bool> SODetailExists(string soLineId)
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
@@ -132,6 +197,40 @@ namespace aims_api.Repositories.Implementation
 
             return false;
         }
+        public async Task<bool> CreateSODetailMod(IDbConnection db, SODetailModel soDetail)
+        {
+            string strQry = @"insert into SoDetail(soLineId, 
+														soId, 
+														sku, 
+														orderQty, 
+														soLineStatusId, 
+														createdBy, 
+														modifiedBy, 
+														remarks)
+ 												values(@soLineId, 
+														@soId, 
+														@sku, 
+														@orderQty, 
+														@soLineStatusId, 
+														@createdBy, 
+														@modifiedBy, 
+														@remarks)";
+
+            int res = await db.ExecuteAsync(strQry, soDetail);
+
+            if (res > 0)
+            {
+                // log audit
+                var audit = await AuditBuilder.BuildSODtlAuditADD(soDetail, TranType.RCVRET);
+
+                if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public async Task<bool> UpdateSODetail(SODetailModel soDetail)
         {
@@ -177,6 +276,5 @@ namespace aims_api.Repositories.Implementation
 
             return false;
         }
-
     }
 }

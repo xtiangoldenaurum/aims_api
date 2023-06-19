@@ -87,8 +87,8 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("createso")]
-        public async Task<ActionResult> CreateSO(SOModel so)
+        [HttpPost("createsomod")]
+        public async Task<ActionResult> CreateSO(SOModelMod so)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace aims_api.API.Controllers
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await SOCore.CreateSO(so));
+                return Ok(await SOCore.CreateSOMod(so));
             }
             catch (Exception ex)
             {
@@ -111,8 +111,8 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("updateso")]
-        public async Task<ActionResult> UpdateSO(SOModel so)
+        [HttpPost("updatesomod")]
+        public async Task<ActionResult> UpdateSOMod(SOModelMod so)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace aims_api.API.Controllers
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await SOCore.UpdateSO(so));
+                return Ok(await SOCore.UpdateSOMod(so));
             }
             catch (Exception ex)
             {
