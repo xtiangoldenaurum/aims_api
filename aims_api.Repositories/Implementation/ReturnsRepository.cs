@@ -1029,7 +1029,7 @@ namespace aims_api.Repositories.Implementation
                 using (var reader = new StreamReader(path))
                 {
                     // Read the header line from the CSV
-                    string headerLine = await reader.ReadLineAsync();
+                    string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
                     if (!ValidateCsvHeader(headerLine))
@@ -1233,121 +1233,124 @@ namespace aims_api.Repositories.Implementation
 
                         foreach (ReturnsModelMod rows in Parameters)
                         {
-                            var parameters = new
+                            if (rows.ReturnsHeader != null)
                             {
-                                poId = rows.ReturnsHeader.ReturnsId,
-                                refNumber = rows.ReturnsHeader.RefNumber,
-                                refNumber2 = rows.ReturnsHeader.RefNumber2,
-                                orderDate = rows.ReturnsHeader.ReturnDate,
-                                arrivalDate = rows.ReturnsHeader.ArrivalDate,
-                                arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
-                                remarks = rows.ReturnsHeader.Remarks,
-                                storeId = rows.ReturnsHeader.StoreId,
-                                storeFrom = rows.ReturnsHeader.StoreFrom,
-                                storeAddress = rows.ReturnsHeader.StoreAddress,
-                                storeContact = rows.ReturnsHeader.StoreContact,
-                                storeEmail = rows.ReturnsHeader.StoreEmail,
-                                carrierId = rows.ReturnsHeader.CarrierId,
-                                carrierName = rows.ReturnsHeader.CarrierName,
-                                carrierAddress = rows.ReturnsHeader.CarrierAddress,
-                                carrierContact = rows.ReturnsHeader.CarrierContact,
-                                carrierEmail = rows.ReturnsHeader.CarrierEmail,
-                                returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
-                                returnStatus = rows.ReturnsHeader.ReturnStatus,
-                                dateCreated = rows.ReturnsHeader.DateCreated,
-                                dateModified = rows.ReturnsHeader.DateModified,
-                                createdBy = rows.ReturnsHeader.CreatedBy,
-                                modifyBy = rows.ReturnsHeader.ModifiedBy
-                            };
-
-                            // check if PO primary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
-                            {
-                                var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
-                                if (poCount > 0)
+                                var parameters = new
                                 {
-                                    return new ReturnsCreateTranResult()
-                                    {
-                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
-                                    };
-                                }
-                            }
+                                    poId = rows.ReturnsHeader.ReturnsId,
+                                    refNumber = rows.ReturnsHeader.RefNumber,
+                                    refNumber2 = rows.ReturnsHeader.RefNumber2,
+                                    orderDate = rows.ReturnsHeader.ReturnDate,
+                                    arrivalDate = rows.ReturnsHeader.ArrivalDate,
+                                    arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
+                                    remarks = rows.ReturnsHeader.Remarks,
+                                    storeId = rows.ReturnsHeader.StoreId,
+                                    storeFrom = rows.ReturnsHeader.StoreFrom,
+                                    storeAddress = rows.ReturnsHeader.StoreAddress,
+                                    storeContact = rows.ReturnsHeader.StoreContact,
+                                    storeEmail = rows.ReturnsHeader.StoreEmail,
+                                    carrierId = rows.ReturnsHeader.CarrierId,
+                                    carrierName = rows.ReturnsHeader.CarrierName,
+                                    carrierAddress = rows.ReturnsHeader.CarrierAddress,
+                                    carrierContact = rows.ReturnsHeader.CarrierContact,
+                                    carrierEmail = rows.ReturnsHeader.CarrierEmail,
+                                    returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
+                                    returnStatus = rows.ReturnsHeader.ReturnStatus,
+                                    dateCreated = rows.ReturnsHeader.DateCreated,
+                                    dateModified = rows.ReturnsHeader.DateModified,
+                                    createdBy = rows.ReturnsHeader.CreatedBy,
+                                    modifyBy = rows.ReturnsHeader.ModifiedBy
+                                };
 
-                            // check if PO secondary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
-                            {
-                                var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
-                                if (poCount > 0)
+                                // check if PO primary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
                                 {
-                                    return new ReturnsCreateTranResult()
+                                    var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
+                                    if (poCount > 0)
                                     {
-                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
-                                    };
-                                }
-                            }
-
-                            // create header
-                            var headCreated = await CreateReturns(db, rows.ReturnsHeader);
-
-                            if (headCreated)
-                            {
-                                // init po user fields default data
-                                var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
-                                if (!initPOUFld)
-                                {
-                                    return new ReturnsCreateTranResult()
-                                    {
-                                        ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
-                                    };
+                                        return new ReturnsCreateTranResult()
+                                        {
+                                            ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
+                                        };
+                                    }
                                 }
 
-                                // insert po user fields values
-                                if (rows.ReturnsUfields != null)
+                                // check if PO secondary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
                                 {
-                                    var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
-                                    if (!uFieldsCreated)
+                                    var poCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
+                                    if (poCount > 0)
+                                    {
+                                        return new ReturnsCreateTranResult()
+                                        {
+                                            ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
+                                        };
+                                    }
+                                }
+
+                                // create header
+                                var headCreated = await CreateReturns(db, rows.ReturnsHeader);
+
+                                if (headCreated)
+                                {
+                                    // init po user fields default data
+                                    var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
+                                    if (!initPOUFld)
                                     {
                                         return new ReturnsCreateTranResult()
                                         {
                                             ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
                                         };
                                     }
-                                }
 
-                                // create detail
-                                if (rows.ReturnsDetails.Any())
-                                {
-                                    var details = rows.ReturnsDetails.ToList();
-
-                                    for (int i = 0; i < details.Count(); i++)
+                                    // insert po user fields values
+                                    if (rows.ReturnsUfields != null)
                                     {
-                                        var detail = details[i];
-
-                                        // check if similar SKU exists under this PO
-                                        var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
-                                        if (skuExists)
+                                        var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
+                                        if (!uFieldsCreated)
                                         {
                                             return new ReturnsCreateTranResult()
                                             {
-                                                ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                                ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
                                             };
                                         }
+                                    }
 
-                                        // set detail id, status and header po id
-                                        detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
-                                        detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
-                                        detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+                                    // create detail
+                                    if (rows.ReturnsDetails.Any())
+                                    {
+                                        var details = rows.ReturnsDetails.ToList();
 
-                                        // create detail
-                                        bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
-
-                                        // return false if either of detail failed to save
-                                        if (!dtlSaved)
+                                        for (int i = 0; i < details.Count(); i++)
                                         {
-                                            return new ReturnsCreateTranResult()
+                                            var detail = details[i];
+
+                                            // check if similar SKU exists under this PO
+                                            var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
+                                            if (skuExists)
                                             {
-                                                ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
-                                            };
+                                                return new ReturnsCreateTranResult()
+                                                {
+                                                    ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                                };
+                                            }
+
+                                            // set detail id, status and header po id
+                                            detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
+                                            detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
+                                            detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+
+                                            // create detail
+                                            bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
+
+                                            // return false if either of detail failed to save
+                                            if (!dtlSaved)
+                                            {
+                                                return new ReturnsCreateTranResult()
+                                                {
+                                                    ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
+                                                };
+                                            }
                                         }
                                     }
                                 }
@@ -1357,7 +1360,7 @@ namespace aims_api.Repositories.Implementation
                         return new ReturnsCreateTranResult()
                         {
                             ResultCode = ReturnsTranResultCode.SUCCESS,
-                            ReturnsIds = Parameters.Select(p => p.ReturnsHeader.ReturnsId).ToArray()
+                            ReturnsIds = Parameters.Select(p => p.ReturnsHeader?.ReturnsId ?? "").ToArray()
                         };
                     }
                 }
@@ -1575,121 +1578,124 @@ namespace aims_api.Repositories.Implementation
 
                                     foreach (ReturnsModelMod rows in Parameters)
                                     {
-                                        var parameters = new
+                                        if (rows.ReturnsHeader != null)
                                         {
-                                            returnId = rows.ReturnsHeader.ReturnsId,
-                                            refNumber = rows.ReturnsHeader.RefNumber,
-                                            refNumber2 = rows.ReturnsHeader.RefNumber2,
-                                            returnDate = rows.ReturnsHeader.ReturnDate,
-                                            arrivalDate = rows.ReturnsHeader.ArrivalDate,
-                                            arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
-                                            remarks = rows.ReturnsHeader.Remarks,
-                                            storeId = rows.ReturnsHeader.StoreId,
-                                            storeFrom = rows.ReturnsHeader.StoreFrom,
-                                            storeAddress = rows.ReturnsHeader.StoreAddress,
-                                            storeContact = rows.ReturnsHeader.StoreContact,
-                                            storeEmail = rows.ReturnsHeader.StoreEmail,
-                                            carrierId = rows.ReturnsHeader.CarrierId,
-                                            carrierName = rows.ReturnsHeader.CarrierName,
-                                            carrierAddress = rows.ReturnsHeader.CarrierAddress,
-                                            carrierContact = rows.ReturnsHeader.CarrierContact,
-                                            carrierEmail = rows.ReturnsHeader.CarrierEmail,
-                                            returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
-                                            returnStatus = rows.ReturnsHeader.ReturnStatus,
-                                            dateCreated = rows.ReturnsHeader.DateCreated,
-                                            dateModified = rows.ReturnsHeader.DateModified,
-                                            createdBy = rows.ReturnsHeader.CreatedBy,
-                                            modifyBy = rows.ReturnsHeader.ModifiedBy
-                                        };
-
-                                        // check if Return primary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
-                                        {
-                                            var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
-                                            if (returnCount > 0)
+                                            var parameters = new
                                             {
-                                                return new ReturnsCreateTranResult()
-                                                {
-                                                    ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
-                                                };
-                                            }
-                                        }
+                                                returnId = rows.ReturnsHeader.ReturnsId,
+                                                refNumber = rows.ReturnsHeader.RefNumber,
+                                                refNumber2 = rows.ReturnsHeader.RefNumber2,
+                                                returnDate = rows.ReturnsHeader.ReturnDate,
+                                                arrivalDate = rows.ReturnsHeader.ArrivalDate,
+                                                arrivalDate2 = rows.ReturnsHeader.ArrivalDate2,
+                                                remarks = rows.ReturnsHeader.Remarks,
+                                                storeId = rows.ReturnsHeader.StoreId,
+                                                storeFrom = rows.ReturnsHeader.StoreFrom,
+                                                storeAddress = rows.ReturnsHeader.StoreAddress,
+                                                storeContact = rows.ReturnsHeader.StoreContact,
+                                                storeEmail = rows.ReturnsHeader.StoreEmail,
+                                                carrierId = rows.ReturnsHeader.CarrierId,
+                                                carrierName = rows.ReturnsHeader.CarrierName,
+                                                carrierAddress = rows.ReturnsHeader.CarrierAddress,
+                                                carrierContact = rows.ReturnsHeader.CarrierContact,
+                                                carrierEmail = rows.ReturnsHeader.CarrierEmail,
+                                                returnStatusId = rows.ReturnsHeader.ReturnsStatusId,
+                                                returnStatus = rows.ReturnsHeader.ReturnStatus,
+                                                dateCreated = rows.ReturnsHeader.DateCreated,
+                                                dateModified = rows.ReturnsHeader.DateModified,
+                                                createdBy = rows.ReturnsHeader.CreatedBy,
+                                                modifyBy = rows.ReturnsHeader.ModifiedBy
+                                            };
 
-                                        // check if Return secondary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
-                                        {
-                                            var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
-                                            if (returnCount > 0)
+                                            // check if Return primary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber))
                                             {
-                                                return new ReturnsCreateTranResult()
+                                                var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber);
+                                                if (returnCount > 0)
                                                 {
-                                                    ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
-                                                };
-                                            }
-                                        }
-
-                                        // create header
-                                        var headCreated = await CreateReturns(db, rows.ReturnsHeader);
-
-                                        if (headCreated)
-                                        {
-                                            // init po user fields default data
-                                            var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
-                                            if (!initPOUFld)
-                                            {
-                                                return new ReturnsCreateTranResult()
-                                                {
-                                                    ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
-                                                };
+                                                    return new ReturnsCreateTranResult()
+                                                    {
+                                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMONE
+                                                    };
+                                                }
                                             }
 
-                                            // insert po user fields values
-                                            if (rows.ReturnsUfields != null)
+                                            // check if Return secondary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.ReturnsHeader.RefNumber2))
                                             {
-                                                var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
-                                                if (!uFieldsCreated)
+                                                var returnCount = await ReferenceNumExists(db, rows.ReturnsHeader.RefNumber2);
+                                                if (returnCount > 0)
+                                                {
+                                                    return new ReturnsCreateTranResult()
+                                                    {
+                                                        ResultCode = ReturnsTranResultCode.INVALIDREFNUMTWO
+                                                    };
+                                                }
+                                            }
+
+                                            // create header
+                                            var headCreated = await CreateReturns(db, rows.ReturnsHeader);
+
+                                            if (headCreated)
+                                            {
+                                                // init po user fields default data
+                                                var initPOUFld = await RetUFieldRepo.InitReturnsUField(db, rows.ReturnsHeader.ReturnsId);
+                                                if (!initPOUFld)
                                                 {
                                                     return new ReturnsCreateTranResult()
                                                     {
                                                         ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
                                                     };
                                                 }
-                                            }
 
-                                            // create detail
-                                            if (rows.ReturnsDetails.Any())
-                                            {
-                                                var details = rows.ReturnsDetails.ToList();
-
-                                                for (int i = 0; i < details.Count(); i++)
+                                                // insert po user fields values
+                                                if (rows.ReturnsUfields != null)
                                                 {
-                                                    var detail = details[i];
-
-                                                    // check if similar SKU exists under this PO
-                                                    var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
-                                                    if (skuExists)
+                                                    var uFieldsCreated = await RetUFieldRepo.UpdateReturnsUField(db, rows.ReturnsHeader.ReturnsId, rows.ReturnsHeader.CreatedBy, rows.ReturnsUfields);
+                                                    if (!uFieldsCreated)
                                                     {
                                                         return new ReturnsCreateTranResult()
                                                         {
-                                                            ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                                            ResultCode = ReturnsTranResultCode.USRFIELDSAVEFAILED
                                                         };
                                                     }
+                                                }
 
-                                                    // set detail id, status and header po id
-                                                    detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
-                                                    detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
-                                                    detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+                                                // create detail
+                                                if (rows.ReturnsDetails.Any())
+                                                {
+                                                    var details = rows.ReturnsDetails.ToList();
 
-                                                    // create detail
-                                                    bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
-
-                                                    // return false if either of detail failed to save
-                                                    if (!dtlSaved)
+                                                    for (int i = 0; i < details.Count(); i++)
                                                     {
-                                                        return new ReturnsCreateTranResult()
+                                                        var detail = details[i];
+
+                                                        // check if similar SKU exists under this PO
+                                                        var skuExists = await SKUExistsInReturns(db, detail.Sku, rows.ReturnsHeader.ReturnsId);
+                                                        if (skuExists)
                                                         {
-                                                            ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
-                                                        };
+                                                            return new ReturnsCreateTranResult()
+                                                            {
+                                                                ResultCode = ReturnsTranResultCode.SKUCONFLICT
+                                                            };
+                                                        }
+
+                                                        // set detail id, status and header po id
+                                                        detail.ReturnsLineId = $"{rows.ReturnsHeader.ReturnsId}-{i + 1}";
+                                                        detail.ReturnsLineStatusId = (RetLneStatus.CREATED).ToString();
+                                                        detail.ReturnsId = rows.ReturnsHeader.ReturnsId;
+
+                                                        // create detail
+                                                        bool dtlSaved = await RetDetailRepo.CreateReturnsDetailMod(db, detail);
+
+                                                        // return false if either of detail failed to save
+                                                        if (!dtlSaved)
+                                                        {
+                                                            return new ReturnsCreateTranResult()
+                                                            {
+                                                                ResultCode = ReturnsTranResultCode.RETLINESAVEFAILED
+                                                            };
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1699,7 +1705,7 @@ namespace aims_api.Repositories.Implementation
                                     return new ReturnsCreateTranResult()
                                     {
                                         ResultCode = ReturnsTranResultCode.SUCCESS,
-                                        ReturnsIds = Parameters.Select(p => p.ReturnsHeader.ReturnsId).ToArray()
+                                        ReturnsIds = Parameters.Select(p => p.ReturnsHeader?.ReturnsId ?? "").ToArray()
                                     };
                                 }
                             }

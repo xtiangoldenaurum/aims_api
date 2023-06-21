@@ -205,6 +205,7 @@ namespace aims_api.API.Controllers
                 if (file == null || file.Length <= 0)
                 {
                     await DataValidator.AddErrorField("file");
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "No file was uploaded."));
                 }
                 if (DataValidator.Invalid)
                 {

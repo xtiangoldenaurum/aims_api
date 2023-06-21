@@ -1370,16 +1370,19 @@ namespace aims_api.Repositories.Implementation
                     return PutawayResultCode.FAILEDTOGETINVHIST;
                 }
 
-                // build inventory history succeeding sequnce record
-                invDetail.SeqNum += 1;
-                invDetail.QtyFrom = invDetail.QtyTo;
-                invDetail.QtyTo = putawayWinTwo.PutawayQty;
-                invDetail.LpnFrom = invDetail.LpnTo;
-                invDetail.LpnTo = putawayWinTwo.PutawayLPN;
-                invDetail.LocationFrom = invDetail.LocationTo;
-                invDetail.LocationTo = putawayWinTwo.PutawayLocation;
-                invDetail.TransactionTypeId = (TranType.PUTAWAY).ToString();
-                invDetail.CreatedBy = refIds.UserAccountId;
+                if(putawayWinTwo != null)
+                {
+                    // build inventory history succeeding sequnce record
+                    invDetail.SeqNum += 1;
+                    invDetail.QtyFrom = invDetail.QtyTo;
+                    invDetail.QtyTo = putawayWinTwo.PutawayQty;
+                    invDetail.LpnFrom = invDetail.LpnTo;
+                    invDetail.LpnTo = putawayWinTwo.PutawayLPN;
+                    invDetail.LocationFrom = invDetail.LocationTo;
+                    invDetail.LocationTo = putawayWinTwo.PutawayLocation;
+                    invDetail.TransactionTypeId = (TranType.PUTAWAY).ToString();
+                    invDetail.CreatedBy = refIds.UserAccountId;
+                }
 
                 // insert new sequence into inventory history table
                 var invHistSaved = await InvHistoryRepo.CreateInventoryHistoryMod(db, invDetail, TranType.PUTAWAY);

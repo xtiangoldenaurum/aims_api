@@ -1027,7 +1027,7 @@ namespace aims_api.Repositories.Implementation
                 using (var reader = new StreamReader(path))
                 {
                     // Read the header line from the CSV
-                    string headerLine = await reader.ReadLineAsync();
+                    string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
                     if (!ValidateCsvHeader(headerLine))
@@ -1231,121 +1231,124 @@ namespace aims_api.Repositories.Implementation
 
                         foreach (WhTransferModelMod rows in Parameters)
                         {
-                            var parameters = new
+                            if (rows.whTransferHeader != null)
                             {
-                                whTransId = rows.whTransferHeader.WhTransferId,
-                                refNumber = rows.whTransferHeader.RefNumber,
-                                refNumber2 = rows.whTransferHeader.RefNumber2,
-                                transferDate = rows.whTransferHeader.TransferDate,
-                                arrivalDate = rows.whTransferHeader.ArrivalDate,
-                                arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
-                                remarks = rows.whTransferHeader.Remarks,
-                                whFromId = rows.whTransferHeader.WhFromId,
-                                whFrom = rows.whTransferHeader.WhFrom,
-                                WhFromAddress = rows.whTransferHeader.WhFromAddress,
-                                whFromContact = rows.whTransferHeader.WhFromContact,
-                                whFromEmail = rows.whTransferHeader.WhFromEmail,
-                                carrierId = rows.whTransferHeader.CarrierId,
-                                carrierName = rows.whTransferHeader.CarrierName,
-                                carrierAddress = rows.whTransferHeader.CarrierAddress,
-                                carrierContact = rows.whTransferHeader.CarrierContact,
-                                carrierEmail = rows.whTransferHeader.CarrierEmail,
-                                poStatusId = rows.whTransferHeader.WhTransStatusId,
-                                poStatus = rows.whTransferHeader.WhTransferStatus,
-                                dateCreated = rows.whTransferHeader.DateCreated,
-                                dateModified = rows.whTransferHeader.DateModified,
-                                createdBy = rows.whTransferHeader.CreatedBy,
-                                modifyBy = rows.whTransferHeader.ModifiedBy
-                            };
-
-                            // check if WhTransfer primary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
-                            {
-                                var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
-                                if (whTransCount > 0)
+                                var parameters = new
                                 {
-                                    return new WhTransCreateTranResult()
-                                    {
-                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
-                                    };
-                                }
-                            }
+                                    whTransId = rows.whTransferHeader.WhTransferId,
+                                    refNumber = rows.whTransferHeader.RefNumber,
+                                    refNumber2 = rows.whTransferHeader.RefNumber2,
+                                    transferDate = rows.whTransferHeader.TransferDate,
+                                    arrivalDate = rows.whTransferHeader.ArrivalDate,
+                                    arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
+                                    remarks = rows.whTransferHeader.Remarks,
+                                    whFromId = rows.whTransferHeader.WhFromId,
+                                    whFrom = rows.whTransferHeader.WhFrom,
+                                    WhFromAddress = rows.whTransferHeader.WhFromAddress,
+                                    whFromContact = rows.whTransferHeader.WhFromContact,
+                                    whFromEmail = rows.whTransferHeader.WhFromEmail,
+                                    carrierId = rows.whTransferHeader.CarrierId,
+                                    carrierName = rows.whTransferHeader.CarrierName,
+                                    carrierAddress = rows.whTransferHeader.CarrierAddress,
+                                    carrierContact = rows.whTransferHeader.CarrierContact,
+                                    carrierEmail = rows.whTransferHeader.CarrierEmail,
+                                    poStatusId = rows.whTransferHeader.WhTransStatusId,
+                                    poStatus = rows.whTransferHeader.WhTransferStatus,
+                                    dateCreated = rows.whTransferHeader.DateCreated,
+                                    dateModified = rows.whTransferHeader.DateModified,
+                                    createdBy = rows.whTransferHeader.CreatedBy,
+                                    modifyBy = rows.whTransferHeader.ModifiedBy
+                                };
 
-                            // check if WhTransfer secondary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
-                            {
-                                var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
-                                if (whTransCount > 0)
+                                // check if WhTransfer primary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
                                 {
-                                    return new WhTransCreateTranResult()
+                                    var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
+                                    if (whTransCount > 0)
                                     {
-                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
-                                    };
-                                }
-                            }
-
-                            // create header
-                            var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
-
-                            if (headCreated)
-                            {
-                                // init po user fields default data
-                                var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
-                                if (!initPOUFld)
-                                {
-                                    return new WhTransCreateTranResult()
-                                    {
-                                        ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
-                                    };
+                                        return new WhTransCreateTranResult()
+                                        {
+                                            ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
+                                        };
+                                    }
                                 }
 
-                                // insert po user fields values
-                                if (rows.WhTransferUfields != null)
+                                // check if WhTransfer secondary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
                                 {
-                                    var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
-                                    if (!uFieldsCreated)
+                                    var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                    if (whTransCount > 0)
+                                    {
+                                        return new WhTransCreateTranResult()
+                                        {
+                                            ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
+                                        };
+                                    }
+                                }
+
+                                // create header
+                                var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
+
+                                if (headCreated)
+                                {
+                                    // init po user fields default data
+                                    var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
+                                    if (!initPOUFld)
                                     {
                                         return new WhTransCreateTranResult()
                                         {
                                             ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
                                         };
                                     }
-                                }
 
-                                // create detail
-                                if (rows.WhTransDetails.Any())
-                                {
-                                    var details = rows.WhTransDetails.ToList();
-
-                                    for (int i = 0; i < details.Count(); i++)
+                                    // insert po user fields values
+                                    if (rows.WhTransferUfields != null)
                                     {
-                                        var detail = details[i];
-
-                                        // check if similar SKU exists under this PO
-                                        var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
-                                        if (skuExists)
+                                        var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
+                                        if (!uFieldsCreated)
                                         {
                                             return new WhTransCreateTranResult()
                                             {
-                                                ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                                ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
                                             };
                                         }
+                                    }
 
-                                        // set detail id, status and header po id
-                                        detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
-                                        detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
-                                        detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+                                    // create detail
+                                    if (rows.WhTransDetails.Any())
+                                    {
+                                        var details = rows.WhTransDetails.ToList();
 
-                                        // create detail
-                                        bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
-
-                                        // return false if either of detail failed to save
-                                        if (!dtlSaved)
+                                        for (int i = 0; i < details.Count(); i++)
                                         {
-                                            return new WhTransCreateTranResult()
+                                            var detail = details[i];
+
+                                            // check if similar SKU exists under this PO
+                                            var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
+                                            if (skuExists)
                                             {
-                                                ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
-                                            };
+                                                return new WhTransCreateTranResult()
+                                                {
+                                                    ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                                };
+                                            }
+
+                                            // set detail id, status and header po id
+                                            detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
+                                            detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
+                                            detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+
+                                            // create detail
+                                            bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
+
+                                            // return false if either of detail failed to save
+                                            if (!dtlSaved)
+                                            {
+                                                return new WhTransCreateTranResult()
+                                                {
+                                                    ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
+                                                };
+                                            }
                                         }
                                     }
                                 }
@@ -1355,7 +1358,7 @@ namespace aims_api.Repositories.Implementation
                         return new WhTransCreateTranResult()
                         {
                             ResultCode = WhTransferTranResultCode.SUCCESS,
-                            WhTransferIds = Parameters.Select(p => p.whTransferHeader.WhTransferId).ToArray()
+                            WhTransferIds = Parameters.Select(p => p.whTransferHeader?.WhTransferId ?? "").ToArray()
                         };
                     }
                 }
@@ -1573,121 +1576,124 @@ namespace aims_api.Repositories.Implementation
 
                                     foreach (WhTransferModelMod rows in Parameters)
                                     {
-                                        var parameters = new
+                                        if (rows.whTransferHeader != null)
                                         {
-                                            whTransId = rows.whTransferHeader.WhTransferId,
-                                            refNumber = rows.whTransferHeader.RefNumber,
-                                            refNumber2 = rows.whTransferHeader.RefNumber2,
-                                            transferDate = rows.whTransferHeader.TransferDate,
-                                            arrivalDate = rows.whTransferHeader.ArrivalDate,
-                                            arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
-                                            remarks = rows.whTransferHeader.Remarks,
-                                            whFromId = rows.whTransferHeader.WhFromId,
-                                            whFrom = rows.whTransferHeader.WhFrom,
-                                            WhFromAddress = rows.whTransferHeader.WhFromAddress,
-                                            whFromContact = rows.whTransferHeader.WhFromContact,
-                                            whFromEmail = rows.whTransferHeader.WhFromEmail,
-                                            carrierId = rows.whTransferHeader.CarrierId,
-                                            carrierName = rows.whTransferHeader.CarrierName,
-                                            carrierAddress = rows.whTransferHeader.CarrierAddress,
-                                            carrierContact = rows.whTransferHeader.CarrierContact,
-                                            carrierEmail = rows.whTransferHeader.CarrierEmail,
-                                            poStatusId = rows.whTransferHeader.WhTransStatusId,
-                                            poStatus = rows.whTransferHeader.WhTransferStatus,
-                                            dateCreated = rows.whTransferHeader.DateCreated,
-                                            dateModified = rows.whTransferHeader.DateModified,
-                                            createdBy = rows.whTransferHeader.CreatedBy,
-                                            modifyBy = rows.whTransferHeader.ModifiedBy
-                                        };
-
-                                        // check if WhTransfer primary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
-                                        {
-                                            var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
-                                            if (poCount > 0)
+                                            var parameters = new
                                             {
-                                                return new WhTransCreateTranResult()
-                                                {
-                                                    ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
-                                                };
-                                            }
-                                        }
+                                                whTransId = rows.whTransferHeader.WhTransferId,
+                                                refNumber = rows.whTransferHeader.RefNumber,
+                                                refNumber2 = rows.whTransferHeader.RefNumber2,
+                                                transferDate = rows.whTransferHeader.TransferDate,
+                                                arrivalDate = rows.whTransferHeader.ArrivalDate,
+                                                arrivalDate2 = rows.whTransferHeader.ArrivalDate2,
+                                                remarks = rows.whTransferHeader.Remarks,
+                                                whFromId = rows.whTransferHeader.WhFromId,
+                                                whFrom = rows.whTransferHeader.WhFrom,
+                                                WhFromAddress = rows.whTransferHeader.WhFromAddress,
+                                                whFromContact = rows.whTransferHeader.WhFromContact,
+                                                whFromEmail = rows.whTransferHeader.WhFromEmail,
+                                                carrierId = rows.whTransferHeader.CarrierId,
+                                                carrierName = rows.whTransferHeader.CarrierName,
+                                                carrierAddress = rows.whTransferHeader.CarrierAddress,
+                                                carrierContact = rows.whTransferHeader.CarrierContact,
+                                                carrierEmail = rows.whTransferHeader.CarrierEmail,
+                                                poStatusId = rows.whTransferHeader.WhTransStatusId,
+                                                poStatus = rows.whTransferHeader.WhTransferStatus,
+                                                dateCreated = rows.whTransferHeader.DateCreated,
+                                                dateModified = rows.whTransferHeader.DateModified,
+                                                createdBy = rows.whTransferHeader.CreatedBy,
+                                                modifyBy = rows.whTransferHeader.ModifiedBy
+                                            };
 
-                                        // check if WhTransfer secondary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
-                                        {
-                                            var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
-                                            if (whTransCount > 0)
+                                            // check if WhTransfer primary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber))
                                             {
-                                                return new WhTransCreateTranResult()
+                                                var poCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber);
+                                                if (poCount > 0)
                                                 {
-                                                    ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
-                                                };
-                                            }
-                                        }
-
-                                        // create header
-                                        var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
-
-                                        if (headCreated)
-                                        {
-                                            // init po user fields default data
-                                            var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
-                                            if (!initPOUFld)
-                                            {
-                                                return new WhTransCreateTranResult()
-                                                {
-                                                    ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
-                                                };
+                                                    return new WhTransCreateTranResult()
+                                                    {
+                                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMONE
+                                                    };
+                                                }
                                             }
 
-                                            // insert po user fields values
-                                            if (rows.WhTransferUfields != null)
+                                            // check if WhTransfer secondary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.whTransferHeader.RefNumber2))
                                             {
-                                                var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
-                                                if (!uFieldsCreated)
+                                                var whTransCount = await ReferenceNumExists(db, rows.whTransferHeader.RefNumber2);
+                                                if (whTransCount > 0)
+                                                {
+                                                    return new WhTransCreateTranResult()
+                                                    {
+                                                        ResultCode = WhTransferTranResultCode.INVALIDREFNUMTWO
+                                                    };
+                                                }
+                                            }
+
+                                            // create header
+                                            var headCreated = await CreateWhTransfer(db, rows.whTransferHeader);
+
+                                            if (headCreated)
+                                            {
+                                                // init po user fields default data
+                                                var initPOUFld = await WhTransUFieldRepo.InitWhTransferUField(db, rows.whTransferHeader.WhTransferId);
+                                                if (!initPOUFld)
                                                 {
                                                     return new WhTransCreateTranResult()
                                                     {
                                                         ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
                                                     };
                                                 }
-                                            }
 
-                                            // create detail
-                                            if (rows.WhTransDetails.Any())
-                                            {
-                                                var details = rows.WhTransDetails.ToList();
-
-                                                for (int i = 0; i < details.Count(); i++)
+                                                // insert po user fields values
+                                                if (rows.WhTransferUfields != null)
                                                 {
-                                                    var detail = details[i];
-
-                                                    // check if similar SKU exists under this PO
-                                                    var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
-                                                    if (skuExists)
+                                                    var uFieldsCreated = await WhTransUFieldRepo.UpdateWhTransferUField(db, rows.whTransferHeader.WhTransferId, rows.whTransferHeader.CreatedBy, rows.WhTransferUfields);
+                                                    if (!uFieldsCreated)
                                                     {
                                                         return new WhTransCreateTranResult()
                                                         {
-                                                            ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                                            ResultCode = WhTransferTranResultCode.USRFIELDSAVEFAILED
                                                         };
                                                     }
+                                                }
 
-                                                    // set detail id, status and header po id
-                                                    detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
-                                                    detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
-                                                    detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+                                                // create detail
+                                                if (rows.WhTransDetails.Any())
+                                                {
+                                                    var details = rows.WhTransDetails.ToList();
 
-                                                    // create detail
-                                                    bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
-
-                                                    // return false if either of detail failed to save
-                                                    if (!dtlSaved)
+                                                    for (int i = 0; i < details.Count(); i++)
                                                     {
-                                                        return new WhTransCreateTranResult()
+                                                        var detail = details[i];
+
+                                                        // check if similar SKU exists under this PO
+                                                        var skuExists = await SKUExistsInWhTransfer(db, detail.Sku, rows.whTransferHeader.WhTransferId);
+                                                        if (skuExists)
                                                         {
-                                                            ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
-                                                        };
+                                                            return new WhTransCreateTranResult()
+                                                            {
+                                                                ResultCode = WhTransferTranResultCode.SKUCONFLICT
+                                                            };
+                                                        }
+
+                                                        // set detail id, status and header po id
+                                                        detail.WhTransferLineId = $"{rows.whTransferHeader.WhTransferId}-{i + 1}";
+                                                        detail.WhTransLineStatusId = (WhTransferLneStatus.CREATED).ToString();
+                                                        detail.WhTransferId = rows.whTransferHeader.WhTransferId;
+
+                                                        // create detail
+                                                        bool dtlSaved = await WhTransDetailsRepo.CreateWhTransferDetailMod(db, detail);
+
+                                                        // return false if either of detail failed to save
+                                                        if (!dtlSaved)
+                                                        {
+                                                            return new WhTransCreateTranResult()
+                                                            {
+                                                                ResultCode = WhTransferTranResultCode.WHTRANSLINESAVEFAILED
+                                                            };
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1697,7 +1703,7 @@ namespace aims_api.Repositories.Implementation
                                     return new WhTransCreateTranResult()
                                     {
                                         ResultCode = WhTransferTranResultCode.SUCCESS,
-                                        WhTransferIds = Parameters.Select(p => p.whTransferHeader.WhTransferId).ToArray()
+                                        WhTransferIds = Parameters.Select(p => p.whTransferHeader?.WhTransferId ?? "").ToArray()
                                     };
                                 }
                             }

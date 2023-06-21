@@ -694,113 +694,115 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<POTranResultCode> UpdatePOMod(POModelMod po)
         {
-            using (IDbConnection db = new MySqlConnection(ConnString))
+            if (po.POHeader != null)
             {
-                db.Open();
-
-                // check if PO primary reference number are unique
-                if (!string.IsNullOrEmpty(po.POHeader.RefNumber))
+                using (IDbConnection db = new MySqlConnection(ConnString))
                 {
-                    var poCount = await ReferenceNumExists(db, po.POHeader.RefNumber, po.POHeader.PoId);
-                    if (poCount > 0)
-                    {
-                        return POTranResultCode.INVALIDREFNUMONE;
-                    }
-                }
+                    db.Open();
 
-                // check if PO secondary reference number are unique
-                if (!string.IsNullOrEmpty(po.POHeader.RefNumber2))
-                {
-                    var poCount = await ReferenceNumExists(db, po.POHeader.RefNumber2, po.POHeader.PoId);
-                    if (poCount > 0)
+                    // check if PO primary reference number are unique
+                    if (!string.IsNullOrEmpty(po.POHeader.RefNumber))
                     {
-                        return POTranResultCode.INVALIDREFNUMTWO;
-                    }
-                }
-
-                // update header
-                var modHeader = await UpdatePO(db, po.POHeader, TranType.PO);
-
-                if (modHeader)
-                {
-                    // update po user fields values
-                    if (po.POUfields != null)
-                    {
-                        var uFieldsCreated = await POUFieldRepo.UpdatePOUFieldMOD(db, po.POHeader.PoId, po.POHeader.ModifiedBy, po.POUfields);
-                        if (!uFieldsCreated)
+                        var poCount = await ReferenceNumExists(db, po.POHeader.RefNumber, po.POHeader.PoId);
+                        if (poCount > 0)
                         {
-                            return POTranResultCode.USRFIELDSAVEFAILED;
+                            return POTranResultCode.INVALIDREFNUMONE;
                         }
                     }
 
-                    // update detail
-                    if (po.PODetails != null && po.PODetails.Any())
+                    // check if PO secondary reference number are unique
+                    if (!string.IsNullOrEmpty(po.POHeader.RefNumber2))
                     {
-                        var details = po.PODetails.ToList();
-
-                        // get last po detail line number
-                        var poDetailsFromDb = await PODetailRepo.LockPODetails(db, po.POHeader.PoId);
-                        var lastPOLneId = poDetailsFromDb.OrderByDescending(x => x.PoLineId).Select(y => y.PoLineId).FirstOrDefault();
-                        int lastLneNum = 0;
-
-                        if (!string.IsNullOrEmpty(lastPOLneId))
+                        var poCount = await ReferenceNumExists(db, po.POHeader.RefNumber2, po.POHeader.PoId);
+                        if (poCount > 0)
                         {
-                            lastLneNum = Convert.ToInt32(lastPOLneId.Substring(lastPOLneId.LastIndexOf('-') + 1));
+                            return POTranResultCode.INVALIDREFNUMTWO;
                         }
-                        else
-                        {
-                            lastLneNum = 0;
-                        }
+                    }
 
-                        for (int i = 0; i < details.Count(); i++)
-                        {
-                            var detail = details[i];
-                            bool dtlSaved = false;
+                    // update header
+                    var modHeader = await UpdatePO(db, po.POHeader, TranType.PO);
 
-                            if (detail.PoLineId == null)
+                    if (modHeader)
+                    {
+                        // update po user fields values
+                        if (po.POUfields != null)
+                        {
+                            var uFieldsCreated = await POUFieldRepo.UpdatePOUFieldMOD(db, po.POHeader.PoId, po.POHeader.ModifiedBy, po.POUfields);
+                            if (!uFieldsCreated)
                             {
-                                // check if similar SKU exists under this PO
-                                var skuExists = await SKUExistsInPO(db, detail.Sku, po.POHeader.PoId);
-                                if (skuExists)
-                                {
-                                    return POTranResultCode.SKUCONFLICT;
-                                }
+                                return POTranResultCode.USRFIELDSAVEFAILED;
+                            }
+                        }
 
-                                // detail concidered as new
-                                // set detail id, status and header po id
-                                lastLneNum += 1;
-                                detail.PoLineId = $"{po.POHeader.PoId}-{lastLneNum}";
-                                detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
-                                detail.PoId = po.POHeader.PoId;
+                        // update detail
+                        if (po.PODetails != null && po.PODetails.Any())
+                        {
+                            var details = po.PODetails.ToList();
 
-                                // create detail
-                                dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
+                            // get last po detail line number
+                            var poDetailsFromDb = await PODetailRepo.LockPODetails(db, po.POHeader.PoId);
+                            var lastPOLneId = poDetailsFromDb.OrderByDescending(x => x.PoLineId).Select(y => y.PoLineId).FirstOrDefault();
+                            int lastLneNum = 0;
+
+                            if (!string.IsNullOrEmpty(lastPOLneId))
+                            {
+                                lastLneNum = Convert.ToInt32(lastPOLneId.Substring(lastPOLneId.LastIndexOf('-') + 1));
                             }
                             else
                             {
-                                // update existing details
-                                var prevDetail = await PODetailRepo.GetPODetailByIdMod(db, detail.PoLineId);
+                                lastLneNum = 0;
+                            }
 
-                                if (prevDetail.PoLineStatusId == (POLneStatus.CREATED).ToString())
+                            for (int i = 0; i < details.Count(); i++)
+                            {
+                                var detail = details[i];
+                                bool dtlSaved = false;
+
+                                if (detail.PoLineId == null)
                                 {
-                                    if (prevDetail != detail)
+                                    // check if similar SKU exists under this PO
+                                    var skuExists = await SKUExistsInPO(db, detail.Sku, po.POHeader.PoId);
+                                    if (skuExists)
                                     {
-                                        dtlSaved = await PODetailRepo.UpdatePODetailMod(db, detail, TranType.PO);
+                                        return POTranResultCode.SKUCONFLICT;
+                                    }
+
+                                    // detail concidered as new
+                                    // set detail id, status and header po id
+                                    lastLneNum += 1;
+                                    detail.PoLineId = $"{po.POHeader.PoId}-{lastLneNum}";
+                                    detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
+                                    detail.PoId = po.POHeader.PoId;
+
+                                    // create detail
+                                    dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
+                                }
+                                else
+                                {
+                                    // update existing details
+                                    var prevDetail = await PODetailRepo.GetPODetailByIdMod(db, detail.PoLineId);
+
+                                    if (prevDetail.PoLineStatusId == (POLneStatus.CREATED).ToString())
+                                    {
+                                        if (prevDetail != detail)
+                                        {
+                                            dtlSaved = await PODetailRepo.UpdatePODetailMod(db, detail, TranType.PO);
+                                        }
                                     }
                                 }
-                            }
 
-                            // return false if either of detail failed to save
-                            if (!dtlSaved)
-                            {
-                                return POTranResultCode.POLINESAVEFAILED;
+                                // return false if either of detail failed to save
+                                if (!dtlSaved)
+                                {
+                                    return POTranResultCode.POLINESAVEFAILED;
+                                }
                             }
                         }
+                        return POTranResultCode.SUCCESS;
                     }
-                    return POTranResultCode.SUCCESS;
                 }
             }
-
             return POTranResultCode.FAILED;
         }
 
@@ -1103,7 +1105,7 @@ namespace aims_api.Repositories.Implementation
                 using (var reader = new StreamReader(path))
                 {
                     // Read the header line from the CSV
-                    string headerLine = await reader.ReadLineAsync();
+                    string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
                     if (!ValidateCsvHeader(headerLine))
@@ -1134,14 +1136,9 @@ namespace aims_api.Repositories.Implementation
                     var poId = await IdNumberRepo.GetNextIdNum("PO");
                     rows.POHeader.PoId = poId;
 
-                    rows.POHeader.RefNumber = value.Rows[i][0] != null ? Convert.ToString(value.Rows[i][0]) : null;
+                    rows.POHeader.RefNumber = value.Rows[i][0]?.ToString();
                     if (string.IsNullOrEmpty(rows.POHeader.RefNumber))
-                    {
-                        return new POCreateTranResult()
-                        {
-                            ResultCode = POTranResultCode.MISSINGREFNUMONE
-                        };
-                    }
+                        return new POCreateTranResult { ResultCode = POTranResultCode.MISSINGREFNUMONE };
 
                     rows.POHeader.RefNumber2 = value.Rows[i][1] != null ? Convert.ToString(value.Rows[i][1]) : null;
                     if (string.IsNullOrEmpty(rows.POHeader.RefNumber2))
@@ -1307,132 +1304,135 @@ namespace aims_api.Repositories.Implementation
 
                         foreach (POModelMod rows in Parameters)
                         {
-                            var parameters = new
+                            if (rows.POHeader != null)
                             {
-                                poId = rows.POHeader.PoId,
-                                refNumber = rows.POHeader.RefNumber,
-                                refNumber2 = rows.POHeader.RefNumber2,
-                                orderDate = rows.POHeader.OrderDate,
-                                arrivalDate = rows.POHeader.ArrivalDate,
-                                arrivalDate2 = rows.POHeader.ArrivalDate2,
-                                remarks = rows.POHeader.Remarks,
-                                supplierId = rows.POHeader.SupplierId,
-                                supplierName = rows.POHeader.SupplierName,
-                                supplierAddress = rows.POHeader.SupplierAddress,
-                                supplierContact = rows.POHeader.SupplierContact,
-                                supplierEmail = rows.POHeader.SupplierEmail,
-                                carrierId = rows.POHeader.CarrierId,
-                                carrierName = rows.POHeader.CarrierName,
-                                carrierAddress = rows.POHeader.CarrierAddress,
-                                carrierContact = rows.POHeader.CarrierContact,
-                                carrierEmail = rows.POHeader.CarrierEmail,
-                                poStatusId = rows.POHeader.PoStatusId,
-                                poStatus = rows.POHeader.PoStatus,
-                                dateCreated = rows.POHeader.DateCreated,
-                                dateModified = rows.POHeader.DateModified,
-                                createdBy = rows.POHeader.CreatedBy,
-                                modifyBy = rows.POHeader.ModifiedBy,
-                            };
-
-                            // check if PO primary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.POHeader.RefNumber))
-                            {
-                                var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber);
-                                if (poCount > 0)
+                                var parameters = new
                                 {
-                                    return new POCreateTranResult()
-                                    {
-                                        ResultCode = POTranResultCode.INVALIDREFNUMONE
-                                    };
-                                }
-                            }
+                                    poId = rows.POHeader.PoId,
+                                    refNumber = rows.POHeader.RefNumber,
+                                    refNumber2 = rows.POHeader.RefNumber2,
+                                    orderDate = rows.POHeader.OrderDate,
+                                    arrivalDate = rows.POHeader.ArrivalDate,
+                                    arrivalDate2 = rows.POHeader.ArrivalDate2,
+                                    remarks = rows.POHeader.Remarks,
+                                    supplierId = rows.POHeader.SupplierId,
+                                    supplierName = rows.POHeader.SupplierName,
+                                    supplierAddress = rows.POHeader.SupplierAddress,
+                                    supplierContact = rows.POHeader.SupplierContact,
+                                    supplierEmail = rows.POHeader.SupplierEmail,
+                                    carrierId = rows.POHeader.CarrierId,
+                                    carrierName = rows.POHeader.CarrierName,
+                                    carrierAddress = rows.POHeader.CarrierAddress,
+                                    carrierContact = rows.POHeader.CarrierContact,
+                                    carrierEmail = rows.POHeader.CarrierEmail,
+                                    poStatusId = rows.POHeader.PoStatusId,
+                                    poStatus = rows.POHeader.PoStatus,
+                                    dateCreated = rows.POHeader.DateCreated,
+                                    dateModified = rows.POHeader.DateModified,
+                                    createdBy = rows.POHeader.CreatedBy,
+                                    modifyBy = rows.POHeader.ModifiedBy,
+                                };
 
-                            // check if PO secondary reference number are unique
-                            if (!string.IsNullOrEmpty(rows.POHeader.RefNumber2))
-                            {
-                                var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber2);
-                                if (poCount > 0)
+                                // check if PO primary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.POHeader.RefNumber))
                                 {
-                                    return new POCreateTranResult()
+                                    var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber);
+                                    if (poCount > 0)
                                     {
-                                        ResultCode = POTranResultCode.INVALIDREFNUMTWO
-                                    };
-                                }
-                            }
-
-                            // create header
-                            var headCreated = await CreatePO(db, rows.POHeader);
-
-                            if (headCreated)
-                            {
-                                // init po user fields default data
-                                var initPOUFld = await POUFieldRepo.InitPOUField(db, rows.POHeader.PoId);
-                                if (!initPOUFld)
-                                {
-                                    return new POCreateTranResult()
-                                    {
-                                        ResultCode = POTranResultCode.USRFIELDSAVEFAILED
-                                    };
+                                        return new POCreateTranResult()
+                                        {
+                                            ResultCode = POTranResultCode.INVALIDREFNUMONE
+                                        };
+                                    }
                                 }
 
-                                // insert po user fields values
-                                if (rows.POUfields != null)
+                                // check if PO secondary reference number are unique
+                                if (!string.IsNullOrEmpty(rows.POHeader.RefNumber2))
                                 {
-                                    var uFieldsCreated = await POUFieldRepo.UpdatePOUField(db, rows.POHeader.PoId, rows.POHeader.CreatedBy, rows.POUfields);
-                                    if (!uFieldsCreated)
+                                    var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber2);
+                                    if (poCount > 0)
+                                    {
+                                        return new POCreateTranResult()
+                                        {
+                                            ResultCode = POTranResultCode.INVALIDREFNUMTWO
+                                        };
+                                    }
+                                }
+
+                                // create header
+                                var headCreated = await CreatePO(db, rows.POHeader);
+
+                                if (headCreated)
+                                {
+                                    // init po user fields default data
+                                    var initPOUFld = await POUFieldRepo.InitPOUField(db, rows.POHeader.PoId);
+                                    if (!initPOUFld)
                                     {
                                         return new POCreateTranResult()
                                         {
                                             ResultCode = POTranResultCode.USRFIELDSAVEFAILED
                                         };
                                     }
-                                }
 
-                                // create detail
-                                if (rows.PODetails.Any())
-                                {
-                                    var details = rows.PODetails.ToList();
-
-                                    for (int i = 0; i < details.Count(); i++)
+                                    // insert po user fields values
+                                    if (rows.POUfields != null)
                                     {
-                                        var detail = details[i];
-
-                                        // check if similar SKU exists under this PO
-                                        var skuExists = await SKUExistsInPO(db, detail.Sku, rows.POHeader.PoId);
-                                        if (skuExists)
+                                        var uFieldsCreated = await POUFieldRepo.UpdatePOUField(db, rows.POHeader.PoId, rows.POHeader.CreatedBy, rows.POUfields);
+                                        if (!uFieldsCreated)
                                         {
                                             return new POCreateTranResult()
                                             {
-                                                ResultCode = POTranResultCode.SKUCONFLICT
+                                                ResultCode = POTranResultCode.USRFIELDSAVEFAILED
                                             };
                                         }
+                                    }
 
-                                        // set detail id, status and header po id
-                                        detail.PoLineId = $"{rows.POHeader.PoId}-{i + 1}";
-                                        detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
-                                        detail.PoId = rows.POHeader.PoId;
+                                    // create detail
+                                    if (rows.PODetails.Any())
+                                    {
+                                        var details = rows.PODetails.ToList();
 
-                                        // create detail
-                                        bool dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
-
-                                        // return false if either of detail failed to save
-                                        if (!dtlSaved)
+                                        for (int i = 0; i < details.Count(); i++)
                                         {
-                                            return new POCreateTranResult()
+                                            var detail = details[i];
+
+                                            // check if similar SKU exists under this PO
+                                            var skuExists = await SKUExistsInPO(db, detail.Sku, rows.POHeader.PoId);
+                                            if (skuExists)
                                             {
-                                                ResultCode = POTranResultCode.POLINESAVEFAILED
-                                            };
+                                                return new POCreateTranResult()
+                                                {
+                                                    ResultCode = POTranResultCode.SKUCONFLICT
+                                                };
+                                            }
+
+                                            // set detail id, status and header po id
+                                            detail.PoLineId = $"{rows.POHeader.PoId}-{i + 1}";
+                                            detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
+                                            detail.PoId = rows.POHeader.PoId;
+
+                                            // create detail
+                                            bool dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
+
+                                            // return false if either of detail failed to save
+                                            if (!dtlSaved)
+                                            {
+                                                return new POCreateTranResult()
+                                                {
+                                                    ResultCode = POTranResultCode.POLINESAVEFAILED
+                                                };
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        return new POCreateTranResult()
-                        {
-                            ResultCode = POTranResultCode.SUCCESS,
-                            POIds = Parameters.Select(p => p.POHeader.PoId).ToArray()
-                        };
+                            return new POCreateTranResult()
+                            {
+                                ResultCode = POTranResultCode.SUCCESS,
+                                POIds = Parameters.Select(p => p.POHeader?.PoId ?? "").ToArray()
+                            };
+                        }
                     }
                 }
             }
@@ -1649,121 +1649,123 @@ namespace aims_api.Repositories.Implementation
 
                                     foreach (POModelMod rows in Parameters)
                                     {
-                                        var parameters = new
+                                        if (rows.POHeader != null)
                                         {
-                                            poId = rows.POHeader.PoId,
-                                            refNumber = rows.POHeader.RefNumber,
-                                            refNumber2 = rows.POHeader.RefNumber2,
-                                            orderDate = rows.POHeader.OrderDate,
-                                            arrivalDate = rows.POHeader.ArrivalDate,
-                                            arrivalDate2 = rows.POHeader.ArrivalDate2,
-                                            remarks = rows.POHeader.Remarks,
-                                            supplierId = rows.POHeader.SupplierId,
-                                            supplierName = rows.POHeader.SupplierName,
-                                            supplierAddress = rows.POHeader.SupplierAddress,
-                                            supplierContact = rows.POHeader.SupplierContact,
-                                            supplierEmail = rows.POHeader.SupplierEmail,
-                                            carrierId = rows.POHeader.CarrierId,
-                                            carrierName = rows.POHeader.CarrierName,
-                                            carrierAddress = rows.POHeader.CarrierAddress,
-                                            carrierContact = rows.POHeader.CarrierContact,
-                                            carrierEmail = rows.POHeader.CarrierEmail,
-                                            poStatusId = rows.POHeader.PoStatusId,
-                                            poStatus = rows.POHeader.PoStatus,
-                                            dateCreated = rows.POHeader.DateCreated,
-                                            dateModified = rows.POHeader.DateModified,
-                                            createdBy = rows.POHeader.CreatedBy,
-                                            modifyBy = rows.POHeader.ModifiedBy,
-                                        };
-
-                                        // check if PO primary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.POHeader.RefNumber))
-                                        {
-                                            var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber);
-                                            if (poCount > 0)
+                                            var parameters = new
                                             {
-                                                return new POCreateTranResult()
-                                                {
-                                                    ResultCode = POTranResultCode.INVALIDREFNUMONE
-                                                };
-                                            }
-                                        }
+                                                poId = rows.POHeader.PoId,
+                                                refNumber = rows.POHeader.RefNumber,
+                                                refNumber2 = rows.POHeader.RefNumber2,
+                                                orderDate = rows.POHeader.OrderDate,
+                                                arrivalDate = rows.POHeader.ArrivalDate,
+                                                arrivalDate2 = rows.POHeader.ArrivalDate2,
+                                                remarks = rows.POHeader.Remarks,
+                                                supplierId = rows.POHeader.SupplierId,
+                                                supplierName = rows.POHeader.SupplierName,
+                                                supplierAddress = rows.POHeader.SupplierAddress,
+                                                supplierContact = rows.POHeader.SupplierContact,
+                                                supplierEmail = rows.POHeader.SupplierEmail,
+                                                carrierId = rows.POHeader.CarrierId,
+                                                carrierName = rows.POHeader.CarrierName,
+                                                carrierAddress = rows.POHeader.CarrierAddress,
+                                                carrierContact = rows.POHeader.CarrierContact,
+                                                carrierEmail = rows.POHeader.CarrierEmail,
+                                                poStatusId = rows.POHeader.PoStatusId,
+                                                poStatus = rows.POHeader.PoStatus,
+                                                dateCreated = rows.POHeader.DateCreated,
+                                                dateModified = rows.POHeader.DateModified,
+                                                createdBy = rows.POHeader.CreatedBy,
+                                                modifyBy = rows.POHeader.ModifiedBy,
+                                            };
 
-                                        // check if PO secondary reference number are unique
-                                        if (!string.IsNullOrEmpty(rows.POHeader.RefNumber2))
-                                        {
-                                            var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber2);
-                                            if (poCount > 0)
+                                            // check if PO primary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.POHeader.RefNumber))
                                             {
-                                                return new POCreateTranResult()
+                                                var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber);
+                                                if (poCount > 0)
                                                 {
-                                                    ResultCode = POTranResultCode.INVALIDREFNUMTWO
-                                                };
-                                            }
-                                        }
-
-                                        // create header
-                                        var headCreated = await CreatePO(db, rows.POHeader);
-
-                                        if (headCreated)
-                                        {
-                                            // init po user fields default data
-                                            var initPOUFld = await POUFieldRepo.InitPOUField(db, rows.POHeader.PoId);
-                                            if (!initPOUFld)
-                                            {
-                                                return new POCreateTranResult()
-                                                {
-                                                    ResultCode = POTranResultCode.USRFIELDSAVEFAILED
-                                                };
+                                                    return new POCreateTranResult()
+                                                    {
+                                                        ResultCode = POTranResultCode.INVALIDREFNUMONE
+                                                    };
+                                                }
                                             }
 
-                                            // insert po user fields values
-                                            if (rows.POUfields != null)
+                                            // check if PO secondary reference number are unique
+                                            if (!string.IsNullOrEmpty(rows.POHeader.RefNumber2))
                                             {
-                                                var uFieldsCreated = await POUFieldRepo.UpdatePOUField(db, rows.POHeader.PoId, rows.POHeader.CreatedBy, rows.POUfields);
-                                                if (!uFieldsCreated)
+                                                var poCount = await ReferenceNumExists(db, rows.POHeader.RefNumber2);
+                                                if (poCount > 0)
+                                                {
+                                                    return new POCreateTranResult()
+                                                    {
+                                                        ResultCode = POTranResultCode.INVALIDREFNUMTWO
+                                                    };
+                                                }
+                                            }
+                                            // create header
+                                            var headCreated = await CreatePO(db, rows.POHeader);
+
+                                            if (headCreated)
+                                            {
+                                                // init po user fields default data
+                                                var initPOUFld = await POUFieldRepo.InitPOUField(db, rows.POHeader.PoId);
+                                                if (!initPOUFld)
                                                 {
                                                     return new POCreateTranResult()
                                                     {
                                                         ResultCode = POTranResultCode.USRFIELDSAVEFAILED
                                                     };
                                                 }
-                                            }
 
-                                            // create detail
-                                            if (rows.PODetails.Any())
-                                            {
-                                                var details = rows.PODetails.ToList();
-
-                                                for (int i = 0; i < details.Count(); i++)
+                                                // insert po user fields values
+                                                if (rows.POUfields != null)
                                                 {
-                                                    var detail = details[i];
-
-                                                    // check if similar SKU exists under this PO
-                                                    var skuExists = await SKUExistsInPO(db, detail.Sku, rows.POHeader.PoId);
-                                                    if (skuExists)
+                                                    var uFieldsCreated = await POUFieldRepo.UpdatePOUField(db, rows.POHeader.PoId, rows.POHeader.CreatedBy, rows.POUfields);
+                                                    if (!uFieldsCreated)
                                                     {
                                                         return new POCreateTranResult()
                                                         {
-                                                            ResultCode = POTranResultCode.SKUCONFLICT
+                                                            ResultCode = POTranResultCode.USRFIELDSAVEFAILED
                                                         };
                                                     }
+                                                }
 
-                                                    // set detail id, status and header po id
-                                                    detail.PoLineId = $"{rows.POHeader.PoId}-{i + 1}";
-                                                    detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
-                                                    detail.PoId = rows.POHeader.PoId;
+                                                // create detail
+                                                if (rows.PODetails.Any())
+                                                {
+                                                    var details = rows.PODetails.ToList();
 
-                                                    // create detail
-                                                    bool dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
-
-                                                    // return false if either of detail failed to save
-                                                    if (!dtlSaved)
+                                                    for (int i = 0; i < details.Count(); i++)
                                                     {
-                                                        return new POCreateTranResult()
+                                                        var detail = details[i];
+
+                                                        // check if similar SKU exists under this PO
+                                                        var skuExists = await SKUExistsInPO(db, detail.Sku, rows.POHeader.PoId);
+                                                        if (skuExists)
                                                         {
-                                                            ResultCode = POTranResultCode.POLINESAVEFAILED
-                                                        };
+                                                            return new POCreateTranResult()
+                                                            {
+                                                                ResultCode = POTranResultCode.SKUCONFLICT
+                                                            };
+                                                        }
+
+                                                        // set detail id, status and header po id
+                                                        detail.PoLineId = $"{rows.POHeader.PoId}-{i + 1}";
+                                                        detail.PoLineStatusId = (POLneStatus.CREATED).ToString();
+                                                        detail.PoId = rows.POHeader.PoId;
+
+                                                        // create detail
+                                                        bool dtlSaved = await PODetailRepo.CreatePODetailMod(db, detail);
+
+                                                        // return false if either of detail failed to save
+                                                        if (!dtlSaved)
+                                                        {
+                                                            return new POCreateTranResult()
+                                                            {
+                                                                ResultCode = POTranResultCode.POLINESAVEFAILED
+                                                            };
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1772,8 +1774,7 @@ namespace aims_api.Repositories.Implementation
 
                                     return new POCreateTranResult()
                                     {
-                                        ResultCode = POTranResultCode.SUCCESS,
-                                        POIds = Parameters.Select(p => p.POHeader.PoId).ToArray()
+                                        POIds = Parameters.Select(p => p.POHeader?.PoId ?? "").ToArray()
                                     };
                                 }
                             }

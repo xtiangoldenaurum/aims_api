@@ -295,7 +295,6 @@ namespace aims_api.API.Controllers
             }
         }
 
-
         [HttpGet("getpotemplate")]
         public async Task<ActionResult> GetPOTemplate()
         {
@@ -393,13 +392,14 @@ namespace aims_api.API.Controllers
                 if (file == null || file.Length <= 0)
                 {
                     await DataValidator.AddErrorField("file");
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "No file was uploaded."));
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                string path = "UploadFileFolder/" + file.FileName;
+                string? path = "UploadFileFolder/" + file.FileName;
 
                 return Ok(await POCore.CreateBulkPO(file, path));
             }

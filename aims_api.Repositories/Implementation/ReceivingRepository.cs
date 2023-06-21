@@ -33,15 +33,15 @@ namespace aims_api.Repositories.Implementation
         IUniqueTagsRepository UniqueTagsRepo;
 
         // constructor to init prerequisit services/repos
-        public ReceivingRepository(ITenantProvider tenantProvider, 
-                                    IAuditTrailRepository auditTrailRepo, 
-                                    IIdNumberRepository idNumberRepo, 
-                                    IPORepository poRepo, 
-                                    IPODetailRepository poDetailRepo, 
-                                    IInventoryRepository inventoryRepo, 
-                                    IInventoryHistoryRepository invHistoryRepo, 
-                                    ILotAttributeDetailRepository lotAttRepo, 
-                                    IPutawayTaskRepository putawayTaskRepo, 
+        public ReceivingRepository(ITenantProvider tenantProvider,
+                                    IAuditTrailRepository auditTrailRepo,
+                                    IIdNumberRepository idNumberRepo,
+                                    IPORepository poRepo,
+                                    IPODetailRepository poDetailRepo,
+                                    IInventoryRepository inventoryRepo,
+                                    IInventoryHistoryRepository invHistoryRepo,
+                                    ILotAttributeDetailRepository lotAttRepo,
+                                    IPutawayTaskRepository putawayTaskRepo,
                                     IPrintHelperRepository printHelperRepo,
                                     IUniqueTagsRepository uniqueTagsRepo)
         {
@@ -296,8 +296,8 @@ namespace aims_api.Repositories.Implementation
 
                         // check header if still in receivable status
                         var hdrValid = await PORepo.POReceivable(invHead.POId);
-                        if (!hdrValid || 
-                            po.PoStatusId == (POStatus.FULLRCV).ToString() || 
+                        if (!hdrValid ||
+                            po.PoStatusId == (POStatus.FULLRCV).ToString() ||
                             po.PoStatusId == (POStatus.FRCCLOSED).ToString() ||
                             po.PoStatusId == (POStatus.CANCELED).ToString() ||
                             po.PoStatusId == (POStatus.CLOSED).ToString())
@@ -334,7 +334,7 @@ namespace aims_api.Repositories.Implementation
                         }
 
                         // update product status if expired
-                        if (lotAtt.ExpiryDate <= DateTime.Now && 
+                        if (lotAtt.ExpiryDate <= DateTime.Now &&
                             lotAtt.ProductConditionId == (ProductCondition.GOOD).ToString())
                         {
                             ret.ResultCode = ReceivingResultCode.INVALIDCONDITION;
@@ -359,7 +359,8 @@ namespace aims_api.Repositories.Implementation
                         lotAtt.LotAttributeId = lotAttId;
 
                         // flag to print lotatt id label
-                        labelsToPrint.Add(new BCodeLabelToPrintModel() { 
+                        labelsToPrint.Add(new BCodeLabelToPrintModel()
+                        {
                             DocType = PrinterDocType.LotAttId,
                             DocTypeId = (PrinterDocType.LotAttId).ToString(),
                             Description = lotAtt.LotAttributeId,
@@ -446,7 +447,7 @@ namespace aims_api.Repositories.Implementation
                             }
                             else
                             {
-                                
+
                                 ret.ResultCode = ReceivingResultCode.FAILED;
                             }
                         }
@@ -816,7 +817,7 @@ namespace aims_api.Repositories.Implementation
                 }
 
                 // check if po is still not closed, canceled or in create status
-                if (poHeader.PoStatusId == (POStatus.CREATED).ToString() || 
+                if (poHeader.PoStatusId == (POStatus.CREATED).ToString() ||
                     poHeader.PoStatusId == (POStatus.CANCELED).ToString() ||
                     poHeader.PoStatusId == (POStatus.FRCCLOSED).ToString() ||
                     poHeader.PoStatusId == (POStatus.CLOSED).ToString())
@@ -890,7 +891,7 @@ namespace aims_api.Repositories.Implementation
                                                         {
                                                             return delUniqTags;
                                                         }
-                                                        
+
                                                         return CancelRcvResultCode.SUCCESS;
                                                     }
                                                 }
