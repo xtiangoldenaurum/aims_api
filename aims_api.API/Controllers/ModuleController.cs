@@ -9,7 +9,7 @@ using Serilog;
 
 namespace aims_api.API.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
 

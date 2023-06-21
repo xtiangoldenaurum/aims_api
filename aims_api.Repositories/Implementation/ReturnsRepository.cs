@@ -1026,6 +1026,21 @@ namespace aims_api.Repositories.Implementation
 
             if (file.FileName.ToLower().Contains(".csv"))
             {
+                using (var reader = new StreamReader(path))
+                {
+                    // Read the header line from the CSV
+                    string headerLine = await reader.ReadLineAsync();
+
+                    // Validate the header
+                    if (!ValidateCsvHeader(headerLine))
+                    {
+                        return new ReturnsCreateTranResult()
+                        {
+                            ResultCode = ReturnsTranResultCode.INVALIDHEADER
+                        };
+                    }
+                }
+
                 DataTable value = new DataTable();
                 //Install Library : LumenWorksCsvReader 
 
@@ -1708,9 +1723,9 @@ namespace aims_api.Repositories.Implementation
 
         public bool ValidateCsvHeader(string headerLine)
         {
-            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Return Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",
-                                         "Order Qty", "Remarks", "Store Id",
+                                         "Expected Qty", "Remarks", "Store Id",
                                          "Store From", "Store Address", "Store Contact",
                                          "Store Email", "Carrier Id", "Carrier Name",
                                          "Carrier Address", "Carrier Contact", "Carrier Email",
@@ -1736,9 +1751,9 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
         {
-            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Return Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",
-                                         "Order Qty", "Remarks", "Store Id",
+                                         "Expected Qty", "Remarks", "Store Id",
                                          "Store From", "Store Address", "Store Contact",
                                          "Store Email", "Carrier Id", "Carrier Name",
                                          "Carrier Address", "Carrier Contact", "Carrier Email",

@@ -1,0 +1,5 @@
+2023-06-21 09:27:21.282 +08:00 [ERR] ERR500: Could not load type 'Invalid_Token.0x02000000' from assembly 'aims_api.Repositories, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. @192.168.1.130:5001    at aims_api.Repositories.Implementation.PORepository.CreateBulkPO(IFormFile file, String path)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at aims_api.Repositories.Implementation.PORepository.CreateBulkPO(IFormFile file, String path)
+   at aims_api.Cores.Implementation.POCore.CreateBulkPO(IFormFile file, String path) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\POCore.cs:line 285
+   at aims_api.API.Controllers.POController.CreateBulkPO(IFormFile file) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\POController.cs:line 404

@@ -293,14 +293,22 @@ namespace aims_api.Repositories.Implementation
                     // check if SO secondary reference number are unique
                     if (!string.IsNullOrEmpty(so.SOHeader.RefNumber2))
                     {
-                        var poCount = await ReferenceNumExists(db, so.SOHeader.RefNumber2);
-                        if (poCount > 0)
+                        var soCount = await ReferenceNumExists(db, so.SOHeader.RefNumber2);
+                        if (soCount > 0)
                         {
                             return new SOCreateTranResult()
                             {
                                 ResultCode = SOTranResultCode.INVALIDREFNUMTWO
                             };
                         }
+                    }
+
+                    if (string.IsNullOrEmpty(so.SOHeader.ConsigneeId))
+                    {
+                        return new SOCreateTranResult()
+                        {
+                            ResultCode = SOTranResultCode.MISSINGCONSIGNEEID
+                        };
                     }
 
                     // create header
@@ -355,6 +363,25 @@ namespace aims_api.Repositories.Implementation
                                 detail.SoLineId = $"{soId}-{i + 1}";
                                 detail.SoLineStatusId = (SOLneStatus.CREATED).ToString();
                                 detail.SoId = soId;
+
+                                if (so.SOHeader.ItemTotalQty != null)
+                                {
+                                    if (so.SOHeader.ItemTotalQty > detail.orderQty)
+                                    {
+                                        return new SOCreateTranResult()
+                                        {
+                                            ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                                        };
+                                    }
+                                }
+                                if (!so.SOHeader.ItemTotalQty.HasValue)
+                                {
+                                    // ItemTotalQty is null
+                                    return new SOCreateTranResult()
+                                    {
+                                        ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                                    };
+                                }
 
                                 // create detail
                                 bool dtlSaved = await SODetailRepo.CreateSODetailMod(db, detail);
@@ -609,6 +636,21 @@ namespace aims_api.Repositories.Implementation
 
             if (file.FileName.ToLower().Contains(".csv"))
             {
+                using (var reader = new StreamReader(path))
+                {
+                    // Read the header line from the CSV
+                    string headerLine = await reader.ReadLineAsync();
+
+                    // Validate the header
+                    if (!ValidateCsvHeader(headerLine))
+                    {
+                        return new SOCreateTranResult()
+                        {
+                            ResultCode = SOTranResultCode.INVALIDHEADER
+                        };
+                    }
+                }
+
                 DataTable value = new DataTable();
                 //Install Library : LumenWorksCsvReader 
 
@@ -624,9 +666,10 @@ namespace aims_api.Repositories.Implementation
                     rows.SODetails = new List<SODetailModel>();
                     SODetailModel detail = new SODetailModel();
 
-                    // get PO id number
-                    var poId = await IdNumberRepo.GetNextIdNum("SO");
-                    rows.SOHeader.SoId = poId;
+                    // get SO id number
+                    var soId = await IdNumberRepo.GetNextIdNum("SO");
+                    rows.SOHeader.SoId = soId;
+                    rows.SOHeader.SoTypeId = "DEFAULT";
 
                     rows.SOHeader.RefNumber = value.Rows[i][0] != null ? Convert.ToString(value.Rows[i][0]) : null;
                     if (string.IsNullOrEmpty(rows.SOHeader.RefNumber))
@@ -648,7 +691,7 @@ namespace aims_api.Repositories.Implementation
                     {
                         return new SOCreateTranResult()
                         {
-                            ResultCode = SOTranResultCode.ORDERDATEISREQUIRED
+                            ResultCode = SOTranResultCode.ORDERCREATEDDATEISREQUIRED
                         };
                     }
                     else
@@ -724,8 +767,12 @@ namespace aims_api.Repositories.Implementation
                     rows.SOHeader.ConsigneeId = value.Rows[i][8] != null ? Convert.ToString(value.Rows[i][8]) : null;
                     if (string.IsNullOrEmpty(rows.SOHeader.ConsigneeId))
                     {
-                        rows.SOHeader.ConsigneeId = null;
+                        return new SOCreateTranResult()
+                        {
+                            ResultCode = SOTranResultCode.MISSINGCONSIGNEEID
+                        };
                     }
+
                     rows.SOHeader.ConsigneeName = value.Rows[i][9] != null ? Convert.ToString(value.Rows[i][9]) : null;
                     if (string.IsNullOrEmpty(rows.SOHeader.ConsigneeName))
                     {
@@ -805,10 +852,32 @@ namespace aims_api.Repositories.Implementation
                     rows.SOHeader.DateModified = currentDateTime;
                     rows.SOHeader.CreatedBy = value.Rows[i][23] != null ? Convert.ToString(value.Rows[i][23]) : null;
                     rows.SOHeader.ModifiedBy = value.Rows[i][24] != null ? Convert.ToString(value.Rows[i][24]) : null;
+                    rows.SOHeader.ItemTotalQty = value.Rows[i][25] != null ? Convert.ToInt32(value.Rows[i][25]) : null;
+                    rows.SOHeader.SoGrossWeight = value.Rows[i][26] != null ? Convert.ToString(value.Rows[i][26]) : null;
 
                     // Populate SODetailModel
                     detail.Sku = value.Rows[i][5] != null ? Convert.ToString(value.Rows[i][5]) : null;
                     detail.orderQty = Convert.ToInt32(value.Rows[i][6]);
+
+                    if (rows.SOHeader.ItemTotalQty != null)
+                    {
+                        if (rows.SOHeader.ItemTotalQty > detail.orderQty)
+                        {
+                            return new SOCreateTranResult()
+                            {
+                                ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                            };
+                        }
+                    }
+                    if (!rows.SOHeader.ItemTotalQty.HasValue)
+                    {
+                        // ItemTotalQty is null
+                        return new SOCreateTranResult()
+                        {
+                            ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                        };
+                    }
+
                     detail.DateCreated = currentDateTime;
                     detail.DateModified = currentDateTime;
                     detail.CreatedBy = value.Rows[i][23] != null ? Convert.ToString(value.Rows[i][23]) : null;
@@ -832,6 +901,7 @@ namespace aims_api.Repositories.Implementation
                             var parameters = new
                             {
                                 soId = rows.SOHeader.SoId,
+                                soTypeId = rows.SOHeader.SoTypeId,
                                 refNumber = rows.SOHeader.RefNumber,
                                 refNumber2 = rows.SOHeader.RefNumber2,
                                 orderCreateDate = rows.SOHeader.OrderCreateDate,
@@ -858,14 +928,16 @@ namespace aims_api.Repositories.Implementation
                                 dateCreated = rows.SOHeader.DateCreated,
                                 dateModified = rows.SOHeader.DateModified,
                                 createdBy = rows.SOHeader.CreatedBy,
-                                modifyBy = rows.SOHeader.ModifiedBy
+                                modifyBy = rows.SOHeader.ModifiedBy,
+                                itemTotalQty = rows.SOHeader.ItemTotalQty,
+                                soGrossWeight = rows.SOHeader.SoGrossWeight
                             };
 
                             // check if SO primary reference number are unique
                             if (!string.IsNullOrEmpty(rows.SOHeader.RefNumber))
                             {
-                                var poCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber);
-                                if (poCount > 0)
+                                var soCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber);
+                                if (soCount > 0)
                                 {
                                     return new SOCreateTranResult()
                                     {
@@ -1001,6 +1073,7 @@ namespace aims_api.Repositories.Implementation
                                 // get SO id number
                                 var soId = await IdNumberRepo.GetNextIdNum("SO");
                                 rows.SOHeader.SoId = soId;
+                                rows.SOHeader.SoTypeId = "DEFAULT";
 
                                 rows.SOHeader.RefNumber = dataSet.Tables[0].Rows[i].ItemArray[0] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[0]) : null;
                                 if (string.IsNullOrEmpty(rows.SOHeader.RefNumber))
@@ -1022,7 +1095,7 @@ namespace aims_api.Repositories.Implementation
                                 {
                                     return new SOCreateTranResult()
                                     {
-                                        ResultCode = SOTranResultCode.ORDERDATEISREQUIRED
+                                        ResultCode = SOTranResultCode.ORDERCREATEDDATEISREQUIRED
                                     };
                                 }
                                 else
@@ -1097,7 +1170,10 @@ namespace aims_api.Repositories.Implementation
                                 rows.SOHeader.ConsigneeId = dataSet.Tables[0].Rows[i].ItemArray[8] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[8]) : null;
                                 if (string.IsNullOrEmpty(rows.SOHeader.ConsigneeId))
                                 {
-                                    rows.SOHeader.ConsigneeId = null;
+                                    return new SOCreateTranResult()
+                                    {
+                                        ResultCode = SOTranResultCode.MISSINGCONSIGNEEID
+                                    };
                                 }
                                 rows.SOHeader.ConsigneeName = dataSet.Tables[0].Rows[i].ItemArray[9] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[9]) : null;
                                 if (string.IsNullOrEmpty(rows.SOHeader.ConsigneeName))
@@ -1177,17 +1253,39 @@ namespace aims_api.Repositories.Implementation
                                 rows.SOHeader.DateModified = currentDateTime;
                                 rows.SOHeader.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[23] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[23]) : null;
                                 rows.SOHeader.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[24] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[24]) : null;
+                                rows.SOHeader.ItemTotalQty = dataSet.Tables[0].Rows[i].ItemArray[25] != null ? Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[25]) : null;
+                                rows.SOHeader.SoGrossWeight = dataSet.Tables[0].Rows[i].ItemArray[26] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[26]) : null;
 
                                 // Populate PODetailModel
                                 detail.Sku = dataSet.Tables[0].Rows[i].ItemArray[5] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[5]) : null;
                                 detail.orderQty = Convert.ToInt32(dataSet.Tables[0].Rows[i].ItemArray[6]);
+
+                                if (rows.SOHeader.ItemTotalQty != null)
+                                {
+                                    if (rows.SOHeader.ItemTotalQty > detail.orderQty)
+                                    {
+                                        return new SOCreateTranResult()
+                                        {
+                                            ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                                        };
+                                    }
+                                }
+                                if (!rows.SOHeader.ItemTotalQty.HasValue)
+                                {
+                                    // ItemTotalQty is null
+                                    return new SOCreateTranResult()
+                                    {
+                                        ResultCode = SOTranResultCode.INVALIDITEMTOTALQTY
+                                    };
+                                }
+
                                 detail.DateCreated = currentDateTime;
                                 detail.DateModified = currentDateTime;
                                 detail.CreatedBy = dataSet.Tables[0].Rows[i].ItemArray[23] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[23]) : null;
                                 detail.ModifiedBy = dataSet.Tables[0].Rows[i].ItemArray[24] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[24]) : null;
                                 detail.Remarks = dataSet.Tables[0].Rows[i].ItemArray[7] != null ? Convert.ToString(dataSet.Tables[0].Rows[i].ItemArray[7]) : null;
 
-                                // Add the detail to the PODetails collection
+                                // Add the detail to the SODetails collection
                                 ((List<SODetailModel>)rows.SODetails).Add(detail);
 
                                 Parameters.Add(rows);
@@ -1206,6 +1304,7 @@ namespace aims_api.Repositories.Implementation
                                         var parameters = new
                                         {
                                             soId = rows.SOHeader.SoId,
+                                            soTypeId = rows.SOHeader.SoTypeId,
                                             refNumber = rows.SOHeader.RefNumber,
                                             refNumber2 = rows.SOHeader.RefNumber2,
                                             orderCreateDate = rows.SOHeader.OrderCreateDate,
@@ -1232,7 +1331,8 @@ namespace aims_api.Repositories.Implementation
                                             dateCreated = rows.SOHeader.DateCreated,
                                             dateModified = rows.SOHeader.DateModified,
                                             createdBy = rows.SOHeader.CreatedBy,
-                                            modifyBy = rows.SOHeader.ModifiedBy
+                                            modifyBy = rows.SOHeader.ModifiedBy,
+                                            soGrossWeight = rows.SOHeader.SoGrossWeight
                                         };
 
                                         // check if SO primary reference number are unique
@@ -1251,8 +1351,8 @@ namespace aims_api.Repositories.Implementation
                                         // check if SO secondary reference number are unique
                                         if (!string.IsNullOrEmpty(rows.SOHeader.RefNumber2))
                                         {
-                                            var poCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber2);
-                                            if (poCount > 0)
+                                            var soCount = await ReferenceNumExists(db, rows.SOHeader.RefNumber2);
+                                            if (soCount > 0)
                                             {
                                                 return new SOCreateTranResult()
                                                 {
@@ -1366,7 +1466,7 @@ namespace aims_api.Repositories.Implementation
                                          "Supplier Address", "Supplier Contact", "Supplier Email",
                                          "Carrier Id", "Carrier Name", "Carrier Address",
                                          "Carrier Contact", "Carrier Email", "Created By",
-                                         "Modified By"
+                                         "Modified By", "Item Total Qty", "Gross Weight"
                                        };
 
             string[] actualHeaders = headerLine.Split(',');
@@ -1396,7 +1496,7 @@ namespace aims_api.Repositories.Implementation
                                          "Supplier Address", "Supplier Contact", "Supplier Email",
                                          "Carrier Id", "Carrier Name", "Carrier Address",
                                          "Carrier Contact", "Carrier Email", "Created By",
-                                         "Modified By"
+                                         "Modified By", "Item Total Qty", "Gross Weight"
                                        };
 
             int columnCount = await Task.Run(() => worksheet.Dimension.Columns);

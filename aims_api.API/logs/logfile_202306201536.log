@@ -1,0 +1,13 @@
+2023-06-20 15:36:40.253 +08:00 [ERR] ERR500: Unknown column 'parentname' in 'field list' @192.168.1.130:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.GetResult(Int32 statementId, Int32& affectedRows, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteDbDataReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.ModuleRepository.GetUserModules(String accessRightId) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\ModuleRepository.cs:line 199
+   at aims_api.Cores.Implementation.ModuleCore.GetUserModules(String accessRightId) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\ModuleCore.cs:line 101
+   at aims_api.API.Controllers.ModuleController.GetUserModules(String accessRightId) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\ModuleController.cs:line 176

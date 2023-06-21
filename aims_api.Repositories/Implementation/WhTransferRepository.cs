@@ -1024,6 +1024,21 @@ namespace aims_api.Repositories.Implementation
 
             if (file.FileName.ToLower().Contains(".csv"))
             {
+                using (var reader = new StreamReader(path))
+                {
+                    // Read the header line from the CSV
+                    string headerLine = await reader.ReadLineAsync();
+
+                    // Validate the header
+                    if (!ValidateCsvHeader(headerLine))
+                    {
+                        return new WhTransCreateTranResult()
+                        {
+                            ResultCode = WhTransferTranResultCode.INVALIDHEADER
+                        };
+                    }
+                }
+
                 DataTable value = new DataTable();
                 //Install Library : LumenWorksCsvReader 
 
@@ -1706,9 +1721,9 @@ namespace aims_api.Repositories.Implementation
 
         public bool ValidateCsvHeader(string headerLine)
         {
-            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Transfer Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",
-                                         "Expected Qty", "Remarks", "Warehouse Id",
+                                         "Expected Qty", "Remarks", "Warehouse From Id",
                                          "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
                                          "Warehouse From Email", "Carrier Id", "Carrier Name",
                                          "Carrier Address", "Carrier Contact", "Carrier Email",
@@ -1734,9 +1749,9 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
         {
-            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
+            string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Transfer Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",
-                                         "Expected Qty", "Remarks", "Warehouse Id",
+                                         "Expected Qty", "Remarks", "Warehouse From Id",
                                          "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
                                          "Warehouse From Email", "Carrier Id", "Carrier Name",
                                          "Carrier Address", "Carrier Contact", "Carrier Email",

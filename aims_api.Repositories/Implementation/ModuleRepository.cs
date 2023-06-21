@@ -73,7 +73,7 @@ namespace aims_api.Repositories.Implementation
 														moduleId = @moduleId";
 
                 var param = new DynamicParameters();
-				param.Add("@moduleId", moduleId);
+                param.Add("@moduleId", moduleId);
                 return await db.QuerySingleOrDefaultAsync<ModuleModel>(strQry, param, commandType: CommandType.Text);
             }
         }
@@ -87,7 +87,7 @@ namespace aims_api.Repositories.Implementation
 														moduleId = @moduleId";
 
                 var param = new DynamicParameters();
-				param.Add("@moduleId", moduleId);
+                param.Add("@moduleId", moduleId);
 
                 var res = await db.ExecuteScalarAsync(strQry, param);
                 if (res != null && res != DBNull.Value)
@@ -156,7 +156,7 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-		// place here InUse checker function
+        // place here InUse checker function
 
         public async Task<bool> DeleteModule(string moduleId)
         {
@@ -165,7 +165,7 @@ namespace aims_api.Repositories.Implementation
                 string strQry = @"delete from Module where 
 														moduleId = @moduleId";
                 var param = new DynamicParameters();
-				param.Add("@moduleId", moduleId);
+                param.Add("@moduleId", moduleId);
                 int res = await db.ExecuteAsync(strQry, param);
 
                 if (res > 0)
@@ -191,7 +191,7 @@ namespace aims_api.Repositories.Implementation
                                     SELECT * FROM tblA 
                                     UNION 
                                     SELECT * FROM module 
-                                    WHERE modulename IN (SELECT distinct parentname FROM tblA) 
+                                    WHERE modulename IN (SELECT distinct parentId FROM tblA) 
                                     ORDER BY seqNum;";
 
                 var param = new DynamicParameters();

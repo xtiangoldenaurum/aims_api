@@ -29,7 +29,11 @@ namespace aims_api.Enums
         INVALIDARRIVALDATE,
         [Description("Invalid Header, Use the Template.")]
         INVALIDHEADER,
-        [Description("Order Date is required.")]
-        ORDERDATEISREQUIRED
+        [Description("Order Created Date is required.")]
+        ORDERCREATEDDATEISREQUIRED,
+        [Description("Item Total Qty should be equal or less than Order Qty.")]
+        INVALIDITEMTOTALQTY,
+        [Description("Consignee ID is required.")]
+        MISSINGCONSIGNEEID
     }
 }

@@ -88,7 +88,7 @@ namespace aims_api.API.Controllers
         }
 
         [HttpPost("createsomod")]
-        public async Task<ActionResult> CreateSO(SOModelMod so)
+        public async Task<ActionResult> CreateSOMod(SOModelMod so)
         {
             try
             {
