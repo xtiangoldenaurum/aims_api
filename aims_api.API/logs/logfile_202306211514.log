@@ -1,7 +1,0 @@
-2023-06-21 15:14:10.140 +08:00 [ERR] ERR500: The process cannot access the file 'E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Template\Inbound\PO_Template.csv' because it is being used by another process. @192.168.1.130:5001    at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
-   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.OSFileStreamStrategy..ctor(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.FileStreamHelpers.ChooseStrategyCore(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
-   at System.IO.Strategies.FileStreamHelpers.ChooseStrategy(FileStream fileStream, String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, Int64 preallocationSize)
-   at System.IO.File.ReadAllBytesAsync(String path, CancellationToken cancellationToken)
-   at aims_api.API.Controllers.POController.GetPOTemplate() in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\POController.cs:line 305

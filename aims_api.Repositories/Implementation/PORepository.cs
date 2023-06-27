@@ -1108,7 +1108,7 @@ namespace aims_api.Repositories.Implementation
                     string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
-                    if (!ValidateCsvHeader(headerLine))
+                    if (!await ValidateCsvHeader(headerLine))
                     {
                         return new POCreateTranResult()
                         {
@@ -1131,6 +1131,9 @@ namespace aims_api.Repositories.Implementation
                     rows.POHeader = new POModel();
                     rows.PODetails = new List<PODetailModel>();
                     PODetailModel detail = new PODetailModel();
+                    ConfigModel configModel = new ConfigModel();
+
+                    var createdBy = configModel.CreatedBy;
 
                     // get PO id number
                     var poId = await IdNumberRepo.GetNextIdNum("PO");
@@ -1796,7 +1799,7 @@ namespace aims_api.Repositories.Implementation
             };
         }
 
-        public bool ValidateCsvHeader(string headerLine)
+        private async Task<bool> ValidateCsvHeader(string headerLine)
         {
             // Perform your validation logic here
             // Example validation: Check if the header contains specific column names
@@ -1823,9 +1826,12 @@ namespace aims_api.Repositories.Implementation
                     return false;
                 }
             }
+
+            await Task.Delay(1000);
+
             return true;
         }
-        public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
+        private async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
         {
             string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",

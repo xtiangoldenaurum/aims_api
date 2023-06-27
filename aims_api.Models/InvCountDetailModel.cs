@@ -1,0 +1,28 @@
+﻿using aims_api.Models.Heredities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace aims_api.Models
+{
+    public class InvCountDetailModel : InvCountDetailModelHeredity
+    {
+        public string? InvCountLineId { get; set; }
+        public string? InvCountId { get; set; }
+        public string? Sku { get; set; }
+        public string? LocationFrom { get; set; }
+        public string? ScanLocation { get; set; }
+        public string? TrackIdFrom { get; set; }
+        public string? ScanTrackId { get; set; }
+        public int? QtyFrom { get; set; }
+        public int? ActualCountQty { get; set; }
+        public string? LotAttributeId { get; set; }
+        public DateTime DateCreated { get; set; }
+        public DateTime DateModified { get; set; }
+        public string? CreatedBy { get; set; }
+        public string? ModifiedBy { get; set; }
+        public string? Remarks { get; set; }
+    }
+}

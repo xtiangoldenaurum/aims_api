@@ -33,7 +33,5 @@ namespace aims_api.Repositories.Interface
         Task<IEnumerable<string>> GetDistinctWhTransFrom();
         Task<IEnumerable<WhTransferModel>> GetExportWhTransfer();
         Task<WhTransCreateTranResult> CreateBulkWhTransfer(IFormFile file, string path);
-        bool ValidateCsvHeader(string headerLine);
-        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

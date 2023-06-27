@@ -644,7 +644,7 @@ namespace aims_api.Repositories.Implementation
                     string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
-                    if (!ValidateCsvHeader(headerLine))
+                    if (!await ValidateCsvHeader(headerLine))
                     {
                         return new SOCreateTranResult()
                         {
@@ -1462,7 +1462,7 @@ namespace aims_api.Repositories.Implementation
             };
         }
 
-        public bool ValidateCsvHeader(string headerLine)
+        private async Task<bool> ValidateCsvHeader(string headerLine)
         {
             // Perform your validation logic here
             // Example validation: Check if the header contains specific column names
@@ -1491,10 +1491,13 @@ namespace aims_api.Repositories.Implementation
                     return false;
                 }
             }
+
+            await Task.Delay(1000);
+
             return true;
         }
 
-        public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
+        private async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
         {
             string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Order Date Created",
                                          "Arrival Date", "Arrival Date 2", "SKU",

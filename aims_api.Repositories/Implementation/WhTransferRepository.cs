@@ -1030,7 +1030,7 @@ namespace aims_api.Repositories.Implementation
                     string? headerLine = await reader.ReadLineAsync();
 
                     // Validate the header
-                    if (!ValidateCsvHeader(headerLine))
+                    if (!await ValidateCsvHeader(headerLine))
                     {
                         return new WhTransCreateTranResult()
                         {
@@ -1725,16 +1725,43 @@ namespace aims_api.Repositories.Implementation
             };
         }
 
-        public bool ValidateCsvHeader(string headerLine)
+        //private bool ValidateCsvHeader(string headerLine)
+        //{
+        //    string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Transfer Date",
+        //                                 "Arrival Date", "Arrival Date 2", "SKU",
+        //                                 "Expected Qty", "Remarks", "Warehouse From Id",
+        //                                 "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
+        //                                 "Warehouse From Email", "Carrier Id", "Carrier Name",
+        //                                 "Carrier Address", "Carrier Contact", "Carrier Email",
+        //                                 "Created By", "Modified By"
+        //                               };
+
+        //    string[] actualHeaders = headerLine.Split(',');
+
+        //    if (actualHeaders.Length != expectedHeaders.Length)
+        //    {
+        //        return false;
+        //    }
+
+        //    for (int i = 0; i < actualHeaders.Length; i++)
+        //    {
+        //        if (actualHeaders[i].Trim() != expectedHeaders[i])
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    return true;
+        //}
+        private async Task<bool> ValidateCsvHeader(string headerLine)
         {
             string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Transfer Date",
-                                         "Arrival Date", "Arrival Date 2", "SKU",
-                                         "Expected Qty", "Remarks", "Warehouse From Id",
-                                         "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
-                                         "Warehouse From Email", "Carrier Id", "Carrier Name",
-                                         "Carrier Address", "Carrier Contact", "Carrier Email",
-                                         "Created By", "Modified By"
-                                       };
+                                 "Arrival Date", "Arrival Date 2", "SKU",
+                                 "Expected Qty", "Remarks", "Warehouse From Id",
+                                 "Warehouse From", "Warehouse From Address", "Warehouse From Contact",
+                                 "Warehouse From Email", "Carrier Id", "Carrier Name",
+                                 "Carrier Address", "Carrier Contact", "Carrier Email",
+                                 "Created By", "Modified By"
+                               };
 
             string[] actualHeaders = headerLine.Split(',');
 
@@ -1750,10 +1777,14 @@ namespace aims_api.Repositories.Implementation
                     return false;
                 }
             }
+
+            // Simulate an asynchronous operation
+            await Task.Delay(1000);
+
             return true;
         }
 
-        public async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
+        private async Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet)
         {
             string[] expectedHeaders = { "Reference Number", "2nd Reference Number", "Transfer Date",
                                          "Arrival Date", "Arrival Date 2", "SKU",

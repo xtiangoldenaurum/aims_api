@@ -33,7 +33,5 @@ namespace aims_api.Repositories.Interface
         Task<IEnumerable<string>> GetDistinctStoreFrom();
         Task<IEnumerable<ReturnsModel>> GetExportReturnsTransfer();
         Task<ReturnsCreateTranResult> CreateBulkReturns(IFormFile file, string path);
-        bool ValidateCsvHeader(string headerLine);
-        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

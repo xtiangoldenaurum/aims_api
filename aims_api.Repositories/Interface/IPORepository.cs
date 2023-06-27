@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace aims_api.Repositories.Interface
 {
-    public interface IPORepository
+    public interface IPORepository //interface - cannot be used to create objects like abstract, by default members of an interface are abstract and public
     {
         Task<POPagedMdl?> GetPOPaged(int pageNum, int pageItem);
         Task<Pagination?> GetPOPageDetail(IDbConnection db, int pageNum, int pageItem, int rowCount);
@@ -36,7 +36,5 @@ namespace aims_api.Repositories.Interface
         Task<CancelPOResultCode> ForceCancelPO(string poId, string userAccountId);
         Task<IEnumerable<POModel>> GetExportPO();
         Task<POCreateTranResult> CreateBulkPO(IFormFile file, string path);
-        bool ValidateCsvHeader(string headerLine);
-        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

@@ -24,7 +24,5 @@ namespace aims_api.Repositories.Interface
         Task<bool> DeleteSO(string soId);
         Task<IEnumerable<SOModel>> GetExportSO();
         Task<SOCreateTranResult> CreateBulkSO(IFormFile file, string path);
-        bool ValidateCsvHeader(string headerLine);
-        Task<bool> ValidateXlsxHeader(ExcelWorksheet worksheet);
     }
 }

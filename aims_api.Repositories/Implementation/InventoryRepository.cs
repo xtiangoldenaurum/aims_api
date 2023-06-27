@@ -267,5 +267,7 @@ namespace aims_api.Repositories.Implementation
             return await db.QuerySingleOrDefaultAsync<InventoryModel>(strQry, param, commandType: CommandType.Text);
         }
 
+        //public async Task<>
+
     }
 }
