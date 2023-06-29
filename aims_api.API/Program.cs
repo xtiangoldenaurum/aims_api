@@ -120,16 +120,23 @@ builder.Services.AddTransient<IInventoryCore, InventoryCore>();
 builder.Services.AddTransient<IInventoryRepository, InventoryRepository>();
 builder.Services.AddTransient<IInventoryHistoryCore, InventoryHistoryCore>();
 builder.Services.AddTransient<IInventoryHistoryRepository, InventoryHistoryRepository>();
-builder.Services.AddTransient<IInvMoveCore, InvMoveCore>();
-builder.Services.AddTransient<IInvMoveRepository, InvMoveRepository>();
-builder.Services.AddTransient<IInvAdjustmentCore, InvAdjustmentCore>();
-builder.Services.AddTransient<IInvAdjustmentRepository, InvAdjustmentRepository>();
 builder.Services.AddTransient<IInventoryStatusCore, InventoryStatusCore>();
 builder.Services.AddTransient<IInventoryStatusRepository, InventoryStatusRepository>();
+
+builder.Services.AddTransient<IInvMoveCore, InvMoveCore>();
+builder.Services.AddTransient<IInvMoveRepository, InvMoveRepository>();
+builder.Services.AddTransient<IInvMoveDetailCore, InvMoveDetailCore>();
+builder.Services.AddTransient<IInvMoveDetailRepository, InvMoveDetailRepository>();
 builder.Services.AddTransient<IInvMoveLineStatusCore, InvMoveLineStatusCore>();
 builder.Services.AddTransient<IInvMoveLineStatusRepository, InvMoveLineStatusRepository>();
 builder.Services.AddTransient<IInvMoveStatusCore, InvMoveStatusCore>();
 builder.Services.AddTransient<IInvMoveStatusRepository, InvMoveStatusRepository>();
+builder.Services.AddTransient<IInvMoveUserFieldCore, InvMoveUserFieldCore>();
+builder.Services.AddTransient<IInvMoveUserFieldRepository, InvMoveUserFieldRepository>();
+
+builder.Services.AddTransient<IInvAdjustmentCore, InvAdjustmentCore>();
+builder.Services.AddTransient<IInvAdjustmentRepository, InvAdjustmentRepository>();
+
 builder.Services.AddTransient<ILocationCore, LocationCore>();
 builder.Services.AddTransient<ILocationRepository, LocationRepository>();
 builder.Services.AddTransient<ILocationGroupCore, LocationGroupCore>();
@@ -149,6 +156,7 @@ builder.Services.AddTransient<IOrganizationTypeRepository, OrganizationTypeRepos
 builder.Services.AddTransient<IPackageTypeCore, PackageTypeCore>();
 builder.Services.AddTransient<IPackageTypeRepository, PackageTypeRepository>();
 builder.Services.AddTransient<IPagingRepository, PagingRepository>();
+
 builder.Services.AddTransient<IPOCore, POCore>();
 builder.Services.AddTransient<IPORepository, PORepository>();
 builder.Services.AddTransient<IPODetailCore, PODetailCore>();
@@ -159,6 +167,7 @@ builder.Services.AddTransient<IPOStatusCore, POStatusCore>();
 builder.Services.AddTransient<IPOStatusRepository, POStatusRepository>();
 builder.Services.AddTransient<IPOUserFieldCore, POUserFieldCore>();
 builder.Services.AddTransient<IPOUserFieldRepository, POUserFieldRepository>();
+
 builder.Services.AddTransient<IPrintHelperRepository, PrintHelperRepository>();
 builder.Services.AddTransient<IPrintHelperCore, PrintHelperCore>();
 builder.Services.AddTransient<IProductCore, ProductCore>();

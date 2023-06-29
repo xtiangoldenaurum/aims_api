@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace aims_api.Models
 {
-    public class InvMoveDetailModel : InvMoveDetailModelHeredity
+    public class InvMoveDetailModelMod : InvMoveDetailModelHeredity
     {
         public string? InvMoveLineId { get; set; }
         public string? InvMoveId { get; set; }

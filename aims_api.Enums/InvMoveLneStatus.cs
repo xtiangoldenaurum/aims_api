@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace aims_api.Enums
 {
-    public enum InvMoveStatus
+    public enum InvMoveLneStatus
     {
         CREATED,
-        PARTMV,
+        PRTMV,
         COMPLETED,
-        CANCELLED,
         CONFIRMED,
         GENERATEDMOVETASK,
         FRCCLOSED

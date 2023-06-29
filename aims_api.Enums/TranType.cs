@@ -29,6 +29,9 @@ namespace aims_api.Enums
         TAGGING,
         TRACE,
         CANCELRCV,
+        CANCELMV,
+        CANCELADJ,
+        CANCELCNT,
         LOCVCODE,
         EPC
     }

@@ -19,6 +19,122 @@ namespace aims_api.API.Controllers
             InvMoveCore = invMoveCore;
             DataValidator = new DataValidator();
         }
+        [HttpPost("getinvmovespecial")]
+        public async Task<ActionResult> GetInvMoveSpecial(InvMoveFilteredMdl filter, string? searchKey, int pageNum = 1, int pageItem = 100)
+        {
+            try
+            {
+                return Ok(await InvMoveCore.GetInvMoveSpecial(filter, searchKey, pageNum, pageItem));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw; //allows to create custom error.
+            }
+        }
+
+        [HttpGet("getinvmoveformvpaged")]
+        public async Task<ActionResult> GetInvMoveForMvPaged(int pageNum = 1, int pageItem = 100)
+        {
+            try
+            {
+                return Ok(await InvMoveCore.GetInvMoveForMvPaged(pageNum, pageItem));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpGet("getinvmovepg")]
+        public async Task<ActionResult> GetInvMovePg(int pageNum = 1, int pageItem = 100)
+        {
+            try
+            {
+                return Ok(await InvMoveCore.GetInvMovePg(pageNum, pageItem));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpGet("getinvmovepgsrch")]
+        public async Task<ActionResult> GetInvMovePgSrch(string searchKey, int pageNum = 1, int pageItem = 100)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(searchKey))
+                {
+                    await DataValidator.AddErrorField("searchKey");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.GetInvMovePgSrch(searchKey, pageNum, pageItem));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpGet("getinvmoveheaderbyid")]
+        public async Task<ActionResult> GetInvMoveHeaderById(string invMoveId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(invMoveId))
+                {
+                    await DataValidator.AddErrorField("invMoveId");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.GetInvMoveById(invMoveId));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpGet("getinvmovebyid")]
+        public async Task<ActionResult> GetInvMoveById(string invMoveId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(invMoveId))
+                {
+                    await DataValidator.AddErrorField("invMoveId");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.GetInvMoveByIdMod(invMoveId));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
 
         [HttpPost("createinvmovemod")]
         public async Task<ActionResult> CreateInvMoveMod(InvMoveModelMod invMove)
