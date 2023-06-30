@@ -186,7 +186,6 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<string> GetPODtlCancelRCvUpdatedStatus(IDbConnection db, string poDetailId, string receivingId)
         {
-
             string strQry = @"call `spGetPODtlCancelRcvUpdtStatus`(@poDetailId, @rcvId);";
 
             var param = new DynamicParameters();

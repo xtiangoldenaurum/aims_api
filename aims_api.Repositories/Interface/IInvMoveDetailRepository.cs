@@ -22,7 +22,6 @@ namespace aims_api.Repositories.Interface
         Task<string> GetInvMoveDtlCancelMvUpdatedStatus(IDbConnection db, string invMoveDetailId, string invMoveId);
         Task<bool> InvMoveDetailExists(string InvMoveLineId);
         Task<bool> ChkInvMoveDetailLock(string InvMoveLineId);
-        Task<bool> InvMoveDetailReceivable(string InvMoveLineId);
         Task<InvMoveDetailModel> LockInvMoveDetail(IDbConnection db, string invMoveLineId);
         Task<IEnumerable<InvMoveDetailModel>> LockInvMoveDetails(IDbConnection db, string invMoveId);
         Task<bool> CreateInvMoveDetail(InvMoveDetailModel invMoveDetail);

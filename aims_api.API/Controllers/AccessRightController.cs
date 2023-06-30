@@ -1,10 +1,7 @@
-﻿using aims_api.Cores.Implementation;
-using aims_api.Cores.Interface;
+﻿using aims_api.Cores.Interface;
 using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Utilities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 

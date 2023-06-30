@@ -2,7 +2,6 @@
 using aims_api.Enums;
 using aims_api.Utilities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -34,7 +33,7 @@ namespace aims_api.API.Controllers
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw;
             }
-            
+
         }
 
         [HttpGet("getaccessrightdetailsbyid")]

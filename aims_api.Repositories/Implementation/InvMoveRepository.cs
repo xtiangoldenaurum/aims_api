@@ -451,6 +451,7 @@ namespace aims_api.Repositories.Implementation
                                 detail.InvMoveLineId = $"{invMoveId}-{i + 1}";
                                 detail.InvMoveLineStatusId = (InvMoveLneStatus.CREATED).ToString();
                                 detail.InvMoveId = invMoveId;
+                                //detail.InventoryId = 
 
                                 // create detail
                                 bool dtlSaved = await InvMoveDetailRepo.CreateInvMoveDetailMod(db, detail);

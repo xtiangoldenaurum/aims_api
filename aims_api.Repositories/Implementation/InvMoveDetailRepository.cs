@@ -51,27 +51,33 @@ namespace aims_api.Repositories.Implementation
             {
                 string strQry = @"insert into InvMoveDetail(invMoveLineId, 
 														    invMoveId, 
-														    sku, 
-														    qtyFrom, 
-														    qtyTo, 
-                                                            locationFrom
-                                                            locationTo
-                                                            trackIdFrom
-                                                            trackIdTo
 														    invMoveLineStatusId, 
+                                                            inventoryId,
+                                                            sku,
+                                                            qtyFrom,
+                                                            qtyTo,
+                                                            locationFrom,
+                                                            locationTo,
+                                                            trackIdFrom,
+                                                            trackIdTo,
+                                                            lpnFrom,
+                                                            lpnTo,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
  												values(@invMoveLineId, 
 														    @invMoveId, 
+                                                            @invMoveLineStatusId,
+                                                            @inventoryId
 														    @sku, 
-														    @qtyFrom, 
-														    @qtyTo, 
-                                                            @locationFrom
-                                                            @locationTo
-                                                            @trackIdFrom
-                                                            @trackIdTo
-                                                            @invMoveLineStatusId
+                                                            @qtyFrom,
+                                                            @qtyTo,
+                                                            @locationFrom,
+                                                            @locationTo,
+                                                            @trackIdFrom,
+                                                            @trackIdTo,
+                                                            @lpnFrom,
+                                                            @lpnTo,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -91,27 +97,33 @@ namespace aims_api.Repositories.Implementation
         {
             string strQry = @"insert into InvMoveDetail(invMoveLineId, 
 														    invMoveId, 
-														    sku, 
-														    qtyFrom, 
-														    qtyTo, 
-                                                            locationFrom
-                                                            locationTo
-                                                            trackIdFrom
-                                                            trackIdTo
 														    invMoveLineStatusId, 
+                                                            inventoryId,
+                                                            sku,
+                                                            qtyFrom,
+                                                            qtyTo,
+                                                            locationFrom,
+                                                            locationTo,
+                                                            trackIdFrom,
+                                                            trackIdTo,
+                                                            lpnFrom,
+                                                            lpnTo,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
  												values(@invMoveLineId, 
 														    @invMoveId, 
+                                                            @invMoveLineStatusId,
+                                                            @inventoryId
 														    @sku, 
-														    @qtyFrom, 
-														    @qtyTo, 
-                                                            @locationFrom
-                                                            @locationTo
-                                                            @trackIdFrom
-                                                            @trackIdTo
-                                                            @invMoveLineStatusId
+                                                            @qtyFrom,
+                                                            @qtyTo,
+                                                            @locationFrom,
+                                                            @locationTo,
+                                                            @trackIdFrom,
+                                                            @trackIdTo,
+                                                            @lpnFrom,
+                                                            @lpnTo,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -132,24 +144,98 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        public Task<bool> DeleteInvMoveDetail(string invMoveLineId)
+        public async Task<bool> DeleteInvMoveDetail(string invMoveLineId)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                string strQry = @"delete from InvMoveDetail where 
+														invMoveLineId = @invMoveLineId";
+                var param = new DynamicParameters();
+                param.Add("@invMoveLineId", invMoveLineId);
+                int res = await db.ExecuteAsync(strQry, param);
+
+                if (res > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public Task<InvMoveDetailDelResultCode> DeleteInvMoveDetailMod(string invMoveLineId, string userAccountId)
+        public async Task<InvMoveDetailDelResultCode> DeleteInvMoveDetailMod(string invMoveLineId, string userAccountId)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                // lock current InvMove detail
+                var invMoveDetail = await LockInvMoveDetail(db, invMoveLineId);
+                if (invMoveDetail == null)
+                {
+                    return InvMoveDetailDelResultCode.INVMOVEDTAILINUSED;
+                }
+
+                // check if InvMove detail is still in create status
+                if (invMoveDetail.InvMoveLineStatusId != (POLneStatus.CREATED).ToString())
+                {
+                    return InvMoveDetailDelResultCode.DETAILSTATUSMODIFIED;
+                }
+
+                // delete InvMove detail and create audit entry
+                string strQry = @"delete from InvMoveDetail where 
+                                                        invMoveLineId = @invMoveLineId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveLineId", invMoveLineId);
+                int res = await db.ExecuteAsync(strQry, param);
+
+                if (res > 0)
+                {
+                    // alter audittrail entries containing deleted recordId
+                    // append "-DEL" on recordId to avoid record inconsistency incase similar recordId is generated
+                    var alteredRecId = $"{invMoveDetail.InvMoveLineId}-DEL";
+                    var auditAltered = await AuditTrailRepo.AlterRecordId(db, invMoveDetail.InvMoveLineId, alteredRecId);
+
+                    if (auditAltered)
+                    {
+                        // log audit
+                        var audit = await AuditBuilder.BuildTranAuditDEL(invMoveDetail, userAccountId, TranType.INVMOV);
+
+                        if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                        {
+                            return InvMoveDetailDelResultCode.SUCCESS;
+                        }
+                    }
+                }
+            }
+
+            return InvMoveDetailDelResultCode.FAILED;
         }
 
-        public Task<InvMoveDetailModel> GetInvMoveDetailById(string invMoveLineId)
+        public async Task<InvMoveDetailModel> GetInvMoveDetailById(string invMoveLineId)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select * from InvMoveDetail where 
+														invMoveLineId = @invMoveLineId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveLineId", invMoveLineId);
+                return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<InvMoveDetailModel> GetInvMoveDetailByIdMod(IDbConnection db, string invMoveLineId)
+        public async Task<InvMoveDetailModel> GetInvMoveDetailByIdMod(IDbConnection db, string invMoveLineId)
         {
-            throw new NotImplementedException();
+            string strQry = @"select * from InvMoveDetail where 
+													invMoveLineId = @invMoveLineId";
+
+            var param = new DynamicParameters();
+            param.Add("@invMoveLineId", invMoveLineId);
+            return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
         }
 
         public async Task<InvMoveDetailPagedMdl?> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem)
@@ -184,49 +270,151 @@ namespace aims_api.Repositories.Implementation
             return null;
         }
 
-        public Task<InvMoveDetailPagedMdlMod?> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum, int pageItem)
+        public async Task<InvMoveDetailPagedMdlMod?> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum, int pageItem)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            int offset = (pageNum - 1) * pageItem;
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = "call `spGetInvMoveDetailByInvMove`(@currInvMove, @pageItem, @offset)";
+
+                var param = new DynamicParameters();
+                param.Add("@currInvMoveId", invMoveId);
+                param.Add("@pageItem", pageItem);
+                param.Add("@offset", offset);
+
+                var ret = await db.QueryAsync<InvMoveDetailModelMod>(strQry, param, commandType: CommandType.Text);
+
+                if (ret != null && ret.Any())
+                {
+                    // build pagination detail
+                    var pageDetail = await GetInvMoveDetailPageDetailMod(db, invMoveId, pageNum, pageItem, ret.Count());
+
+                    return new InvMoveDetailPagedMdlMod()
+                    {
+                        Pagination = pageDetail,
+                        InvMoveDetailModel = ret
+                    };
+                }
+            }
+
+            return null;
         }
 
-        public Task<Pagination?> GetInvMoveDetailPageDetail(IDbConnection db, string InvMoveId, int pageNum, int pageItem, int rowCount)
+        public async Task<Pagination?> GetInvMoveDetailPageDetail(IDbConnection db, string invMoveId, int pageNum, int pageItem, int rowCount)
         {
-            throw new NotImplementedException();
+            // provide query here then get page detail from paging repository
+            string strQry = @"select * from InvMoveDetail where invMoveId = @invMoveId";
+
+            var param = new DynamicParameters();
+            param.Add("@invMoveId", invMoveId);
+
+            return await PagingRepo.GetPageDetail(db, strQry, param, pageNum, pageItem, rowCount);
         }
 
-        public Task<Pagination?> GetInvMoveDetailPageDetailMod(IDbConnection db, string poId, int pageNum, int pageItem, int rowCount)
+        public async Task<Pagination?> GetInvMoveDetailPageDetailMod(IDbConnection db, string invMoveId, int pageNum, int pageItem, int rowCount)
         {
-            throw new NotImplementedException();
+            // provide query here then get page detail from paging repository
+            string strQry = @"call `spCountInvMoveDetailByinvMoveId`(@currInvMoveId)";
+
+            var param = new DynamicParameters();
+            param.Add("@currInvMoveId", invMoveId);
+
+            return await PagingRepo.GetPageDetail(db, strQry, param, pageNum, pageItem, rowCount);
         }
 
-        public Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPg(int pageNum, int pageItem)
+        public async Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPg(int pageNum, int pageItem)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            int offset = (pageNum - 1) * pageItem;
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = "select * from InvMoveDetail limit @pageItem offset @offset";
+
+                var param = new DynamicParameters();
+                param.Add("@pageItem", pageItem);
+                param.Add("@offset", offset);
+                return await db.QueryAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPgSrch(string searchKey, int pageNum, int pageItem)
-        {
-            throw new NotImplementedException();
+        public async Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPgSrch(string searchKey, int pageNum, int pageItem)
+        { 
+            // pagination setup
+            int offset = (pageNum - 1) * pageItem;
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select * from InvMoveDetail where 
+														invMoveLineId like @searchKey or 
+														invMoveId like @searchKey or 
+														sku like @searchKey or 
+														qtyFrom like @searchKey or 
+														qtyTo like @searchKey or 
+														locationFrom like @searchKey or 
+														locationTo like @searchKey or 
+														trackIdFrom like @searchKey or 
+														trackiIdTo like @searchKey or 
+														lpnFrom like @searchKey or 
+														lpnTo like @searchKey or 
+														invMoveLineStatusId like @searchKey or 
+														dateCreated like @searchKey or 
+														dateModified like @searchKey or 
+														createdBy like @searchKey or 
+														modifiedBy like @searchKey or 
+														remarks like @searchKey 
+														limit @pageItem offset @offset";
+
+                var param = new DynamicParameters();
+                param.Add("@searchKey", $"%{searchKey}%");
+                param.Add("@pageItem", pageItem);
+                param.Add("@offset", offset);
+                return await db.QueryAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<string> GetInvMoveDtlCancelMvUpdatedStatus(IDbConnection db, string invMoveDetailId, string invMoveId)
+        public async Task<string> GetInvMoveDtlCancelMvUpdatedStatus(IDbConnection db, string invMoveDetailId, string mvId)
         {
-            throw new NotImplementedException();
+            string strQry = @"call `spGetPODtlCancelMvUpdtStatus`(@invMoveDetailId, @mvId);";
+
+            var param = new DynamicParameters();
+            param.Add("@invMoveDetailId", invMoveDetailId);
+            param.Add("@mvId", mvId);
+
+            return await db.ExecuteScalarAsync<string>(strQry, param, commandType: CommandType.Text);
         }
 
-        public Task<bool> InvMoveDetailExists(string InvMoveLineId)
+        public async Task<bool> InvMoveDetailExists(string invMoveLineId)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select invMoveLineId from InvMoveDetail where 
+														invMoveLineId = @invMoveLineId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveLineId", invMoveLineId);
+
+                var res = await db.ExecuteScalarAsync(strQry, param);
+                if (res != null && res != DBNull.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> InvMoveDetailReceivable(string InvMoveLineId)
+        public async Task<InvMoveDetailModel> LockInvMoveDetail(IDbConnection db, string invMoveLineId)
         {
-            throw new NotImplementedException();
-        }
+            string strQry = @"SELECT * FROM invmovedetail WHERE invMoveLineId = @invMoveLineId FOR UPDATE;";
 
-        public Task<InvMoveDetailModel> LockInvMoveDetail(IDbConnection db, string invMoveLineId)
-        {
-            throw new NotImplementedException();
+            var param = new DynamicParameters();
+            param.Add("@invMoveLineId", invMoveLineId);
+
+            return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param);
         }
 
         public async Task<IEnumerable<InvMoveDetailModel>> LockInvMoveDetails(IDbConnection db, string invMoveId)
@@ -246,13 +434,11 @@ namespace aims_api.Repositories.Implementation
                 string strQry = @"update InvMoveDetail set 
 														invMoveId = @invMoveId, 
 														sku = @sku, 
-														qtyFrom = @qtyFrom, 
-														qtyTo = @qtyTo, 
-														locationFrom = @locationFrom, 
-														locationTo = @locationTo, 
-														trackIdFrom = @trackIdFrom, 
-														trackIdTo = @trackIdTo, 
 														invMoveLineStatusId = @invMoveLineStatusId, 
+                                                        qtyTo = @qtyTo,
+                                                        locationTo = @locationTo,
+                                                        trackIdTo = @trackIdTo,
+                                                        lpnTo = @lpnTo,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";
@@ -273,13 +459,11 @@ namespace aims_api.Repositories.Implementation
             string strQry = @"update InvMoveDetail set 
 														invMoveId = @invMoveId, 
 														sku = @sku, 
-														qtyFrom = @qtyFrom, 
-														qtyTo = @qtyTo, 
-														locationFrom = @locationFrom, 
-														locationTo = @locationTo, 
-														trackIdFrom = @trackIdFrom, 
-														trackIdTo = @trackIdTo, 
 														invMoveLineStatusId = @invMoveLineStatusId, 
+                                                        qtyTo = @qtyTo,
+                                                        locationTo = @locationTo,
+                                                        trackIdTo = @trackIdTo,
+                                                        lpnTo = @lpnTo,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";

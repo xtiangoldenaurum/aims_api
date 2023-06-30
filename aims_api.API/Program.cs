@@ -241,12 +241,15 @@ builder.Services.AddTransient<PORepoSub>();
 builder.Services.AddTransient<ReceivingRepoSub>();
 builder.Services.AddTransient<ReturnsRepoSub>();
 builder.Services.AddTransient<WhTransferRepoSub>();
+builder.Services.AddTransient<MovementTaskRepoSub>();
 builder.Services.AddTransient<PutawayTaskRepoSub>();
 
 // mycustom services end here...
 #endregion
 
 var app = builder.Build();
+
+//Middleware - component (class) which is executed on every request in ASP.NET Core application.
 
 // implement CORS policy
 app.UseCors("ClientPermission");
@@ -269,6 +272,7 @@ app.UseAuthorization();
 // replaced with code below to allow jwt auth
 //app.MapControllers();
 
+//can now add the [Authorize] attribute to your controller actions or individual endpoints to require JWT authentication for accessing those endpoints.
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();

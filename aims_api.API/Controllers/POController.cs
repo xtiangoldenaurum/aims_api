@@ -10,6 +10,7 @@ using Serilog;
 
 namespace aims_api.API.Controllers
 {
+    //Web API includes filters to add extra logic before or after action method executes.
     //[Authorize] //This Authorization attribute is everyone can see the detail view but every other action requires the user to identity themselves and sign im
     [Route("api/[controller]")]
     [ApiController]
