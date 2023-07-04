@@ -1,0 +1,15 @@
+2023-07-04 13:43:18.759 +08:00 [ERR] ERR500: Unknown column 'ih.qtyTo' in 'where clause' @192.168.1.130:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.GetResult(Int32 statementId, Int32& affectedRows, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteScalar()
+   at System.Data.Common.DbCommand.ExecuteScalarAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteScalarImplAsync[T](IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1210
+   at aims_api.Repositories.Implementation.InvMoveRepository.MoveQtyIsValid(IDbConnection db, String inventoryId, Nullable`1 qtyTo) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\InvMoveRepository.cs:line 561
+   at aims_api.Repositories.Implementation.InvMoveRepository.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\InvMoveRepository.cs:line 453
+   at aims_api.Cores.Implementation.InvMoveCore.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\InvMoveCore.cs:line 130
+   at aims_api.API.Controllers.InvMoveController.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\InvMoveController.cs:line 153

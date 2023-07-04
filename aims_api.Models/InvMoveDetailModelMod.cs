@@ -13,14 +13,9 @@ namespace aims_api.Models
         public string? InvMoveId { get; set; }
         public string? InvMoveLineStatusId { get; set; }
         public string? InventoryId { get; set; }
-        public string? Sku { get; set; }
-        public int? QtyFrom { get; set; }
         public int? QtyTo { get; set; }
-        public string? LocationFrom { get; set; }
         public string? LocationTo { get; set; }
-        public string? TrackIdFrom { get; set; }
         public string? TrackIdTo { get; set; }
-        public string? LpnFrom { get; set; }
         public string? LpnTo { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime? DateModified { get; set; }

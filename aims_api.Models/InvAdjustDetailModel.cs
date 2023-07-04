@@ -12,7 +12,8 @@ namespace aims_api.Models
         public string? InvAdjustLineId { get; set; }
         public string? InvAdjustId { get; set; }
         public string? InventoryId { get; set; }
-        public string? Sku { get; set; }
+        public int? QtyTo { get; set; }
+        public string? ApprovedBy { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime? DateModified { get; set; }
         public string? CreatedBy { get; set; }

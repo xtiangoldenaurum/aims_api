@@ -1,5 +1,10 @@
 ﻿using aims_api.Models;
+using aims_api.Repositories.AuditBuilder;
 using aims_api.Repositories.Interface;
+using aims_api.Utilities;
+using aims_api.Utilities.Interface;
+using Dapper;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,84 +16,389 @@ namespace aims_api.Repositories.Implementation
 {
     public class InvMoveUserFieldRepository : IInvMoveUserFieldRepository
     {
-        public Task<bool> ChkColExists(string fieldName)
+        private string ConnString;
+        private string DatabaseName;
+        IAuditTrailRepository AuditTrailRepo;
+        InvMoveUserFieldAudit AuditBuilder;
+        public InvMoveUserFieldRepository(ITenantProvider tenantProvider, IAuditTrailRepository auditTrailRepo)
         {
-            throw new NotImplementedException();
+            ConnString = tenantProvider.GetTenant().SqlConnectionString;
+            DatabaseName = tenantProvider.GetTenant().DBName;
+            AuditTrailRepo = auditTrailRepo;
+            AuditBuilder = new InvMoveUserFieldAudit();
         }
 
-        public Task<bool> CreateInvMoveUField(string fieldName, string createdBy)
+        public async Task<bool> ChkColExists(string fieldName)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = @"SELECT count(COLUMN_NAME) inUse
+                                    FROM INFORMATION_SCHEMA.COLUMNS 
+                                    WHERE TABLE_SCHEMA = @dbName AND 
+		                                    TABLE_NAME = 'pouserfield' AND 
+		                                    COLUMN_NAME = @fieldName;";
+
+                var param = new DynamicParameters();
+                param.Add("@dbName", DatabaseName);
+                param.Add("@fieldName", fieldName);
+
+                var res = await db.ExecuteScalarAsync<int>(strQry, param);
+
+                if (res == 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        public Task<bool> CreateInvMoveUserField(InvMoveUserFieldModel invMoveUserField)
+        public async Task<bool> CreateInvMoveUField(string fieldName, string createdBy)
         {
-            throw new NotImplementedException();
+            // note: MySql does not support rollback on database table schema alter queries
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = $"ALTER TABLE invmoveuserfield ADD `{fieldName}` VARCHAR(255) NULL;";
+
+                var res = await db.ExecuteAsync(strQry);
+
+                // check column if created successfully
+                var isExists = await ChkColExists(fieldName);
+
+                if (isExists)
+                {
+                    // log audit
+                    var audit = await AuditBuilder.BuildTranAuditADD(fieldName, createdBy);
+
+                    if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> DeleteInvMoveUField(string fieldName, string userAccountId)
+        public async Task<bool> CreateInvMoveUserField(InvMoveUserFieldModel invMoveUserField)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                string strQry = @"insert into InvMoveUserField(invMoveId)
+ 												values(@invMoveId)";
+
+                int res = await db.ExecuteAsync(strQry, invMoveUserField);
+
+                if (res > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> DeleteInvMoveUserField(string poId)
+        public async Task<bool> DeleteInvMoveUField(string fieldName, string userAccountId)
         {
-            throw new NotImplementedException();
+            // note: MySql does not support rollback on database table schema alter queries
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = $"alter table invmoveuserfield drop `{fieldName}`";
+                int res = await db.ExecuteAsync(strQry);
+
+                var isExists = await ChkColExists(fieldName);
+
+                if (!isExists)
+                {
+                    // log audit
+                    var audit = await AuditBuilder.BuildTranAuditDEL(fieldName, userAccountId);
+
+                    if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
-        public Task<dynamic> GeInvMoveOUFields()
+        public async Task<bool> DeleteInvMoveUserField(string invMoveId)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                string strQry = @"delete from InvMoveUserField where 
+														invMoveId = @invMoveId";
+                var param = new DynamicParameters();
+                param.Add("@invMoveId", invMoveId);
+                int res = await db.ExecuteAsync(strQry, param);
+
+                if (res > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public Task<dynamic> GetInvMoveUserFieldById(string invMoveId)
+        public async Task<dynamic?> GetInvMoveUFields()
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = @"SELECT COLUMN_NAME ColumnName
+                                    FROM INFORMATION_SCHEMA.COLUMNS 
+                                    WHERE TABLE_SCHEMA = @dbName AND 
+		                                    TABLE_NAME = 'invmoveuserfield'";
+
+                var param = new DynamicParameters();
+                param.Add("@dbName", DatabaseName);
+
+                var res = await db.QueryAsync<UserFieldModel>(strQry, param);
+
+                if (res.Any())
+                {
+                    var expando = new Dictionary<string, object?>();
+
+                    foreach (var itm in res)
+                    {
+                        expando.Add(itm.ColumnName, null);
+                    }
+
+                    return expando;
+                }
+            }
+
+            return null;
         }
 
-        public Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPg(int pageNum, int pageItem)
+        public async Task<dynamic> GetInvMoveUserFieldById(string invMoveId)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select * from InvMoveUserField where 
+														invMoveId = @invMoveId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveId", invMoveId);
+                return await db.QuerySingleOrDefaultAsync<dynamic>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPgSrch(string searchKey, int pageNum, int pageItem)
+        public async Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPg(int pageNum, int pageItem)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            int offset = (pageNum - 1) * pageItem;
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = "select * from InvMoveUserField limit @pageItem offset @offset";
+
+                var param = new DynamicParameters();
+                param.Add("@pageItem", pageItem);
+                param.Add("@offset", offset);
+                return await db.QueryAsync<InvMoveUserFieldModel>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<string?> GetInvMoveUsrFldQryFilter()
+        public async Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPgSrch(string searchKey, int pageNum, int pageItem)
         {
-            throw new NotImplementedException();
+            // pagination setup
+            int offset = (pageNum - 1) * pageItem;
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select * from InvMoveUserField where 
+														poId like @searchKey 
+														limit @pageItem offset @offset";
+
+                var param = new DynamicParameters();
+                param.Add("@searchKey", $"%{searchKey}%");
+                param.Add("@pageItem", pageItem);
+                param.Add("@offset", offset);
+                return await db.QueryAsync<InvMoveUserFieldModel>(strQry, param, commandType: CommandType.Text);
+            }
         }
 
-        public Task<bool> InitInvMoveUField(IDbConnection db, string invMoveId)
+        public async Task<string?> GetInvMoveUsrFldQryFilter()
         {
-            throw new NotImplementedException();
+            // get wildcard search filter script of product user fields
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = @"with tmpData  AS (SELECT group_concat(CONCAT('prodUF.', COLUMN_NAME)) ColumnName 
+                                                    FROM INFORMATION_SCHEMA.COLUMNS 
+                                                    WHERE TABLE_SCHEMA = '@dbName' AND 
+			                                                    TABLE_NAME = 'invmoveuserfield') 
+                                                    SELECT CONCAT(REPLACE(ColumnName, "","", "" like @searchKey or ""), ' like @searchKey ') 
+                                                    FROM tmpData";
+
+                var param = new DynamicParameters();
+                param.Add("@dbName", DatabaseName);
+
+                var res = await db.ExecuteScalarAsync<string>(strQry, param);
+
+                if (res != null && res.Length > 0)
+                {
+                    return res;
+                }
+            }
+
+            return null;
         }
 
-        public Task<bool> InvMoveUserFieldExists(string invMoveId)
+        public async Task<bool> InitInvMoveUField(IDbConnection db, string invMoveId)
         {
-            throw new NotImplementedException();
+            string strQry = $"insert into invmoveuserfield(invMoveId) values(@invMoveId);";
+
+            var param = new DynamicParameters();
+            param.Add("@invMoveId", invMoveId);
+
+            int res = await db.ExecuteAsync(strQry, param);
+
+            if (res > 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
-        public Task<bool> UpdateinvMoveUField(IDbConnection db, string invMoveId, string createdBy, dynamic data)
+        public async Task<bool> InvMoveUserFieldExists(string invMoveId)
         {
-            throw new NotImplementedException();
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select invMoveId from InvMoveUserField where 
+														invMoveId = @invMoveId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveId", invMoveId);
+
+                var res = await db.ExecuteScalarAsync(strQry, param);
+                if (res != null && res != DBNull.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> UpdateInvMoveUField(string oldFieldName, string newFieldName, string modifiedBy)
+        public async Task<bool> UpdateinvMoveUField(IDbConnection db, string invMoveId, string createdBy, dynamic data)
         {
-            throw new NotImplementedException();
+            // default sku insert then fields update from null will be executed
+            var qryHelper = new QryHelper();
+            var qryCols = await qryHelper.GetUpdateQry(data);
+
+            if (qryCols != null)
+            {
+                string strQry = $"update invmoveuserfield set {qryCols} where invMoveId = @invMoveId;";
+
+                var param = (DynamicParameters?)await qryHelper.GetParams(data);
+
+                int res = await db.ExecuteAsync(strQry, param);
+
+                if (res > 0)
+                {
+                    // log audit
+                    var audit = await AuditBuilder.BuildTranAuditADDDyn(invMoveId, createdBy, data);
+
+                    if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> UpdateinvMoveUFieldMOD(IDbConnection db, string invMoveId, string modifiedBy, dynamic data)
+        public async Task<bool> UpdateInvMoveUField(string oldFieldName, string newFieldName, string modifiedBy)
         {
-            throw new NotImplementedException();
+            // note: MySql does not support rollback on database table schema alter queries
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+
+                string strQry = $"ALTER TABLE invmoveuserfield RENAME COLUMN `{oldFieldName}` TO `{newFieldName}`;";
+
+                int res = await db.ExecuteAsync(strQry);
+
+                bool newExists = await ChkColExists(newFieldName);
+                bool oldExists = await ChkColExists(oldFieldName);
+
+                if (newExists && !oldExists)
+                {
+                    // log audit
+                    var audit = await AuditBuilder.BuildTranAuditMOD(oldFieldName, newFieldName, modifiedBy);
+
+                    if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
-        public Task<bool> UpdateInvMoveUserField(InvMoveUserFieldModel invMoveUserField)
+        public async Task<bool> UpdateinvMoveUFieldMOD(IDbConnection db, string invMoveId, string modifiedBy, dynamic data)
         {
-            throw new NotImplementedException();
+            // default sku insert then fields update from null will be executed
+            var qryHelper = new QryHelper();
+            var qryCols = await qryHelper.GetUpdateQry(data);
+
+            if (qryCols != null)
+            {
+                string strQry = $"update invmoveuserfield set {qryCols} where invMoveId = @invMoveId;";
+
+                var param = (DynamicParameters?)await qryHelper.GetParams(data);
+
+                int res = await db.ExecuteAsync(strQry, param);
+
+                if (res > 0)
+                {
+                    // log audit
+                    var audit = await AuditBuilder.BuildTranAuditMODDyn(invMoveId, modifiedBy, data);
+
+                    if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> UpdateInvMoveUserField(InvMoveUserFieldModel invMoveUserField)
+        {
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                string strQry = @"update InvMoveUserField set  where 
+														invMoveId = @invMoveId";
+
+                int res = await db.ExecuteAsync(strQry, invMoveUserField);
+
+                if (res > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -18,6 +18,8 @@ namespace aims_api.Enums
         [Description("Failed to process PO user fields value.")]
         USRFIELDSAVEFAILED,
         [Description("Failed to process current Movement Document.")]
-        FAILED
+        FAILED,
+        [Description("Movement Qty should be less than or equal to Actual Qty.")]
+        INVALIDQTY
     }
 }

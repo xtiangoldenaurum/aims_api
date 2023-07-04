@@ -13,7 +13,7 @@ namespace aims_api.Repositories.Interface
         Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPg(int pageNum, int pageItem);
         Task<IEnumerable<InvMoveUserFieldModel>> GetInvMoveUserFieldPgSrch(string searchKey, int pageNum, int pageItem);
         Task<dynamic> GetInvMoveUserFieldById(string invMoveId);
-        Task<dynamic?> GeInvMoveOUFields();
+        Task<dynamic?> GetInvMoveUFields();
         Task<string?> GetInvMoveUsrFldQryFilter();
         Task<bool> CreateInvMoveUField(string fieldName, string createdBy);
         Task<bool> InitInvMoveUField(IDbConnection db, string invMoveId);

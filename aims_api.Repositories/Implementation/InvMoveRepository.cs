@@ -438,13 +438,26 @@ namespace aims_api.Repositories.Implementation
                                 var detail = details[i];
 
                                 // check if similar SKU exists under this Movement
-                                var skuExists = await SKUExistsInInvMove(db, detail.Sku, invMoveId);
+                                var skuExists = await SKUExistsInInvMove(db, detail.InventoryId, invMoveId);
                                 if (skuExists)
                                 {
                                     return new InvMoveCreateTranResult()
                                     {
                                         ResultCode = InvMoveTranResultCode.SKUCONFLICT
                                     };
+                                }
+
+                                // check if qty is valid
+                                if (detail.QtyTo != null)
+                                {
+                                    var moveQty = await MoveQtyIsValid(db, detail.InventoryId, detail.QtyTo);
+                                    if (moveQty)
+                                    {
+                                        return new InvMoveCreateTranResult()
+                                        {
+                                            ResultCode = InvMoveTranResultCode.INVALIDQTY
+                                        };
+                                    }
                                 }
 
                                 // set detail id, status and header invMove id
@@ -516,15 +529,34 @@ namespace aims_api.Repositories.Implementation
 
 			return false;
 		}
-        public async Task<bool> SKUExistsInInvMove(IDbConnection db, string sku, string invMoveId)
+        public async Task<bool> SKUExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId)
         {
-            string strQry = @"select count(sku) from invMoveDetail 
-                                where sku = @sku and 
+            string strQry = @"select count(inventoryId) from invMoveDetail 
+                                where inventoryId = @inventoryId and 
                                         invMoveId = @invMoveId";
 
             var param = new DynamicParameters();
-            param.Add("@sku", sku);
+            param.Add("@inventoryId", inventoryId);
             param.Add("@invMoveId", invMoveId);
+
+            var res = await db.ExecuteScalarAsync<int>(strQry, param);
+            if (res == 0)
+            {
+                return false;
+            }
+
+            // default true to ensure no conflict will occur on error
+            return true;
+        }
+        public async Task<bool> MoveQtyIsValid(IDbConnection db, string inventoryId, int? qtyTo)
+        {
+            string strQry = @"SELECT count(inventoryId)
+                                FROM inventoryhistory ih
+                                WHERE ih.inventoryId = @inventoryId AND @qtyTo > ih.qtyTo";
+
+            var param = new DynamicParameters();
+            param.Add("@inventoryId", inventoryId);
+            param.Add("@qtyTo", qtyTo);
 
             var res = await db.ExecuteScalarAsync<int>(strQry, param);
             if (res == 0)
@@ -586,7 +618,7 @@ namespace aims_api.Repositories.Implementation
                                 if (detail.InvMoveLineId == null)
                                 {
                                     // check if similar SKU exists under this InvMove
-                                    var skuExists = await SKUExistsInInvMove(db, detail.Sku, invMove.InvMoveHeader.InvMoveId);
+                                    var skuExists = await SKUExistsInInvMove(db, detail.InventoryId, invMove.InvMoveHeader.InvMoveId);
                                     if (skuExists)
                                     {
                                         return InvMoveTranResultCode.SKUCONFLICT;
@@ -722,7 +754,7 @@ namespace aims_api.Repositories.Implementation
                 foreach (var invMoveDetail in invMoveDetails)
                 {
                     invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.COMPLETED).ToString();
-                    var poDtlAltered = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.CANCELRCV);
+                    var poDtlAltered = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.CANCELMV);
 
                     if (!poDtlAltered)
                     {
