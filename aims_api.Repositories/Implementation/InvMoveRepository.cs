@@ -167,7 +167,7 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<InvMovePagedMdl?> GetInvMoveForMvPaged(int pageNum, int pageItem)
         {
-            string strQry = "select invmove.*, postatus.poStatus from invmove";
+            string strQry = "select invmove.*, invmovestatus.invmoveStatus from invmove";
             string strFltr = @" where invmove.invMoveStatusId = @statsCreated or 
                                         invmove.invMoveStatusId = @statsPartMv ";
 
