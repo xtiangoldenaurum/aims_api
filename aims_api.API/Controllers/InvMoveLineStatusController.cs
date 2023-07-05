@@ -111,7 +111,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("updatearea")]
+        [HttpPost("updateinvmovelinestatus")]
         public async Task<ActionResult> UpdateInvMoveLineStatus(InvMoveLineStatusModel invMoveLineStatus)
         {
             try

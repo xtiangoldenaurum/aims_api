@@ -53,14 +53,13 @@ namespace aims_api.Repositories.Implementation
 														    invMoveId, 
 														    invMoveLineStatusId, 
                                                             inventoryId,
+                                                            finalLpnFrom,
                                                             qtyTo,
                                                             finalQty,
                                                             locationTo,
                                                             finalLocation,
-                                                            trackIdTo,
-                                                            finalTrackId,
                                                             lpnTo,
-                                                            finalLpn
+                                                            finalLpn,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
@@ -68,14 +67,13 @@ namespace aims_api.Repositories.Implementation
 														    @invMoveId, 
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
+                                                            @finalLpnFrom,
                                                             @qtyTo,
                                                             @finalQty,
                                                             @locationTo,
                                                             @finalLocation,
-                                                            @trackIdTo,
-                                                            @finalTrackId
                                                             @lpnTo,
-                                                            @finalLpn
+                                                            @finalLpn,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -97,14 +95,13 @@ namespace aims_api.Repositories.Implementation
 														    invMoveId, 
 														    invMoveLineStatusId, 
                                                             inventoryId,
+                                                            finalLpnFrom,
                                                             qtyTo,
                                                             finalQty,
                                                             locationTo,
                                                             finalLocation,
-                                                            trackIdTo,
-                                                            finalTrackId,
                                                             lpnTo,
-                                                            finalLpn
+                                                            finalLpn,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
@@ -112,14 +109,13 @@ namespace aims_api.Repositories.Implementation
 														    @invMoveId, 
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
+                                                            @finalLpnFrom,
                                                             @qtyTo,
                                                             @finalQty,
                                                             @locationTo,
                                                             @finalLocation,
-                                                            @trackIdTo,
-                                                            @finalTrackId
                                                             @lpnTo,
-                                                            @finalLpn
+                                                            @finalLpn,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -129,7 +125,7 @@ namespace aims_api.Repositories.Implementation
             if (res > 0)
             {
                 // log audit
-                var audit = await AuditBuilder.BuildPODtlAuditADD(invMoveDetail, TranType.INVMOV);
+                var audit = await AuditBuilder.BuildInvMoveDtlAuditADD(invMoveDetail, TranType.INVMOV);
 
                 if (await AuditTrailRepo.CreateAuditTrail(db, audit))
                 {
@@ -209,26 +205,6 @@ namespace aims_api.Repositories.Implementation
             return InvMoveDetailDelResultCode.FAILED;
         }
 
-        public async Task<bool> GenerateMovementTask(InvMoveDetailModel invMoveDetail)
-        {
-            using (IDbConnection db = new MySqlConnection(ConnString))
-            {
-                string strQry = @"update InvMoveDetail set 
-														invMoveLineStatusId = @invMoveLineStatusId 
-                                                        where 
-														invMoveLineId = @invMoveLineId";
-
-                int res = await db.ExecuteAsync(strQry, invMoveDetail);
-
-                if (res > 0)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         public async Task<InvMoveDetailModel> GetInvMoveDetailById(string invMoveLineId)
         {
             // pagination setup
@@ -293,7 +269,7 @@ namespace aims_api.Repositories.Implementation
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
                 db.Open();
-                string strQry = "call `spGetInvMoveDetailByInvMove`(@currInvMove, @pageItem, @offset)";
+                string strQry = "call `spGetInvMoveDetailByInvMoveId`(@currInvMove, @pageItem, @offset)";
 
                 var param = new DynamicParameters();
                 param.Add("@currInvMoveId", invMoveId);
@@ -369,10 +345,13 @@ namespace aims_api.Repositories.Implementation
                                     WHERE inv.sku LIKE @searchKey
                                        OR imd.invMoveLineId LIKE @searchKey
                                        OR imd.invMoveId LIKE @searchKey
+                                       OR imd.finalLpnFrom LIKE @searchKey
                                        OR imd.qtyTo LIKE @searchKey
+                                       OR imd.finalQty LIKE @searchKey
                                        OR imd.locationTo LIKE @searchKey
-                                       OR imd.trackiIdTo LIKE @searchKey
+                                       OR imd.finalLocation LIKE @searchKey
                                        OR imd.lpnTo LIKE @searchKey
+                                       OR imd.finalLpn LIKE @searchKey
                                        OR imd.invMoveLineStatusId LIKE @searchKey
                                        OR imd.dateCreated LIKE @searchKey
                                        OR imd.dateModified LIKE @searchKey
@@ -448,10 +427,9 @@ namespace aims_api.Repositories.Implementation
                 string strQry = @"update InvMoveDetail set 
 														invMoveId = @invMoveId, 
 														invMoveLineStatusId = @invMoveLineStatusId, 
-                                                        inventoryId = @inventoryId
+                                                        inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
                                                         locationTo = @locationTo,
-                                                        trackIdTo = @trackIdTo,
                                                         lpnTo = @lpnTo,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
@@ -473,10 +451,9 @@ namespace aims_api.Repositories.Implementation
             string strQry = @"update InvMoveDetail set 
 														invMoveId = @invMoveId, 
 														invMoveLineStatusId = @invMoveLineStatusId, 
-                                                        inventoryId = @inventoryId
+                                                        inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
                                                         locationTo = @locationTo,
-                                                        trackIdTo = @trackIdTo,
                                                         lpnTo = @lpnTo,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
@@ -487,9 +464,29 @@ namespace aims_api.Repositories.Implementation
             if (res > 0)
             {
                 // log audit
-                var audit = await AuditBuilder.BuildPODtlAuditMOD(invMoveDetail, tranTyp);
+                var audit = await AuditBuilder.BuildInvMoveDtlAuditMOD(invMoveDetail, tranTyp);
 
                 if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> GenerateMovementTask(InvMoveDetailModel invMoveDetail)
+        {
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                string strQry = @"update InvMoveDetail set 
+														invMoveLineStatusId = @invMoveLineStatusId 
+                                                        where 
+														invMoveLineId = @invMoveLineId";
+
+                int res = await db.ExecuteAsync(strQry, invMoveDetail);
+
+                if (res > 0)
                 {
                     return true;
                 }

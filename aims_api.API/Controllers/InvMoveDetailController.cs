@@ -44,8 +44,8 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getpodetailbypoidpagedmod")]
-        public async Task<ActionResult> GetInvMoveDetailByPoIDPagedMod(string invMoveId, int pageNum = 1, int pageItem = 100)
+        [HttpGet("getinvmovedetailbyinvmoveidpagedmod")]
+        public async Task<ActionResult> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum = 1, int pageItem = 100)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getpodetailpg")]
+        [HttpGet("getinvmovedetailpg")]
         public async Task<ActionResult> GetInvMoveDetailPg(int pageNum = 1, int pageItem = 100)
         {
             try
@@ -83,7 +83,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getpodetailpgsrch")]
+        [HttpGet("getinvmovedetailpgsrch")]
         public async Task<ActionResult> GetInvMoveDetailPgSrch(string searchKey, int pageNum = 1, int pageItem = 100)
         {
             try
@@ -107,7 +107,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getpodetailbyid")]
+        [HttpGet("getinvmovedetailbyid")]
         public async Task<ActionResult> GetInvMoveDetailById(string invMoveLineId)
         {
             try
@@ -131,7 +131,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("createpodetail")]
+        [HttpPost("createinvmovedetail")]
         public async Task<ActionResult> CreateInvMoveDetail(InvMoveDetailModel invMoveDetail)
         {
             try
@@ -155,7 +155,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("updatepodetail")]
+        [HttpPost("updateinvmovedetail")]
         public async Task<ActionResult> UpdateInvMoveDetail(InvMoveDetailModel invMoveDetail)
         {
             try
@@ -179,7 +179,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpDelete("deletepodetail")]
+        [HttpDelete("deleteinvmovedetail")]
         public async Task<ActionResult> DeleteInvMoveDetail(string invMoveLineId)
         {
             try
@@ -203,7 +203,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpDelete("deletepodetailmod")]
+        [HttpDelete("deleteinvmovedetailmod")]
         public async Task<ActionResult> DeleteInvMoveDetailMod(string invMoveLineId, string userAccountId)
         {
             try

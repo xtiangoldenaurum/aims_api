@@ -236,7 +236,7 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("updatearea")]
+        [HttpPost("updateaudittrail")]
         public async Task<ActionResult> UpdateAuditTrail(AuditTrailModel auditTrail)
         {
             try

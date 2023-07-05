@@ -11,7 +11,7 @@ namespace aims_api.Repositories.AuditBuilder
 {
     public class InvMoveDetailAudit
     {
-        public async Task<AuditTrailModel> BuildPODtlAuditADD(InvMoveDetailModel invMoveDetail, TranType tranTyp)
+        public async Task<AuditTrailModel> BuildInvMoveDtlAuditADD(InvMoveDetailModel invMoveDetail, TranType tranTyp)
         {
             string actTyp = "ADD";
             string data = JsonSerializer.Serialize(invMoveDetail);
@@ -30,7 +30,7 @@ namespace aims_api.Repositories.AuditBuilder
             });
         }
 
-        public async Task<AuditTrailModel> BuildPODtlAuditMOD(InvMoveDetailModel invMoveDetail, TranType tranTyp)
+        public async Task<AuditTrailModel> BuildInvMoveDtlAuditMOD(InvMoveDetailModel invMoveDetail, TranType tranTyp)
         {
             string actTyp = "MOD";
             string data = JsonSerializer.Serialize(invMoveDetail);
