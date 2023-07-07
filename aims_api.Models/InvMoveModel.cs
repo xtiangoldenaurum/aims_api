@@ -13,6 +13,7 @@ namespace aims_api.Models
         public string? InvMoveStatusId { get; set; }
         public string? WarehouseId { get; set; }
         public string? ReasonCodeId { get; set; }
+        public string? Reason { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime? DateModified { get; set; }
         public string? CreatedBy { get; set; }

@@ -108,10 +108,6 @@ builder.Services.AddTransient<IAuditTrailCore, AuditTrailCore>();
 builder.Services.AddTransient<IAuditTrailRepository, AuditTrailRepository>();
 builder.Services.AddTransient<IIdNumberCore, IdNumberCore>();
 builder.Services.AddTransient<IIdNumberRepository, IdNumberRepository>();
-builder.Services.AddTransient<IInvAdjustLineStatusCore, InvAdjustLineStatusCore>();
-builder.Services.AddTransient<IInvAdjustLineStatusRepository, InvAdjustLineStatusRepository>();
-builder.Services.AddTransient<IInvAdjustStatusCore, InvAdjustStatusCore>();
-builder.Services.AddTransient<IInvAdjustStatusRepository, InvAdjustStatusRepository>();
 builder.Services.AddTransient<IInvCountLineStatusCore, InvCountLineStatusCore>();
 builder.Services.AddTransient<IInvCountLineStatusRepository, InvCountLineStatusRepository>();
 builder.Services.AddTransient<IInvCountStatusCore, InvCountStatusCore>();
@@ -134,8 +130,16 @@ builder.Services.AddTransient<IInvMoveStatusRepository, InvMoveStatusRepository>
 builder.Services.AddTransient<IInvMoveUserFieldCore, InvMoveUserFieldCore>();
 builder.Services.AddTransient<IInvMoveUserFieldRepository, InvMoveUserFieldRepository>();
 
-builder.Services.AddTransient<IInvAdjustmentCore, InvAdjustmentCore>();
-builder.Services.AddTransient<IInvAdjustmentRepository, InvAdjustmentRepository>();
+builder.Services.AddTransient<IInvAdjustCore, InvAdjustCore>();
+builder.Services.AddTransient<IInvAdjustRepository, InvAdjustRepository>();
+builder.Services.AddTransient<IInvAdjustDetailCore, InvAdjustDetailCore>();
+builder.Services.AddTransient<IInvAdjustDetailRepository, InvAdjustDetailRepository>();
+builder.Services.AddTransient<IInvAdjustLineStatusCore, InvAdjustLineStatusCore>();
+builder.Services.AddTransient<IInvAdjustLineStatusRepository, InvAdjustLineStatusRepository>();
+builder.Services.AddTransient<IInvAdjustStatusCore, InvAdjustStatusCore>();
+builder.Services.AddTransient<IInvAdjustStatusRepository, InvAdjustStatusRepository>();
+builder.Services.AddTransient<IInvAdjustUserFieldCore, InvAdjustUserFieldCore>();
+builder.Services.AddTransient<IInvAdjustUserFieldRepository, InvAdjustUserFieldRepository>();
 
 builder.Services.AddTransient<ILocationCore, LocationCore>();
 builder.Services.AddTransient<ILocationRepository, LocationRepository>();
@@ -243,6 +247,7 @@ builder.Services.AddTransient<ReturnsRepoSub>();
 builder.Services.AddTransient<WhTransferRepoSub>();
 builder.Services.AddTransient<MovementTaskRepoSub>();
 builder.Services.AddTransient<PutawayTaskRepoSub>();
+builder.Services.AddTransient<AdjustmentTaskRepoSub>();
 
 // mycustom services end here...
 #endregion

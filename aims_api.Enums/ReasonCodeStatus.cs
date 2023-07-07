@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace aims_api.Repositories.Interface
+namespace aims_api.Enums
 {
-    public interface IInvAdjustmentRepository
+    public enum ReasonCodeStatus
     {
-
+        DAMAGE,
+        LOSS,
+        NORMAL,
+        OTHER    
     }
 }

@@ -169,7 +169,7 @@ namespace aims_api.Repositories.Implementation
                 }
 
                 // check if InvMove detail is still in create status
-                if (invMoveDetail.InvMoveLineStatusId != (POLneStatus.CREATED).ToString())
+                if (invMoveDetail.InvMoveLineStatusId != (InvMoveLneStatus.CREATED).ToString())
                 {
                     return InvMoveDetailDelResultCode.DETAILSTATUSMODIFIED;
                 }
@@ -467,26 +467,6 @@ namespace aims_api.Repositories.Implementation
                 var audit = await AuditBuilder.BuildInvMoveDtlAuditMOD(invMoveDetail, tranTyp);
 
                 if (await AuditTrailRepo.CreateAuditTrail(db, audit))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public async Task<bool> GenerateMovementTask(InvMoveDetailModel invMoveDetail)
-        {
-            using (IDbConnection db = new MySqlConnection(ConnString))
-            {
-                string strQry = @"update InvMoveDetail set 
-														invMoveLineStatusId = @invMoveLineStatusId 
-                                                        where 
-														invMoveLineId = @invMoveLineId";
-
-                int res = await db.ExecuteAsync(strQry, invMoveDetail);
-
-                if (res > 0)
                 {
                     return true;
                 }

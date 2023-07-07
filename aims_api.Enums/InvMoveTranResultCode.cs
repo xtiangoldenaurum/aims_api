@@ -15,7 +15,7 @@ namespace aims_api.Enums
         SKUCONFLICT,
         [Description("Failed to save Movement Document detail.")]
         MOVEMENTDOCLINESAVEFAILED,
-        [Description("Failed to process PO user fields value.")]
+        [Description("Failed to process Inventory Movement user fields value.")]
         USRFIELDSAVEFAILED,
         [Description("Failed to process current Movement Document.")]
         FAILED,

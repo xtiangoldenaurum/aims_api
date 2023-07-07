@@ -1,3 +1,0 @@
-2023-06-29 11:49:42.250 +08:00 [ERR] ERR500: The method or operation is not implemented. @192.168.1.130:5001    at aims_api.Repositories.Implementation.InvMoveRepository.GetInvMovePg(Int32 pageNum, Int32 pageItem) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\InvMoveRepository.cs:line 106
-   at aims_api.Cores.Implementation.InvMoveCore.GetInvMovePg(Int32 pageNum, Int32 pageItem) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\InvMoveCore.cs:line 76
-   at aims_api.API.Controllers.InvMoveController.GetInvMovePg(Int32 pageNum, Int32 pageItem) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\InvMoveController.cs:line 57

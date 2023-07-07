@@ -85,9 +85,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "Failed to create record.");
         }
 
-        public async Task<RequestResponse> UpdatePOUField(string oldFieldName, string newFieldName, string modifiedByd)
+        public async Task<RequestResponse> UpdatePOUField(string oldFieldName, string newFieldName, string modifiedBy)
         {
-            bool res = await POUserFieldRepo.UpdatePOUField(oldFieldName, newFieldName, modifiedByd);
+            bool res = await POUserFieldRepo.UpdatePOUField(oldFieldName, newFieldName, modifiedBy);
             if (res)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, "Record updated successfully.");

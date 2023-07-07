@@ -10,23 +10,23 @@ using System.Threading.Tasks;
 
 namespace aims_api.Cores.Implementation
 {
-    public class InvMoveUserFieldCore : IInvMoveUserFieldCore
+    public class InvAdjustUserFieldCore : IInvAdjustUserFieldCore
     {
-        private IInvMoveUserFieldRepository InvMoveUserFieldRepo { get; set; }
-        public InvMoveUserFieldCore(IInvMoveUserFieldRepository invMoveUserFieldRepo)
+        private IInvAdjustUserFieldRepository InvAdjustUserFieldRepo { get; set; }
+        public InvAdjustUserFieldCore(IInvAdjustUserFieldRepository invAdjustUserFieldRepo)
         {
-            InvMoveUserFieldRepo = invMoveUserFieldRepo;
+            InvAdjustUserFieldRepo = invAdjustUserFieldRepo;
         }
-        public async Task<RequestResponse> CreateInvMoveUField(string fieldName, string createdBy)
+        public async Task<RequestResponse> CreateInvAdjustUField(string fieldName, string createdBy)
         {
             // check is column name is in use
-            bool columnExists = await InvMoveUserFieldRepo.ChkColExists(fieldName);
+            bool columnExists = await InvAdjustUserFieldRepo.ChkColExists(fieldName);
             if (columnExists)
             {
                 return new RequestResponse(ResponseCode.FAILED, "Similar column name exists.");
             }
 
-            bool res = await InvMoveUserFieldRepo.CreateInvMoveUField(fieldName, createdBy);
+            bool res = await InvAdjustUserFieldRepo.CreateInvAdjustUField(fieldName, createdBy);
             if (res)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, "Record created successfully.");
@@ -35,11 +35,11 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "Failed to create record.");
         }
 
-        public async Task<RequestResponse> DeleteInvMoveUField(string fieldName, string userAccountId)
+        public async Task<RequestResponse> DeleteInvAdjustUField(string fieldName, string userAccountId)
         {
             // place item in use validator here
 
-            bool res = await InvMoveUserFieldRepo.DeleteInvMoveUField(fieldName, userAccountId);
+            bool res = await InvAdjustUserFieldRepo.DeleteInvAdjustUField(fieldName, userAccountId);
             if (res)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, "Record deleted successfully.");
@@ -48,9 +48,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "Failed to delete record.");
         }
 
-        public async Task<RequestResponse> GetInvMoveUFields()
+        public async Task<RequestResponse> GetInvAdjustUFields()
         {
-            var data = await InvMoveUserFieldRepo.GetInvMoveUFields();
+            var data = await InvAdjustUserFieldRepo.GetInvAdjustUFields();
 
             if ((object?)data != null)
             {
@@ -60,9 +60,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveUserFieldById(string invMoveId)
+        public async Task<RequestResponse> GetInvAdjustUserFieldById(string invAdjustId)
         {
-            var data = await InvMoveUserFieldRepo.GetInvMoveUserFieldById(invMoveId);
+            var data = await InvAdjustUserFieldRepo.GetInvAdjustUserFieldById(invAdjustId);
 
             if (data != null)
             {
@@ -72,9 +72,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveUserFieldPg(int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvAdjustUserFieldPg(int pageNum, int pageItem)
         {
-            var data = await InvMoveUserFieldRepo.GetInvMoveUserFieldPg(pageNum, pageItem);
+            var data = await InvAdjustUserFieldRepo.GetInvAdjustUserFieldPg(pageNum, pageItem);
 
             if (data != null && data.Any())
             {
@@ -84,9 +84,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveUserFieldPgSrch(string searchKey, int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvAdjustUserFieldPgSrch(string searchKey, int pageNum, int pageItem)
         {
-            var data = await InvMoveUserFieldRepo.GetInvMoveUserFieldPgSrch(searchKey, pageNum, pageItem);
+            var data = await InvAdjustUserFieldRepo.GetInvAdjustUserFieldPgSrch(searchKey, pageNum, pageItem);
 
             if (data != null && data.Any())
             {
@@ -96,9 +96,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> UpdateInvMoveUField(string oldFieldName, string newFieldName, string modifiedBy)
+        public async Task<RequestResponse> UpdateInvAdjustUField(string oldFieldName, string newFieldName, string modifiedBy)
         {
-            bool res = await InvMoveUserFieldRepo.UpdateInvMoveUField(oldFieldName, newFieldName, modifiedBy);
+            bool res = await InvAdjustUserFieldRepo.UpdateInvAdjustUField(oldFieldName, newFieldName, modifiedBy);
             if (res)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, "Record updated successfully.");

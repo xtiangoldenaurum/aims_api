@@ -232,6 +232,7 @@ namespace aims_api.Repositories.Implementation
                                                 invmove.invMoveStatusId like @searchKey or
                                                 invmove.warehouseId like @searchKey or
                                                 invmove.reasonCodeId like @searchKey or
+                                                invmove.reason like @searchKey or
 											    invmove.dateCreated like @searchKey or 
 											    invmove.dateModified like @searchKey or 
 											    invmove.createdBy like @searchKey or 
@@ -271,7 +272,7 @@ namespace aims_api.Repositories.Implementation
                                where invmove.invMoveId like @searchKey or 
                                     invmove.invMoveStatusId like @searchKey or
                                     invmove.warehouseId like @searchKey or
-                                    invmove.reasonCodeId like @searchKey or
+                                    invmove.reason like @searchKey or
 							        invmove.dateCreated like @searchKey or 
 							        invmove.dateModified like @searchKey or 
 							        invmove.createdBy like @searchKey or 
@@ -314,6 +315,7 @@ namespace aims_api.Repositories.Implementation
 														invmove.invMoveStatusId like @searchKey or
                                                         invmove.warehouseId like @searchKey or
                                                         invmove.reasonCodeId like @searchKey or
+                                                        invmove.reason like @searchKey or
 							                            invmove.dateCreated like @searchKey or 
 							                            invmove.dateModified like @searchKey or 
 							                            invmove.createdBy like @searchKey or 
@@ -503,6 +505,7 @@ namespace aims_api.Repositories.Implementation
 														invMoveStatusId, 
 														warehouseId, 
 														reasonCodeId, 
+                                                        reason,
 														createdBy, 
 														modifiedBy, 
 														remarks)
@@ -510,6 +513,7 @@ namespace aims_api.Repositories.Implementation
 														@invMoveStatusId, 
 														@warehouseId, 
 														@reasonCodeId, 
+                                                        @reason,
 														@createdBy, 
 														@modifiedBy, 
 														@remarks)";
@@ -548,7 +552,7 @@ namespace aims_api.Repositories.Implementation
             // default true to ensure no conflict will occur on error
             return true;
         }
-        public async Task<bool> MoveQtyIsValid(IDbConnection db, string inventoryId, int? qtyTo)
+        private async Task<bool> MoveQtyIsValid(IDbConnection db, string inventoryId, int? qtyTo)
         {
             string strQry = @"SELECT count(inventoryId)
                                 FROM inventoryhistory ih
@@ -666,6 +670,7 @@ namespace aims_api.Repositories.Implementation
         {
             string strQry = @"update InvMove set 
 							                reasonCodeId = @reasonCodeId, 
+                                            reason = @reason,
 							                invMoveStatusId = @invMoveStatusId, 
 							                modifiedBy = @modifiedBy, 
 							                remarks = @remarks where 
@@ -852,14 +857,14 @@ namespace aims_api.Repositories.Implementation
             {
                 // check if InvMove contains force close-able details
                 var dtlCreateCnt = invMoveDetails.Where(x => x.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString()).Count();
-                var dtlPrtRcvCnt = invMoveDetails.Where(x => x.InvMoveLineStatusId == (InvMoveLneStatus.PRTMV).ToString()).Count();
-                var dtlFullRcvCnt = invMoveDetails.Where(x => x.InvMoveLineStatusId == (InvMoveLneStatus.COMPLETED).ToString()).Count();
+                var dtlPrtMvCnt = invMoveDetails.Where(x => x.InvMoveLineStatusId == (InvMoveLneStatus.PRTMV).ToString()).Count();
+                var dtlFullMvCnt = invMoveDetails.Where(x => x.InvMoveLineStatusId == (InvMoveLneStatus.COMPLETED).ToString()).Count();
 
-                if (dtlPrtRcvCnt > 0)
+                if (dtlPrtMvCnt > 0)
                 {
                     return true;
                 }
-                else if (dtlCreateCnt > 0 && dtlFullRcvCnt > 0)
+                else if (dtlCreateCnt > 0 && dtlFullMvCnt > 0)
                 {
                     return true;
                 }

@@ -5,4 +5,9 @@
     <Controller_SelectedScaffolderCategoryPath>root/Common/Api</Controller_SelectedScaffolderCategoryPath>
     <NameOfLastUsedPublishProfile>E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Properties\PublishProfiles\FolderProfile3.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

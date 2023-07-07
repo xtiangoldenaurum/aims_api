@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace aims_api.Cores.Interface
+namespace aims_api.Models
 {
-    public interface IInvAdjustmentCore
+    public class InvAdjustUserFieldModel
     {
-
+        public string? InvAdjustId { get; set; }
     }
 }

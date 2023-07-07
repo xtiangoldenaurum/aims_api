@@ -1,4 +1,0 @@
-2023-07-04 12:59:50.214 +08:00 [ERR] ERR500: The method or operation is not implemented. @192.168.1.130:5001    at aims_api.Repositories.Implementation.InvMoveUserFieldRepository.InitInvMoveUField(IDbConnection db, String invMoveId) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\InvMoveUserFieldRepository.cs:line 66
-   at aims_api.Repositories.Implementation.InvMoveRepository.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Repositories\Implementation\InvMoveRepository.cs:line 409
-   at aims_api.Cores.Implementation.InvMoveCore.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\InvMoveCore.cs:line 130
-   at aims_api.API.Controllers.InvMoveController.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\InvMoveController.cs:line 153

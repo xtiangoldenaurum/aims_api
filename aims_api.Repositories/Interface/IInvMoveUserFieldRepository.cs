@@ -25,6 +25,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> InvMoveUserFieldExists(string invMoveId);
         Task<bool> CreateInvMoveUserField(InvMoveUserFieldModel invMoveUserField);
         Task<bool> UpdateInvMoveUserField(InvMoveUserFieldModel invMoveUserField);
-        Task<bool> DeleteInvMoveUserField(string poId);
+        Task<bool> DeleteInvMoveUserField(string invMoveId);
     }
 }
