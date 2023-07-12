@@ -24,9 +24,9 @@ namespace aims_api.Repositories.Implementation
         IAuditTrailRepository AuditTrailRepo;
         MovementTaskRepoSub MovementTaskRepoSub;
         InvMoveAudit AuditBuilder;
-		IPagingRepository PagingRepo;
+        IPagingRepository PagingRepo;
 
-		public InvMoveRepository(ITenantProvider tenantProvider,
+        public InvMoveRepository(ITenantProvider tenantProvider,
                             IAuditTrailRepository auditTrailRepo,
                             IIdNumberRepository idNumberRepo,
                             IInvMoveDetailRepository invMoveDetailsRepo,
@@ -40,8 +40,8 @@ namespace aims_api.Repositories.Implementation
             InvMoveUFieldRepo = invMoveUFieldRepo;
             MovementTaskRepoSub = movementTaskRepoSub;
             PagingRepo = new PagingRepository();
-			AuditBuilder = new InvMoveAudit();
-		}
+            AuditBuilder = new InvMoveAudit();
+        }
 
 
         public async Task<InvMovePagedMdl?> GetInvMovePaged(int pageNum, int pageItem)
@@ -110,7 +110,7 @@ namespace aims_api.Repositories.Implementation
                     strFltr += " and ";
                 }
 
-                strFltr += $"invMoveStatusId = @invMoveStatusId ";
+                strFltr += $"invmove.invMoveStatusId = @invMoveStatusId ";
                 param.Add("@invMoveStatusId", filter.InvMoveStatusId);
             }
 
@@ -126,7 +126,7 @@ namespace aims_api.Repositories.Implementation
             }
 
             // build inner joins
-            string strJoins = @" inner join postatus on invmove.invMoveStatusId = invMoveStatus.invMoveStatusId";
+            string strJoins = @" inner join invmovestatus on invmove.invMoveStatusId = invMoveStatus.invMoveStatusId";
 
             // build order by and paging
             strQry += strJoins;
@@ -173,7 +173,7 @@ namespace aims_api.Repositories.Implementation
 
             var param = new DynamicParameters();
             param.Add("@statsCreated", (InvMoveStatus.CREATED).ToString());
-            param.Add("@statsPartMv", (InvMoveStatus.PARTMV).ToString());
+            param.Add("@statsPartMv", (InvMoveStatus.PRTMV).ToString());
 
             // init pagedetail parameters
             var pgParam = new DynamicParameters();
@@ -228,18 +228,18 @@ namespace aims_api.Repositories.Implementation
                 db.Open();
                 string strQry = @"select invmove.*, invmovestats.invMoveStatus from InvMove 
                                                 inner join invmovestatus invmovestats on invmove.invMoveStatusId = invmovestats.invMoveStatusId 
-                                    where invmove.invMoveId like @searchKey or 
+                                                where invmove.invMoveId like @searchKey or 
                                                 invmove.invMoveStatusId like @searchKey or
                                                 invmove.warehouseId like @searchKey or
                                                 invmove.reasonCodeId like @searchKey or
                                                 invmove.reason like @searchKey or
-											    invmove.dateCreated like @searchKey or 
-											    invmove.dateModified like @searchKey or 
-											    invmove.createdBy like @searchKey or 
-											    invmove.modifiedBy like @searchKey or 
-											    invmove.remarks like @searchKey or 
+                                                invmove.dateCreated like @searchKey or 
+                                                invmove.dateModified like @searchKey or 
+                                                invmove.createdBy like @searchKey or 
+                                                invmove.modifiedBy like @searchKey or 
+                                                invmove.remarks like @searchKey or 
                                                 invmovestats.invMoveStatus like @searchKey 
-											    limit @pageItem offset @offset";
+                                                limit @pageItem offset @offset";
 
                 var param = new DynamicParameters();
                 param.Add("@searchKey", $"%{searchKey}%");
@@ -273,13 +273,12 @@ namespace aims_api.Repositories.Implementation
                                     invmove.invMoveStatusId like @searchKey or
                                     invmove.warehouseId like @searchKey or
                                     invmove.reason like @searchKey or
-							        invmove.dateCreated like @searchKey or 
-							        invmove.dateModified like @searchKey or 
-							        invmove.createdBy like @searchKey or 
-							        invmove.modifiedBy like @searchKey or 
-							        invmove.remarks like @searchKey or 
+                                    invmove.dateCreated like @searchKey or 
+                                    invmove.dateModified like @searchKey or 
+                                    invmove.createdBy like @searchKey or 
+                                    invmove.modifiedBy like @searchKey or 
+                                    invmove.remarks like @searchKey or 
                                     invmovestats.invMoveStatus like @searchKey";
-
 
             var param = new DynamicParameters();
             param.Add("@searchKey", $" %{ searchKey}% ");
@@ -311,17 +310,17 @@ namespace aims_api.Repositories.Implementation
             {
                 db.Open();
                 string strQry = @"select * from InvMove where 
-														invMoveId like @searchKey or 
-														invmove.invMoveStatusId like @searchKey or
-                                                        invmove.warehouseId like @searchKey or
-                                                        invmove.reasonCodeId like @searchKey or
-                                                        invmove.reason like @searchKey or
-							                            invmove.dateCreated like @searchKey or 
-							                            invmove.dateModified like @searchKey or 
-							                            invmove.createdBy like @searchKey or 
-							                            invmove.modifiedBy like @searchKey or 
-							                            invmove.remarks like @searchKey or 
-														limit @pageItem offset @offset";
+                                     invMoveId like @searchKey or 
+                                     invmove.invMoveStatusId like @searchKey or
+                                     invmove.warehouseId like @searchKey or
+                                     invmove.reasonCodeId like @searchKey or
+                                     invmove.reason like @searchKey or
+                                     invmove.dateCreated like @searchKey or 
+                                     invmove.dateModified like @searchKey or 
+                                     invmove.createdBy like @searchKey or 
+                                     invmove.modifiedBy like @searchKey or 
+                                     invmove.remarks like @searchKey
+                limit @pageItem offset @offset";
 
                 var param = new DynamicParameters();
                 param.Add("@searchKey", $"%{searchKey}%");
@@ -389,7 +388,7 @@ namespace aims_api.Repositories.Implementation
             return await db.ExecuteScalarAsync<string?>(strQry, param);
         }
         public async Task<InvMoveCreateTranResult> CreateInvMoveMod(InvMoveModelMod invMove)
-        { 
+        {
             // get InvMove id number
             var invMoveId = await IdNumberRepo.GetNextIdNum("INVMOV");
 
@@ -501,7 +500,7 @@ namespace aims_api.Repositories.Implementation
             // define InvMove status
             invMove.InvMoveStatusId = (InvMoveStatus.CREATED).ToString();
 
-			string strQry = @"insert into invmove(invMoveId, 
+            string strQry = @"insert into invmove(invMoveId, 
 														invMoveStatusId, 
 														warehouseId, 
 														reasonCodeId, 
@@ -518,21 +517,21 @@ namespace aims_api.Repositories.Implementation
 														@modifiedBy, 
 														@remarks)";
 
-			int res = await db.ExecuteAsync(strQry, invMove);
+            int res = await db.ExecuteAsync(strQry, invMove);
 
-			if (res > 0)
-			{
-				// log audit
-				var audit = await AuditBuilder.BuildTranAuditADD(invMove, TranType.INVMOV);
+            if (res > 0)
+            {
+                // log audit
+                var audit = await AuditBuilder.BuildTranAuditADD(invMove, TranType.INVMOV);
 
-				if (await AuditTrailRepo.CreateAuditTrail(db, audit))
-				{
-					return true;
-				}
-			}
+                if (await AuditTrailRepo.CreateAuditTrail(db, audit))
+                {
+                    return true;
+                }
+            }
 
-			return false;
-		}
+            return false;
+        }
         public async Task<bool> SKUExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId)
         {
             string strQry = @"select count(inventoryId) from invMoveDetail 
@@ -814,7 +813,7 @@ namespace aims_api.Repositories.Implementation
                 }
 
                 // check if InvMove header is in partial receive status
-                if (po.InvMoveStatusId != (InvMoveStatus.PARTMV).ToString())
+                if (po.InvMoveStatusId != (InvMoveStatus.PRTMV).ToString())
                 {
                     return CancelInvMoveResultCode.INVMOVESTATUSNOTVALID;
                 }

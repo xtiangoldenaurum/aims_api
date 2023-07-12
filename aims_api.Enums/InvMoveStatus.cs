@@ -9,7 +9,7 @@ namespace aims_api.Enums
     public enum InvMoveStatus
     {
         CREATED,
-        PARTMV,
+        PRTMV,
         COMPLETED,
         CANCELLED,
         CONFIRMED,

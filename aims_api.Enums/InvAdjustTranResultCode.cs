@@ -22,6 +22,8 @@ namespace aims_api.Enums
         [Description("Adjustment Qty should be less than or equal to Actual Qty.")]
         INVALIDQTY, 
         [Description("Access rights are not applicable for non-admin users.")]
-        INVALIDUSERACCESSRIGHT
+        INVALIDUSERACCESSRIGHT,
+        [Description("Failed to Approved. No Adjustment Line ID")]
+        FAILEDTOAPPROVE
     }
 }

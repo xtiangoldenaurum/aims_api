@@ -21,6 +21,6 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> DeleteInvAdjust(string invAdjustId);
         Task<RequestResponse> CancelInvAdjust(string invAdjustId, string userAccountId);
         Task<RequestResponse> ForceCancelInvAdjust(string invAdjustId, string userAccountId);
-        Task<RequestResponse> UpdateInvAdjustApprovedMod(string invAdjustId, string userAccountId);
+        Task<RequestResponse> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust);
     }
 }

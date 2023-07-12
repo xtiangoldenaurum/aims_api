@@ -37,8 +37,8 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvadjustforrcvpaged")]
-        public async Task<ActionResult> GetInvAdjustForRcvPaged(int pageNum = 1, int pageItem = 100)
+        [HttpGet("getinvadjustforadjpaged")]
+        public async Task<ActionResult> GetInvAdjustForAdjPaged(int pageNum = 1, int pageItem = 100)
         {
             try
             {
@@ -269,24 +269,20 @@ namespace aims_api.API.Controllers
         }
 
         [HttpPost("updateinvadjustapproved")]
-        public async Task<ActionResult> UpdateInvAdjustApprovedMod(string invAdjustId, string userAccountId)
+        public async Task<ActionResult> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust)
         {
             try
             {
-                if (string.IsNullOrEmpty(invAdjustId))
+                if (invAdjust == null)
                 {
-                    await DataValidator.AddErrorField("invAdjustId");
-                }
-                if (string.IsNullOrEmpty(userAccountId))
-                {
-                    await DataValidator.AddErrorField("userAccountId");
+                    await DataValidator.AddErrorField("invAdjust");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvAdjustCore.UpdateInvAdjustApprovedMod(invAdjustId, userAccountId));
+                return Ok(await InvAdjustCore.UpdateInvAdjustApprovedMod(invAdjust));
             }
             catch (Exception ex)
             {

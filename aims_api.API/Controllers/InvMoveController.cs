@@ -159,5 +159,109 @@ namespace aims_api.API.Controllers
                 throw;
             }
         }
+        [HttpPost("updateinvmovemod")]
+        public async Task<ActionResult> UpdateInvMoveMod(InvMoveModelMod invMove)
+        {
+            try
+            {
+                if (invMove == null)
+                {
+                    await DataValidator.AddErrorField("invMove");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.UpdateInvMoveMod(invMove));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpDelete("deleteinvmove")]
+        public async Task<ActionResult> DeleteInvMove(string invMoveId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(invMoveId))
+                {
+                    await DataValidator.AddErrorField("invMoveId");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.DeleteInvMove(invMoveId));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+        [HttpPost("cancelinvmove")]
+        public async Task<ActionResult> CancelInvMove(string invMoveId, string userAccountId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(invMoveId))
+                {
+                    await DataValidator.AddErrorField("invMoveId");
+                }
+                if (string.IsNullOrEmpty(userAccountId))
+                {
+                    await DataValidator.AddErrorField("userAccountId");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.CancelInvMove(invMoveId, userAccountId));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
+
+
+        [HttpPost("forcecancelinvmove")]
+        public async Task<ActionResult> ForceCancelInvMove(string invMoveId, string userAccountId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(invMoveId))
+                {
+                    await DataValidator.AddErrorField("invMoveId");
+                }
+                if (string.IsNullOrEmpty(userAccountId))
+                {
+                    await DataValidator.AddErrorField("userAccountId");
+                }
+                if (DataValidator.Invalid)
+                {
+                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+                }
+
+                return Ok(await InvMoveCore.ForceCancelInvMove(invMoveId, userAccountId));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
     }
 }

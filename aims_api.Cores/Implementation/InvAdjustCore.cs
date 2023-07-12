@@ -190,9 +190,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
         }
 
-        public async Task<RequestResponse> UpdateInvAdjustApprovedMod(string invAdjustId, string userAccountId)
+        public async Task<RequestResponse> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust)
         {
-            var res = await InvAdjustRepo.UpdateInvAdjustApprovedMod(invAdjustId, userAccountId);
+            var res = await InvAdjustRepo.UpdateInvAdjustMod(invAdjust);
             string resMsg = await EnumHelper.GetDescription(res);
 
             if (res == InvAdjustTranResultCode.SUCCESS)

@@ -3,6 +3,7 @@ using aims_api.Models;
 using aims_api.Repositories.AuditBuilder;
 using aims_api.Repositories.Interface;
 using aims_api.Repositories.Sub;
+using aims_api.Utilities;
 using aims_api.Utilities.Interface;
 using Dapper;
 using MySql.Data.MySqlClient;
@@ -17,6 +18,7 @@ namespace aims_api.Repositories.Implementation
 {
     public class InvAdjustRepository : IInvAdjustRepository
     {
+        Tenant tenant;
         private string ConnString;
         IIdNumberRepository IdNumberRepo;
         IInvAdjustDetailRepository InvAdjustDetailRepo;
@@ -37,6 +39,7 @@ namespace aims_api.Repositories.Implementation
                             IInvAdjustUserFieldRepository invAdjustUFieldRepo,
                             AdjustmentTaskRepoSub adjustmentTaskRepoSub)
         {
+            tenant = tenantProvider.GetTenant();
             ConnString = tenantProvider.GetTenant().SqlConnectionString;
             AuditTrailRepo = auditTrailRepo;
             IdNumberRepo = idNumberRepo;
@@ -783,82 +786,85 @@ namespace aims_api.Repositories.Implementation
                 {
                     db.Open();
 
-                    // update header
-                    var modHeader = await UpdateInvAdjust(db, invAdjust.InvAdjustHeader, TranType.INVADJ);
-
-                    if (modHeader)
+                    if (invAdjust.InvAdjustHeader.InvAdjustStatusId == InvAdjustLneStatus.CREATED.ToString())
                     {
-                        // update InvAdjust user fields values
-                        if (invAdjust.InvAdjustUfields != null)
+                        // update header
+                        var modHeader = await UpdateInvAdjust(db, invAdjust.InvAdjustHeader, TranType.INVADJ);
+
+                        if (modHeader)
                         {
-                            var uFieldsCreated = await InvAdjustUFieldRepo.UpdateinvAdjustUFieldMOD(db, invAdjust.InvAdjustHeader.InvAdjustId, invAdjust.InvAdjustHeader.ModifiedBy, invAdjust.InvAdjustUfields);
-                            if (!uFieldsCreated)
+                            // update InvAdjust user fields values
+                            if (invAdjust.InvAdjustUfields != null)
                             {
-                                return InvAdjustTranResultCode.USRFIELDSAVEFAILED;
-                            }
-                        }
-
-                        // update detail
-                        if (invAdjust.InvAdjustDetails != null && invAdjust.InvAdjustDetails.Any())
-                        {
-                            var details = invAdjust.InvAdjustDetails.ToList();
-
-                            // get last InvAdjust detail line number
-                            var invAdjustDetailsFromDb = await InvAdjustDetailRepo.LockInvAdjustDetails(db, invAdjust.InvAdjustHeader.InvAdjustId);
-                            var lastinvAdjustLneId = invAdjustDetailsFromDb.OrderByDescending(x => x.InvAdjustLineId).Select(y => y.InvAdjustLineId).FirstOrDefault();
-                            int lastLneNum = 0;
-
-                            if (!string.IsNullOrEmpty(lastinvAdjustLneId))
-                            {
-                                lastLneNum = Convert.ToInt32(lastinvAdjustLneId.Substring(lastinvAdjustLneId.LastIndexOf('-') + 1));
-                            }
-                            else
-                            {
-                                lastLneNum = 0;
-                            }
-
-                            for (int i = 0; i < details.Count(); i++)
-                            {
-                                var detail = details[i];
-                                bool dtlSaved = false;
-
-                                if (detail.InvAdjustLineId == null)
+                                var uFieldsCreated = await InvAdjustUFieldRepo.UpdateinvAdjustUFieldMOD(db, invAdjust.InvAdjustHeader.InvAdjustId, invAdjust.InvAdjustHeader.ModifiedBy, invAdjust.InvAdjustUfields);
+                                if (!uFieldsCreated)
                                 {
-                                    // check if similar SKU exists under this InvAdjust
-                                    var skuExists = await SKUExistsInInvAdjust(db, detail.InventoryId, invAdjust.InvAdjustHeader.InvAdjustId);
-                                    if (skuExists)
-                                    {
-                                        return InvAdjustTranResultCode.SKUCONFLICT;
-                                    }
+                                    return InvAdjustTranResultCode.USRFIELDSAVEFAILED;
+                                }
+                            }
 
-                                    // detail concidered as new
-                                    // set detail id, status and header po id
-                                    lastLneNum += 1;
-                                    detail.InvAdjustLineId = $"{invAdjust.InvAdjustHeader.InvAdjustId}-{lastLneNum}";
-                                    detail.InvAdjustLineStatusId = (InvAdjustLneStatus.CREATED).ToString();
-                                    detail.InvAdjustId = invAdjust.InvAdjustHeader.InvAdjustId;
+                            // update detail
+                            if (invAdjust.InvAdjustDetails != null && invAdjust.InvAdjustDetails.Any())
+                            {
+                                var details = invAdjust.InvAdjustDetails.ToList();
 
-                                    // create detail
-                                    dtlSaved = await InvAdjustDetailRepo.CreateInvAdjustDetailMod(db, detail);
+                                // get last InvAdjust detail line number
+                                var invAdjustDetailsFromDb = await InvAdjustDetailRepo.LockInvAdjustDetails(db, invAdjust.InvAdjustHeader.InvAdjustId);
+                                var lastinvAdjustLneId = invAdjustDetailsFromDb.OrderByDescending(x => x.InvAdjustLineId).Select(y => y.InvAdjustLineId).FirstOrDefault();
+                                int lastLneNum = 0;
+
+                                if (!string.IsNullOrEmpty(lastinvAdjustLneId))
+                                {
+                                    lastLneNum = Convert.ToInt32(lastinvAdjustLneId.Substring(lastinvAdjustLneId.LastIndexOf('-') + 1));
                                 }
                                 else
                                 {
-                                    // update existing details
-                                    var prevDetail = await InvAdjustDetailRepo.GetInvAdjustDetailByIdMod(db, detail.InvAdjustLineId);
-
-                                    if (prevDetail.InvAdjustLineStatusId == (InvAdjustLneStatus.CREATED).ToString())
-                                    {
-                                        if (prevDetail != detail)
-                                        {
-                                            dtlSaved = await InvAdjustDetailRepo.UpdateInvAdjustDetailMod(db, detail, TranType.INVADJ);
-                                        }
-                                    }
+                                    lastLneNum = 0;
                                 }
 
-                                // return false if either of detail failed to save
-                                if (!dtlSaved)
+                                for (int i = 0; i < details.Count(); i++)
                                 {
-                                    return InvAdjustTranResultCode.ADJUSTMENTDOCLINESAVEFAILED;
+                                    var detail = details[i];
+                                    bool dtlSaved = false;
+
+                                    if (detail.InvAdjustLineId == null)
+                                    {
+                                        // check if similar SKU exists under this InvAdjust
+                                        var skuExists = await SKUExistsInInvAdjust(db, detail.InventoryId, invAdjust.InvAdjustHeader.InvAdjustId);
+                                        if (skuExists)
+                                        {
+                                            return InvAdjustTranResultCode.SKUCONFLICT;
+                                        }
+
+                                        // detail concidered as new
+                                        // set detail id, status and header po id
+                                        lastLneNum += 1;
+                                        detail.InvAdjustLineId = $"{invAdjust.InvAdjustHeader.InvAdjustId}-{lastLneNum}";
+                                        detail.InvAdjustLineStatusId = (InvAdjustLneStatus.CREATED).ToString();
+                                        detail.InvAdjustId = invAdjust.InvAdjustHeader.InvAdjustId;
+
+                                        // create detail
+                                        dtlSaved = await InvAdjustDetailRepo.CreateInvAdjustDetailMod(db, detail);
+                                    }
+                                    else
+                                    {
+                                        // update existing details
+                                        var prevDetail = await InvAdjustDetailRepo.GetInvAdjustDetailByIdMod(db, detail.InvAdjustLineId);
+
+                                        if (prevDetail.InvAdjustLineStatusId == (InvAdjustLneStatus.CREATED).ToString())
+                                        {
+                                            if (prevDetail != detail)
+                                            {
+                                                dtlSaved = await InvAdjustDetailRepo.UpdateInvAdjustDetailMod(db, detail, TranType.INVADJ);
+                                            }
+                                        }
+                                    }
+
+                                    // return false if either of detail failed to save
+                                    if (!dtlSaved)
+                                    {
+                                        return InvAdjustTranResultCode.ADJUSTMENTDOCLINESAVEFAILED;
+                                    }
                                 }
                             }
                         }
@@ -869,72 +875,169 @@ namespace aims_api.Repositories.Implementation
             return InvAdjustTranResultCode.FAILED;
         }
 
-        public async Task<InvAdjustTranResultCode> UpdateInvAdjustApprovedMod(string invAdjustId, string userAccountId)
+        //public async Task<InvAdjustTranResultCode> UpdateInvAdjustApprovedMod(string invAdjustId, string userAccountId)
+        //{
+        //    using (IDbConnection db = new MySqlConnection(ConnString))
+        //    {
+        //        db.Open();
+
+        //        //check if user is admin
+        //        var validUSer = await IsValidAccessRight(userAccountId);
+        //        if (!validUSer)
+        //        {
+        //            return InvAdjustTranResultCode.INVALIDUSERACCESSRIGHT;
+        //        }
+
+        //        var statusApproved = (InvAdjustLneStatus.APPROVED).ToString();
+
+
+
+        //        //// check if InvAdjust details is all in create status
+        //        //var mods = invAdjustDetails.Where(y => y.InvAdjustLineStatusId != (InvAdjustLneStatus.CREATED).ToString());
+        //        //if (mods.Any())
+        //        //{
+        //        //    return InvAdjustTranResultCode.INVADJUSTDETAILSSTATUSALTERED;
+        //        //}
+
+        //        //// lock InvAdjust header
+        //        //var invAdjust = await LockInvAdjust(db, invAdjustId);
+        //        //if (invAdjust == null)
+        //        //{
+        //        //    return InvAdjustTranResultCode.INVADJUSTLOCKFAILED;
+        //        //}
+
+        //        //// check if InvAdjust header is in create status
+        //        //if (invAdjust.InvAdjustStatusId != (InvAdjustStatus.CREATED).ToString())
+        //        //{
+        //        //    return InvAdjustTranResultCode.INVADJUSTSTATUSALTERED;
+        //        //}
+
+        //        //// update InvAdjust status into canceled
+        //        //invAdjust.InvAdjustStatusId = (InvAdjustStatus.CANCELLED).ToString();
+        //        //var poAltered = await UpdateInvAdjust(db, invAdjust, TranType.CANCELADJ);
+
+        //        //if (!poAltered)
+        //        //{
+        //        //    return InvAdjustTranResultCode.INVADJUSTSTATUSUPDATEFAILED;
+        //        //}
+
+        //        //// update InvAdjust details staus
+        //        //int alteredDtlCnt = 0;
+        //        //foreach (var invAdjustDetail in invAdjustDetails)
+        //        //{
+        //        //    invAdjustDetail.InvAdjustLineStatusId = (InvAdjustLneStatus.CLOSED).ToString();
+        //        //    var poDtlAltered = await InvAdjustDetailRepo.UpdateInvAdjustDetailMod(db, invAdjustDetail, TranType.CANCELADJ);
+
+        //        //    if (!poDtlAltered)
+        //        //    {
+        //        //        return InvAdjustTranResultCode.INVADJUSTDETAILSSTATUSUPDATEFAILED;
+        //        //    }
+
+        //        //    alteredDtlCnt += 1;
+        //        //}
+
+        //        //if (alteredDtlCnt == invAdjustDetails.Count())
+        //        //{
+        //        //    return InvAdjustTranResultCode.SUCCESS;
+        //        //}
+        //    }
+
+        //    return InvAdjustTranResultCode.FAILED;
+        //}
+        public async Task<InvAdjustTranResultCode> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust)
         {
-            using (IDbConnection db = new MySqlConnection(ConnString))
+            if (invAdjust.InvAdjustHeader != null)
             {
-                db.Open();
-
-                //check if user is admin
-                var validUSer = await IsValidAccessRight(userAccountId);
-                if (!validUSer)
+                using (IDbConnection db = new MySqlConnection(ConnString))
                 {
-                    return InvAdjustTranResultCode.INVALIDUSERACCESSRIGHT;
+                    db.Open();
+
+                    if (invAdjust.InvAdjustHeader.InvAdjustStatusId == InvAdjustLneStatus.CREATED.ToString())
+                    {
+                        var validUSer = await IsValidAccessRight(invAdjust.InvAdjustHeader.ModifiedBy);
+                        if (!validUSer)
+                        {
+                            return InvAdjustTranResultCode.INVALIDUSERACCESSRIGHT;
+                        }
+
+                        invAdjust.InvAdjustHeader.InvAdjustStatusId = (InvAdjustLneStatus.APPROVED).ToString();
+
+                        // update header
+                        var modHeader = await UpdateInvAdjust(db, invAdjust.InvAdjustHeader, TranType.INVADJ);
+
+                        if (modHeader)
+                        {
+                            // update InvAdjust user fields values
+                            if (invAdjust.InvAdjustUfields != null)
+                            {
+                                var uFieldsCreated = await InvAdjustUFieldRepo.UpdateinvAdjustUFieldMOD(db, invAdjust.InvAdjustHeader.InvAdjustId, invAdjust.InvAdjustHeader.ModifiedBy, invAdjust.InvAdjustUfields);
+                                if (!uFieldsCreated)
+                                {
+                                    return InvAdjustTranResultCode.USRFIELDSAVEFAILED;
+                                }
+                            }
+
+                            // update detail
+                            if (invAdjust.InvAdjustDetails != null && invAdjust.InvAdjustDetails.Any())
+                            {
+                                var details = invAdjust.InvAdjustDetails.ToList();
+
+                                // get last InvAdjust detail line number
+                                var invAdjustDetailsFromDb = await InvAdjustDetailRepo.LockInvAdjustDetails(db, invAdjust.InvAdjustHeader.InvAdjustId);
+                                var lastinvAdjustLneId = invAdjustDetailsFromDb.OrderByDescending(x => x.InvAdjustLineId).Select(y => y.InvAdjustLineId).FirstOrDefault();
+                                int lastLneNum = 0;
+
+                                if (!string.IsNullOrEmpty(lastinvAdjustLneId))
+                                {
+                                    lastLneNum = Convert.ToInt32(lastinvAdjustLneId.Substring(lastinvAdjustLneId.LastIndexOf('-') + 1));
+                                }
+                                else
+                                {
+                                    lastLneNum = 0;
+                                }
+
+                                for (int i = 0; i < details.Count(); i++)
+                                {
+                                    var detail = details[i];
+                                    bool dtlSaved = false;
+
+                                    if (detail.InvAdjustLineId == null)
+                                    {
+                                        return InvAdjustTranResultCode.FAILEDTOAPPROVE;
+                                    }
+                                    else
+                                    {
+                                        // update existing details
+                                        var prevDetail = await InvAdjustDetailRepo.GetInvAdjustDetailByIdMod(db, detail.InvAdjustLineId);
+
+                                        if (prevDetail.InvAdjustLineStatusId == (InvAdjustLneStatus.CREATED).ToString())
+                                        {
+                                            if (prevDetail != detail)
+                                            {
+                                                detail.InvAdjustLineStatusId = InvAdjustLneStatus.APPROVED.ToString();
+
+                                                dtlSaved = await InvAdjustDetailRepo.UpdateInvAdjustDetailMod(db, detail, TranType.INVADJ);
+
+                                                var invDetail = await GetInventoryByInvId(db, prevDetail.InventoryId);
+                                            }
+                                        }
+                                    }
+
+                                    // return false if either of detail failed to save
+                                    if (!dtlSaved)
+                                    {
+                                        return InvAdjustTranResultCode.ADJUSTMENTDOCLINESAVEFAILED;
+                                    }
+                                }
+                            }
+                            return InvAdjustTranResultCode.SUCCESS;
+                        }
+                    }
                 }
-
-                //// check if InvAdjust details is all in create status
-                //var mods = invAdjustDetails.Where(y => y.InvAdjustLineStatusId != (InvAdjustLneStatus.CREATED).ToString());
-                //if (mods.Any())
-                //{
-                //    return InvAdjustTranResultCode.INVADJUSTDETAILSSTATUSALTERED;
-                //}
-
-                //// lock InvAdjust header
-                //var invAdjust = await LockInvAdjust(db, invAdjustId);
-                //if (invAdjust == null)
-                //{
-                //    return InvAdjustTranResultCode.INVADJUSTLOCKFAILED;
-                //}
-
-                //// check if InvAdjust header is in create status
-                //if (invAdjust.InvAdjustStatusId != (InvAdjustStatus.CREATED).ToString())
-                //{
-                //    return InvAdjustTranResultCode.INVADJUSTSTATUSALTERED;
-                //}
-
-                //// update InvAdjust status into canceled
-                //invAdjust.InvAdjustStatusId = (InvAdjustStatus.CANCELLED).ToString();
-                //var poAltered = await UpdateInvAdjust(db, invAdjust, TranType.CANCELADJ);
-
-                //if (!poAltered)
-                //{
-                //    return InvAdjustTranResultCode.INVADJUSTSTATUSUPDATEFAILED;
-                //}
-
-                //// update InvAdjust details staus
-                //int alteredDtlCnt = 0;
-                //foreach (var invAdjustDetail in invAdjustDetails)
-                //{
-                //    invAdjustDetail.InvAdjustLineStatusId = (InvAdjustLneStatus.CLOSED).ToString();
-                //    var poDtlAltered = await InvAdjustDetailRepo.UpdateInvAdjustDetailMod(db, invAdjustDetail, TranType.CANCELADJ);
-
-                //    if (!poDtlAltered)
-                //    {
-                //        return InvAdjustTranResultCode.INVADJUSTDETAILSSTATUSUPDATEFAILED;
-                //    }
-
-                //    alteredDtlCnt += 1;
-                //}
-
-                //if (alteredDtlCnt == invAdjustDetails.Count())
-                //{
-                //    return InvAdjustTranResultCode.SUCCESS;
-                //}
             }
-
             return InvAdjustTranResultCode.FAILED;
         }
-        public async Task<bool> IsValidAccessRight(string userAccountId)
+        public async Task<bool> IsValidAccessRight(string? userAccountId)
         {
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
@@ -953,6 +1056,20 @@ namespace aims_api.Repositories.Implementation
             }
 
             return false;
+        }
+
+        public async Task<InventoryHistoryModel> GetInventoryByInvId(IDbConnection db, string inventoryId)
+        {
+            string strQry = @"select * from inventoryhistory 
+                                where seqnum = (
+                                select MAX(seqnum)
+                                from inventoryhistory 
+                                where inventoryId = @inventoryId)";
+
+            var param = new DynamicParameters();
+            param.Add("@inventoryId", inventoryId);
+
+            return await db.QuerySingleOrDefaultAsync<InventoryHistoryModel>(strQry, param, commandType: CommandType.Text);
         }
     }
 }

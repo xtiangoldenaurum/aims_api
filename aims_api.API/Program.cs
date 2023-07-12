@@ -94,6 +94,7 @@ Log.Logger = new LoggerConfiguration()
 
 // dependency injection
 #region Dependency Injections
+builder.Services.AddTransient<IEmailSvcRepository, EmailSvcRepository>();
 builder.Services.AddTransient<ITransactionTypeCore, TransactionTypeCore>();
 builder.Services.AddTransient<ITransactionTypeRepository, TransactionTypeRepository>();
 builder.Services.AddTransient<IAccessRightCore, AccessRightCore>();
