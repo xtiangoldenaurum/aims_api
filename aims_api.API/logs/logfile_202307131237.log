@@ -1,0 +1,15 @@
+2023-07-13 12:37:27.818 +08:00 [ERR] ERR500: Column 'reason' cannot be null @192.168.1.130:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.GetResult(Int32 statementId, Int32& affectedRows, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 646
+   at aims_api.Repositories.Implementation.InvMoveRepository.CreateInvMove(IDbConnection db, InvMoveModel invMove)
+   at aims_api.Repositories.Implementation.InvMoveRepository.CreateInvMoveMod(InvMoveModelMod invMove)
+   at aims_api.Cores.Implementation.InvMoveCore.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.Cores\Implementation\InvMoveCore.cs:line 130
+   at aims_api.API.Controllers.InvMoveController.CreateInvMoveMod(InvMoveModelMod invMove) in E:\Mark\AIMS\aims_api-main\aims_api-main\aims_api.API\Controllers\InvMoveController.cs:line 153

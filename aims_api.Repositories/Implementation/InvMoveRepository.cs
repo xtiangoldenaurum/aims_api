@@ -226,8 +226,8 @@ namespace aims_api.Repositories.Implementation
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
                 db.Open();
-                string strQry = @"select invmove.*, invmovestats.invMoveStatus from InvMove 
-                                                inner join invmovestatus invmovestats on invmove.invMoveStatusId = invmovestats.invMoveStatusId 
+                string strQry = @"select invmove.*, invmovestatus.invMoveStatus from InvMove 
+                                                inner join invmovestatus on invmove.invMoveStatusId = invmovestatus.invMoveStatusId 
                                                 where invmove.invMoveId like @searchKey or 
                                                 invmove.invMoveStatusId like @searchKey or
                                                 invmove.warehouseId like @searchKey or
@@ -238,7 +238,7 @@ namespace aims_api.Repositories.Implementation
                                                 invmove.createdBy like @searchKey or 
                                                 invmove.modifiedBy like @searchKey or 
                                                 invmove.remarks like @searchKey or 
-                                                invmovestats.invMoveStatus like @searchKey 
+                                                invmovestatus.invMoveStatus like @searchKey 
                                                 limit @pageItem offset @offset";
 
                 var param = new DynamicParameters();
@@ -278,7 +278,7 @@ namespace aims_api.Repositories.Implementation
                                     invmove.createdBy like @searchKey or 
                                     invmove.modifiedBy like @searchKey or 
                                     invmove.remarks like @searchKey or 
-                                    invmovestats.invMoveStatus like @searchKey";
+                                    invmovestatus.invMoveStatus like @searchKey";
 
             var param = new DynamicParameters();
             param.Add("@searchKey", $" %{ searchKey}% ");
@@ -438,13 +438,13 @@ namespace aims_api.Repositories.Implementation
                             {
                                 var detail = details[i];
 
-                                // check if similar SKU exists under this Movement
-                                var skuExists = await SKUExistsInInvMove(db, detail.InventoryId, invMoveId);
-                                if (skuExists)
+                                // check if similar Inventory ID exists under this Movement
+                                var invIDExists = await InvIDExistsInInvMove(db, detail.InventoryId, invMoveId);
+                                if (invIDExists)
                                 {
                                     return new InvMoveCreateTranResult()
                                     {
-                                        ResultCode = InvMoveTranResultCode.SKUCONFLICT
+                                        ResultCode = InvMoveTranResultCode.INVENTORYIDCONFLICT
                                     };
                                 }
 
@@ -532,7 +532,7 @@ namespace aims_api.Repositories.Implementation
 
             return false;
         }
-        public async Task<bool> SKUExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId)
+        public async Task<bool> InvIDExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId)
         {
             string strQry = @"select count(inventoryId) from invMoveDetail 
                                 where inventoryId = @inventoryId and 
@@ -620,11 +620,11 @@ namespace aims_api.Repositories.Implementation
 
                                 if (detail.InvMoveLineId == null)
                                 {
-                                    // check if similar SKU exists under this InvMove
-                                    var skuExists = await SKUExistsInInvMove(db, detail.InventoryId, invMove.InvMoveHeader.InvMoveId);
-                                    if (skuExists)
+                                    // check if similar Inventory exists under this InvMove
+                                    var invIDExists = await InvIDExistsInInvMove(db, detail.InventoryId, invMove.InvMoveHeader.InvMoveId);
+                                    if (invIDExists)
                                     {
-                                        return InvMoveTranResultCode.SKUCONFLICT;
+                                        return InvMoveTranResultCode.INVENTORYIDCONFLICT;
                                     }
 
                                     // detail concidered as new

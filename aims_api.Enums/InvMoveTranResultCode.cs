@@ -11,8 +11,8 @@ namespace aims_api.Enums
     {
         [Description("Movement Document transacted successfully.")]
         SUCCESS,
-        [Description("Similar SKU already exists in current Movement Document.")]
-        SKUCONFLICT,
+        [Description("Similar Inventory ID already exists in current Movement Document.")]
+        INVENTORYIDCONFLICT,
         [Description("Failed to save Movement Document detail.")]
         MOVEMENTDOCLINESAVEFAILED,
         [Description("Failed to process Inventory Movement user fields value.")]

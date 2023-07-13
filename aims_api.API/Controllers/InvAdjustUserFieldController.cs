@@ -11,6 +11,7 @@ namespace aims_api.API.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public class InvAdjustUserFieldController : ControllerBase
     {
         private IInvAdjustUserFieldCore InvAdjustUserFieldCore { get; set; }

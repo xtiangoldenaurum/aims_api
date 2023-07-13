@@ -230,37 +230,37 @@ namespace aims_api.Repositories.Implementation
             return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
         }
 
-        public async Task<InvMoveDetailPagedMdl?> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem)
-        {
-            // pagination setup
-            int offset = (pageNum - 1) * pageItem;
-            using (IDbConnection db = new MySqlConnection(ConnString))
-            {
-                db.Open();
-                string strQry = "select * from InvMoveDetail where invMoveId = @invMoveId limit @pageItem offset @offset";
+        //public async Task<InvMoveDetailPagedMdl?> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem)
+        //{
+        //    // pagination setup
+        //    int offset = (pageNum - 1) * pageItem;
+        //    using (IDbConnection db = new MySqlConnection(ConnString))
+        //    {
+        //        db.Open();
+        //        string strQry = "select * from InvMoveDetail where invMoveId = @invMoveId limit @pageItem offset @offset";
 
-                var param = new DynamicParameters();
-                param.Add("@invMoveId", invMoveId);
-                param.Add("@pageItem", pageItem);
-                param.Add("@offset", offset);
+        //        var param = new DynamicParameters();
+        //        param.Add("@invMoveId", invMoveId);
+        //        param.Add("@pageItem", pageItem);
+        //        param.Add("@offset", offset);
 
-                var ret = await db.QueryAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
+        //        var ret = await db.QueryAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
 
-                if (ret != null && ret.Any())
-                {
-                    // build pagination detail
-                    var pageDetail = await GetInvMoveDetailPageDetail(db, invMoveId, pageNum, pageItem, ret.Count());
+        //        if (ret != null && ret.Any())
+        //        {
+        //            // build pagination detail
+        //            var pageDetail = await GetInvMoveDetailPageDetail(db, invMoveId, pageNum, pageItem, ret.Count());
 
-                    return new InvMoveDetailPagedMdl()
-                    {
-                        Pagination = pageDetail,
-                        InvMoveDetailModel = ret
-                    };
-                }
-            }
+        //            return new InvMoveDetailPagedMdl()
+        //            {
+        //                Pagination = pageDetail,
+        //                InvMoveDetailModel = ret
+        //            };
+        //        }
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         public async Task<InvMoveDetailPagedMdlMod?> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum, int pageItem)
         {
@@ -269,7 +269,7 @@ namespace aims_api.Repositories.Implementation
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
                 db.Open();
-                string strQry = "call `spGetInvMoveDetailByInvMoveId`(@currInvMove, @pageItem, @offset)";
+                string strQry = "call `spGetInvMoveDetailByInvMoveId`(@currInvMoveId, @pageItem, @offset)";
 
                 var param = new DynamicParameters();
                 param.Add("@currInvMoveId", invMoveId);
@@ -339,9 +339,9 @@ namespace aims_api.Repositories.Implementation
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
                 db.Open();
-                string strQry = @"SELECT imd.*
+                string strQry = @"SELECT imd.*, inv.sku
                                     FROM InvMoveDetail imd
-                                    JOIN inventory inv ON imd.inventoryId = inv.inventoryId
+                                    INNER JOIN inventory inv ON imd.inventoryId = inv.inventoryId
                                     WHERE inv.sku LIKE @searchKey
                                        OR imd.invMoveLineId LIKE @searchKey
                                        OR imd.invMoveId LIKE @searchKey

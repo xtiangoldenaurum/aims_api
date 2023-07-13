@@ -11,7 +11,7 @@ namespace aims_api.Repositories.Interface
 {
     public interface IInvMoveDetailRepository
     {
-        Task<InvMoveDetailPagedMdl?> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem);
+        //Task<InvMoveDetailPagedMdl?> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem);
         Task<InvMoveDetailPagedMdlMod?> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum, int pageItem);
         Task<Pagination?> GetInvMoveDetailPageDetail(IDbConnection db, string InvMoveId, int pageNum, int pageItem, int rowCount);
         Task<Pagination?> GetInvMoveDetailPageDetailMod(IDbConnection db, string poId, int pageNum, int pageItem, int rowCount);

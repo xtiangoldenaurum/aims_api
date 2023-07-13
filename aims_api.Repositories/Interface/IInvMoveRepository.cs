@@ -24,7 +24,7 @@ namespace aims_api.Repositories.Interface
         Task<InvMoveModel> LockInvMove(IDbConnection db, string invMoveId);
         Task<string?> GetInvMoveUpdatedStatus(IDbConnection db, string invMoveId);
         Task<InvMoveCreateTranResult> CreateInvMoveMod(InvMoveModelMod invMove);
-        Task<bool> SKUExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId);
+        Task<bool> InvIDExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId);
         Task<bool> CreateInvMove(IDbConnection db, InvMoveModel invMove);
         Task<InvMoveTranResultCode> UpdateInvMoveMod(InvMoveModelMod invMove);
         Task<bool> UpdateInvMove(IDbConnection db, InvMoveModel invMove, TranType tranTyp);

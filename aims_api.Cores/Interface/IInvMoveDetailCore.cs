@@ -10,7 +10,7 @@ namespace aims_api.Cores.Interface
 {
     public interface IInvMoveDetailCore
     {
-        Task<RequestResponse> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem);
+        //Task<RequestResponse> GetInvMoveDetailByInvMoveIDPaged(string invMoveId, int pageNum, int pageItem);
         Task<RequestResponse> GetInvMoveDetailByInvMoveIDPagedMod(string invMoveId, int pageNum, int pageItem);
         Task<RequestResponse> GetInvMoveDetailPg(int pageNum, int pageItem);
         Task<RequestResponse> GetInvMoveDetailPgSrch(string searchKey, int pageNum, int pageItem);
