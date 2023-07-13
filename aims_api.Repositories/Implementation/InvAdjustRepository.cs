@@ -429,7 +429,7 @@ namespace aims_api.Repositories.Implementation
                     strFltr += " and ";
                 }
 
-                strFltr += $"invAdjustStatusId = @invAdjustStatusId ";
+                strFltr += $"invadjust.invAdjustStatusId = @invAdjustStatusId ";
                 param.Add("@invAdjustStatusId", filter.InvAdjustStatusId);
             }
 
@@ -612,7 +612,7 @@ namespace aims_api.Repositories.Implementation
 							                            invadjust.dateModified like @searchKey or 
 							                            invadjust.createdBy like @searchKey or 
 							                            invadjust.modifiedBy like @searchKey or 
-							                            invadjust.remarks like @searchKey or 
+							                            invadjust.remarks like @searchKey
 														limit @pageItem offset @offset";
 
                 var param = new DynamicParameters();
@@ -683,7 +683,7 @@ namespace aims_api.Repositories.Implementation
 							        invadjust.createdBy like @searchKey or 
 							        invadjust.modifiedBy like @searchKey or 
 							        invadjust.remarks like @searchKey or 
-                                    invadjuststats.invAdjustStatus like @searchKey";
+                                    invadjuststatus.invAdjustStatus like @searchKey";
 
 
             var param = new DynamicParameters();
@@ -851,7 +851,7 @@ namespace aims_api.Repositories.Implementation
                                         // update existing details
                                         var prevDetail = await InvAdjustDetailRepo.GetInvAdjustDetailByIdMod(db, detail.InvAdjustLineId);
 
-                                        if (prevDetail.InvAdjustLineStatusId == (InvAdjustLneStatus.CREATED).ToString())
+                                        if (prevDetail.InvAdjustLineStatusId == InvAdjustLneStatus.CREATED.ToString())
                                         {
                                             if (prevDetail != detail)
                                             {
