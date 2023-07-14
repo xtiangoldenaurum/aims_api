@@ -24,7 +24,7 @@ namespace aims_api.Repositories.Interface
         Task<InvAdjustModel> LockInvAdjust(IDbConnection db, string invAdjustId);
         Task<string?> GetInvAdjustUpdatedStatus(IDbConnection db, string invAdjustId);
         Task<InvAdjustCreateTranResult> CreateInvAdjustMod(InvAdjustModelMod invAdjust);
-        Task<bool> SKUExistsInInvAdjust(IDbConnection db, string inventoryId, string invAdjustId);
+        Task<bool> InvIdExistsInInvAdjust(IDbConnection db, string inventoryId, string invAdjustId);
         Task<bool> CreateInvAdjust(IDbConnection db, InvAdjustModel invAdjust);
         Task<InvAdjustTranResultCode> UpdateInvAdjustMod(InvAdjustModelMod invAdjust);
         Task<bool> UpdateInvAdjust(IDbConnection db, InvAdjustModel invAdjust, TranType tranTyp);

@@ -11,8 +11,8 @@ namespace aims_api.Enums
     {
         [Description("Adjustment Document transacted successfully.")]
         SUCCESS,
-        [Description("Similar SKU already exists in current Adjustment Document.")]
-        SKUCONFLICT,
+        [Description("Similar Inventory Id already exists in current Adjustment Document.")]
+        INVENTORYIDCONFLICT,
         [Description("Failed to save Adjustment Document detail.")]
         ADJUSTMENTDOCLINESAVEFAILED,
         [Description("Failed to process Inventory Adjustment user fields value.")]

@@ -18,7 +18,7 @@
   {
     "Id": 2,
     "Subdomain": "localhost:5001",
-    "SqlConnectionString": "Server=localhost;Port=3312;Database=aims_mariadb;Uid=root;Pwd=$$w0rd;",
+    "SqlConnectionString": "Server=localhost;Port=3312;Database=aims_mariadb;Uid=root;Pwd=p@$$w0rd;",
     "Name": "localhost",
     "DBName": "aims_mariadb",
     "NotifByBranch": 1,

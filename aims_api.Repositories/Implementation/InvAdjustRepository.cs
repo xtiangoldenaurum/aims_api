@@ -207,13 +207,13 @@ namespace aims_api.Repositories.Implementation
                             {
                                 var detail = details[i];
 
-                                // check if similar SKU exists under this Adjustment
-                                var skuExists = await SKUExistsInInvAdjust(db, detail.InventoryId, invAdjustId);
-                                if (skuExists)
+                                // check if similar InvID exists under this Adjustment
+                                var invIdExists = await InvIdExistsInInvAdjust(db, detail.InventoryId, invAdjustId);
+                                if (invIdExists)
                                 {
                                     return new InvAdjustCreateTranResult()
                                     {
-                                        ResultCode = InvAdjustTranResultCode.SKUCONFLICT
+                                        ResultCode = InvAdjustTranResultCode.INVENTORYIDCONFLICT
                                     };
                                 }
 
@@ -733,7 +733,7 @@ namespace aims_api.Repositories.Implementation
             return await db.QuerySingleOrDefaultAsync<InvAdjustModel>(strQry, param);
         }
 
-        public async Task<bool> SKUExistsInInvAdjust(IDbConnection db, string inventoryId, string invAdjustId)
+        public async Task<bool> InvIdExistsInInvAdjust(IDbConnection db, string inventoryId, string invAdjustId)
         {
             string strQry = @"select count(inventoryId) from invAdjustDetail 
                                 where inventoryId = @inventoryId and 
@@ -829,11 +829,11 @@ namespace aims_api.Repositories.Implementation
 
                                     if (detail.InvAdjustLineId == null)
                                     {
-                                        // check if similar SKU exists under this InvAdjust
-                                        var skuExists = await SKUExistsInInvAdjust(db, detail.InventoryId, invAdjust.InvAdjustHeader.InvAdjustId);
-                                        if (skuExists)
+                                        // check if similar InventoryID exists under this InvAdjust
+                                        var invIdExists = await InvIdExistsInInvAdjust(db, detail.InventoryId, invAdjust.InvAdjustHeader.InvAdjustId);
+                                        if (invIdExists)
                                         {
-                                            return InvAdjustTranResultCode.SKUCONFLICT;
+                                            return InvAdjustTranResultCode.INVENTORYIDCONFLICT;
                                         }
 
                                         // detail concidered as new

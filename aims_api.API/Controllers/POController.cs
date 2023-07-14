@@ -38,7 +38,7 @@ namespace aims_api.API.Controllers
                 Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
                 return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
                 throw; //allows to create custom error.
-            } 
+            }
         }
 
         [HttpGet("getpoforrcvpaged")]
