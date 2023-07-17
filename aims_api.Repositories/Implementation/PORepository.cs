@@ -1060,34 +1060,6 @@ namespace aims_api.Repositories.Implementation
                 string strQry = "SELECT * FROM po";
                 return await db.QueryAsync<POModel>(strQry, commandType: CommandType.Text);
             }
-            //using (IDbConnection db = new MySqlConnection(ConnString))
-            //{
-            //    db.Open();
-
-            //    var command = db.CreateCommand();
-            //    command.CommandText = "SELECT * FROM po";
-
-            //    using (var reader = command.ExecuteReader())
-            //    {
-            //        var pos = new List<POModel>();
-
-            //        while (reader.Read())
-            //        {
-            //            var po = new POModel
-            //            {
-            //                PoId = reader.GetString(reader.GetOrdinal("poId")),
-            //                OrderDate = reader.GetDateTime(reader.GetOrdinal("orderDate")),
-            //                RefNumber = reader.GetString(reader.GetOrdinal("refNumber")),
-            //                SupplierName = reader.GetString(reader.GetOrdinal("supplierName")),
-            //                PoStatusId = reader.GetString(reader.GetOrdinal("poStatusId"))
-            //                // Map other properties accordingly
-            //            };
-
-            //            pos.Add(po);
-            //        }
-
-            //        return pos;
-            //    }
         }
 
         public async Task<POCreateTranResult> CreateBulkPO(IFormFile file, string path)

@@ -130,6 +130,8 @@ builder.Services.AddTransient<IInvMoveStatusCore, InvMoveStatusCore>();
 builder.Services.AddTransient<IInvMoveStatusRepository, InvMoveStatusRepository>();
 builder.Services.AddTransient<IInvMoveUserFieldCore, InvMoveUserFieldCore>();
 builder.Services.AddTransient<IInvMoveUserFieldRepository, InvMoveUserFieldRepository>();
+builder.Services.AddTransient<IMovementTaskCore, MovementTaskCore>();
+builder.Services.AddTransient<IMovementTaskRepository, MovementTaskRepository>();
 
 builder.Services.AddTransient<IInvAdjustCore, InvAdjustCore>();
 builder.Services.AddTransient<IInvAdjustRepository, InvAdjustRepository>();

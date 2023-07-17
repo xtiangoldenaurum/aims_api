@@ -642,7 +642,7 @@ namespace aims_api.Repositories.Implementation
                                     // update existing details
                                     var prevDetail = await InvMoveDetailRepo.GetInvMoveDetailByIdMod(db, detail.InvMoveLineId);
 
-                                    if (prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString())
+                                    if (prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString() || prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.PRTMV).ToString())
                                     {
                                         if (prevDetail != detail)
                                         {
@@ -668,9 +668,10 @@ namespace aims_api.Repositories.Implementation
         public async Task<bool> UpdateInvMove(IDbConnection db, InvMoveModel invMove, TranType tranTyp)
         {
             string strQry = @"update InvMove set 
+							                invMoveStatusId = @invMoveStatusId, 
+                                            warehouseId = @warehouseId,
 							                reasonCodeId = @reasonCodeId, 
                                             reason = @reason,
-							                invMoveStatusId = @invMoveStatusId, 
 							                modifiedBy = @modifiedBy, 
 							                remarks = @remarks where 
 							                invMoveId = @invMoveId";

@@ -429,8 +429,11 @@ namespace aims_api.Repositories.Implementation
 														invMoveLineStatusId = @invMoveLineStatusId, 
                                                         inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
+                                                        finalQty = @finalQty,
                                                         locationTo = @locationTo,
+                                                        finalLocation = @finalLocation,
                                                         lpnTo = @lpnTo,
+                                                        finalLpn = @finalLpn,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";
@@ -453,8 +456,11 @@ namespace aims_api.Repositories.Implementation
 														invMoveLineStatusId = @invMoveLineStatusId, 
                                                         inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
+                                                        finalQty = @finalQty,
                                                         locationTo = @locationTo,
+                                                        finalLocation = @finalLocation,
                                                         lpnTo = @lpnTo,
+                                                        finalLpn = @finalLpn,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";

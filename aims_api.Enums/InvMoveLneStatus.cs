@@ -11,8 +11,6 @@ namespace aims_api.Enums
         CREATED,
         PRTMV,
         COMPLETED,
-        CONFIRMED,
-        GENERATEDMOVETASK,
         FRCCLOSED
     }
 }
