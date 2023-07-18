@@ -104,23 +104,23 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> MovementTask(MovementTaskModelMod data)
-        {
-            var res = await MovementTaskRepo.MovementTask(data);
+        //public async Task<RequestResponse> MovementTask(MovementTaskModelMod data)
+        //{
+        //    var res = await MovementTaskRepo.MovementTask(data);
 
-            if (res != null)
-            {
-                string resMsg = await EnumHelper.GetDescription(res.ResultCode);
-                if (res.ResultCode == MovementTaskResultCode.SUCCESS)
-                {
-                    return new RequestResponse(ResponseCode.SUCCESS, resMsg, res);
-                }
+        //    if (res != null)
+        //    {
+        //        string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+        //        if (res.ResultCode == MovementTaskResultCode.SUCCESS)
+        //        {
+        //            return new RequestResponse(ResponseCode.SUCCESS, resMsg, res);
+        //        }
 
-                return new RequestResponse(ResponseCode.FAILED, resMsg, res);
-            }
+        //        return new RequestResponse(ResponseCode.FAILED, resMsg, res);
+        //    }
 
-            return new RequestResponse(ResponseCode.FAILED, "Failed to process movement task.");
-        }
+        //    return new RequestResponse(ResponseCode.FAILED, "Failed to process movement task.");
+        //}
 
         public async Task<RequestResponse> CreateMovementTask(MovementTaskModel movementTask)
         {
@@ -174,6 +174,19 @@ namespace aims_api.Cores.Implementation
             }
 
             return new RequestResponse(ResponseCode.FAILED, "Failed to delete record.");
+        }
+
+        public async Task<RequestResponse> ProceedMovementTask(CommitMovementTaskModel data)
+        {
+            var res = await MovementTaskRepo.ProceedMovementTask(data);
+            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+
+            if (res.ResultCode == MovementTaskResultCode.SUCCESS)
+            {
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg);
+            }
+
+            return new RequestResponse(ResponseCode.FAILED, resMsg);
         }
     }
 }

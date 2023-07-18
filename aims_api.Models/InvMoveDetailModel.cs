@@ -13,8 +13,7 @@ namespace aims_api.Models
         public string? InvMoveId { get; set; }
         public string? InvMoveLineStatusId { get; set; }
         public string? InventoryId { get; set; }
-        public string? FinalLpnFrom { get; set; }
-        public int? QtyTo { get; set; }
+        public int QtyTo { get; set; }
         public int? FinalQty { get; set; }
         public string? LocationTo { get; set; }
         public string? FinalLocation { get; set; }

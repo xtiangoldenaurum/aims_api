@@ -53,7 +53,6 @@ namespace aims_api.Repositories.Implementation
 														    invMoveId, 
 														    invMoveLineStatusId, 
                                                             inventoryId,
-                                                            finalLpnFrom,
                                                             qtyTo,
                                                             finalQty,
                                                             locationTo,
@@ -67,7 +66,6 @@ namespace aims_api.Repositories.Implementation
 														    @invMoveId, 
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
-                                                            @finalLpnFrom,
                                                             @qtyTo,
                                                             @finalQty,
                                                             @locationTo,
@@ -95,7 +93,6 @@ namespace aims_api.Repositories.Implementation
 														    invMoveId, 
 														    invMoveLineStatusId, 
                                                             inventoryId,
-                                                            finalLpnFrom,
                                                             qtyTo,
                                                             finalQty,
                                                             locationTo,
@@ -109,7 +106,6 @@ namespace aims_api.Repositories.Implementation
 														    @invMoveId, 
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
-                                                            @finalLpnFrom,
                                                             @qtyTo,
                                                             @finalQty,
                                                             @locationTo,
@@ -211,11 +207,12 @@ namespace aims_api.Repositories.Implementation
             using (IDbConnection db = new MySqlConnection(ConnString))
             {
                 db.Open();
-                string strQry = @"select * from InvMoveDetail where 
-														invMoveLineId = @invMoveLineId";
+                //  string strQry = @"select * from InvMoveDetail where 
+                //invMoveLineId = @invMoveLineId";
+                string strQry = "call `spGetInvMoveDetailByInvMoveLineId`(@currInvMoveLineId)";
 
                 var param = new DynamicParameters();
-                param.Add("@invMoveLineId", invMoveLineId);
+                param.Add("@currInvMoveLineId", invMoveLineId);
                 return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
             }
         }
@@ -345,7 +342,6 @@ namespace aims_api.Repositories.Implementation
                                     WHERE inv.sku LIKE @searchKey
                                        OR imd.invMoveLineId LIKE @searchKey
                                        OR imd.invMoveId LIKE @searchKey
-                                       OR imd.finalLpnFrom LIKE @searchKey
                                        OR imd.qtyTo LIKE @searchKey
                                        OR imd.finalQty LIKE @searchKey
                                        OR imd.locationTo LIKE @searchKey
@@ -392,6 +388,29 @@ namespace aims_api.Repositories.Implementation
 
                 var res = await db.ExecuteScalarAsync(strQry, param);
                 if (res != null && res != DBNull.Value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> InvMoveDetailMovable(string invMoveLineId)
+        {
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select count(invMoveLineId) from InvMoveDetail where 
+                                                        (invMoveLineStatusId = 'CREATED' or 
+                                                        invMoveLineStatusId = 'PRTRCV') and 
+														invMoveLineId = @invMoveLineId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveLineId", invMoveLineId);
+
+                var res = await db.ExecuteScalarAsync<bool>(strQry, param);
+                if (res)
                 {
                     return true;
                 }

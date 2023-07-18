@@ -8,7 +8,8 @@ namespace aims_api.Models
 {
     public class MovementTaskModelMod
     {
-        public InventoryModelMod? InvHead { get; set; }
+        public InventoryMovementModelMod? InvHead { get; set; }
         public InventoryHistoryModel? InvDetail { get; set; }
+        public LotAttributeDetailModel? LotAtt { get; set; }
     }
 }

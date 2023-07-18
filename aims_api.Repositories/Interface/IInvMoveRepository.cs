@@ -31,5 +31,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> DeleteInvMove(string invMoveId);
         Task<CancelInvMoveResultCode> CancelInvMove(string invMoveId, string userAccountId);
         Task<CancelInvMoveResultCode> ForceCancelInvMove(string invMoveId, string userAccountId);
+        Task<bool> InvMoveMovable(string invMoveId);
     }
 }

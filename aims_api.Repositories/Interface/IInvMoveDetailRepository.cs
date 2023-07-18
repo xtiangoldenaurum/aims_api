@@ -30,5 +30,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> UpdateInvMoveDetailMod(IDbConnection db, InvMoveDetailModel invMoveDetail, TranType tranTyp);
         Task<bool> DeleteInvMoveDetail(string invMoveLineId);
         Task<InvMoveDetailDelResultCode> DeleteInvMoveDetailMod(string invMoveLineId, string userAccountId);
+        Task<bool> InvMoveDetailMovable(string invMoveLineId);
     }
 }

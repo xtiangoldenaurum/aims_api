@@ -758,10 +758,10 @@ namespace aims_api.Repositories.Implementation
                 int alteredDtlCnt = 0;
                 foreach (var invMoveDetail in invMoveDetails)
                 {
-                    invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.COMPLETED).ToString();
-                    var poDtlAltered = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.CANCELMV);
+                    invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.CLOSED).ToString();
+                    var invMoveDtlAltered = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.CANCELMV);
 
-                    if (!poDtlAltered)
+                    if (!invMoveDtlAltered)
                     {
                         return CancelInvMoveResultCode.INVMOVEDETAILSSTATUSUPDATEFAILED;
                     }
@@ -813,7 +813,7 @@ namespace aims_api.Repositories.Implementation
                     return CancelInvMoveResultCode.INVMOVELOCKFAILED;
                 }
 
-                // check if InvMove header is in partial receive status
+                // check if InvMove header is in partial move status
                 if (po.InvMoveStatusId != (InvMoveStatus.PRTMV).ToString())
                 {
                     return CancelInvMoveResultCode.INVMOVESTATUSNOTVALID;
@@ -871,6 +871,28 @@ namespace aims_api.Repositories.Implementation
 
                 return false;
             });
+        }
+        public async Task<bool> InvMoveMovable(string invMoveId)
+        {
+            using (IDbConnection db = new MySqlConnection(ConnString))
+            {
+                db.Open();
+                string strQry = @"select count(invMoveId) from InvMove where 
+                                                        (invMoveStatusId = 'CREATED' or 
+                                                        invMoveStatusId = 'PARTMV') and 
+														invMoveId = @invMoveId";
+
+                var param = new DynamicParameters();
+                param.Add("@invMoveId", invMoveId);
+
+                var res = await db.ExecuteScalarAsync<bool>(strQry, param);
+                if (res)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

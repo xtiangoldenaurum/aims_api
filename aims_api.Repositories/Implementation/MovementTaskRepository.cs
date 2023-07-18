@@ -22,6 +22,7 @@ namespace aims_api.Repositories.Implementation
         IInvMoveDetailRepository InvMoveDetailRepo;
         IInventoryRepository InventoryRepo;
         IInventoryHistoryRepository InvHistoryRepo;
+        ILotAttributeDetailRepository LotAttRepo;
         IPagingRepository PagingRepo;
         IAuditTrailRepository AuditTrailRepo;
         MovementTaskAudit AuditBuilder;
@@ -31,7 +32,8 @@ namespace aims_api.Repositories.Implementation
                                     IInvMoveRepository invMoveRepo,
                                     IInvMoveDetailRepository invMoveDetailRepo,
                                     IInventoryRepository inventoryRepo,
-                                    IInventoryHistoryRepository invHistoryRepo)
+                                    IInventoryHistoryRepository invHistoryRepo,
+                                    ILotAttributeDetailRepository lotAttRepo)
         {
             ConnString = tenantProvider.GetTenant().SqlConnectionString;
             AuditTrailRepo = auditTrailRepo;
@@ -40,6 +42,7 @@ namespace aims_api.Repositories.Implementation
             InvMoveDetailRepo = invMoveDetailRepo;
             InventoryRepo = inventoryRepo;
             InvHistoryRepo = invHistoryRepo;
+            LotAttRepo = lotAttRepo;
             PagingRepo = new PagingRepository();
             AuditBuilder = new MovementTaskAudit();
         }
@@ -235,9 +238,421 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        public Task<MovementTaskResultModel> MovementTask(MovementTaskModelMod data)
+        //public async Task<MovementTaskResultModel> MovementTask(MovementTaskModelMod data)
+        //{
+        //    // init return object
+        //    var ret = new MovementTaskResultModel();
+        //    ret.ResultCode = MovementTaskResultCode.FAILED;
+
+        //    // check if required details is not null
+        //    if (data.InvHead != null &&
+        //        data.InvDetail != null)
+        //    {
+        //        // init objects
+        //        var invHead = data.InvHead;
+        //        var invDetail = data.InvDetail;
+
+        //        using (IDbConnection db = new MySqlConnection(ConnString))
+        //        {
+        //            db.Open();
+
+        //            // lock InvMoveDetail record
+        //            var invMoveDetail = await InvMoveDetailRepo.LockInvMoveDetail(db, invHead.InvMoveLineId);
+
+        //            // lock InvMove record
+        //            var invMove = await InvMoveRepo.LockInvMove(db, invHead.InvMoveId);
+
+        //            if (invMoveDetail != null &&
+        //                invMoveDetail.InvMoveLineId == invHead.InvMoveLineId &&
+        //                invMove.InvMoveId != null &&
+        //                invMove.InvMoveId == invHead.InvMoveId)
+        //            {
+        //                // check if qty to move is valid
+        //                if (invHead.QtyToMove < 1 && invMoveDetail.QtyTo < invHead.QtyToMove)
+        //                {
+        //                    ret.ResultCode = MovementTaskResultCode.INVALIDQTY;
+        //                    return ret;
+        //                }
+
+        //                // check header if still in moveable status
+        //                var hdrValid = await InvMoveRepo.InvMoveMovable(invHead.InvMoveId);
+        //                if (!hdrValid ||
+        //                    invMove.InvMoveStatusId == (InvMoveStatus.COMPLETED).ToString() ||
+        //                    invMove.InvMoveStatusId == (InvMoveStatus.FRCCLOSED).ToString() ||
+        //                    invMove.InvMoveStatusId == (InvMoveStatus.CANCELLED).ToString() ||
+        //                    invMove.InvMoveStatusId == (InvMoveStatus.CLOSED).ToString())
+        //                {
+        //                    ret.ResultCode = MovementTaskResultCode.INVALIDINVMOVE;
+        //                    return ret;
+        //                }
+
+
+        //                // check detail itself if still in movable status
+        //                var dtlValid = await InvMoveDetailRepo.InvMoveDetailMovable(invHead.InvMoveLineId);
+        //                if (!dtlValid)
+        //                {
+        //                    ret.ResultCode = MovementTaskResultCode.INVALIDINVMOVELANE;
+        //                    return ret;
+        //                }
+
+        //                // check if invMove detail has movable qty left
+        //                int qtyMoved = await GetInvMoveLineMvdQty(db, invMoveDetail.InvMoveLineId);
+        //                int availableQty = invMoveDetail.QtyTo - qtyMoved;
+        //                int leftOverQty = availableQty - invHead.QtyToMove;
+
+        //                if (availableQty < 1 || availableQty < invHead.QtyToMove)
+        //                {
+        //                    ret.ResultCode = MovementTaskResultCode.INVALIDQTY;
+        //                    return ret;
+        //                }
+
+        //                //// check if expiry date is valid
+        //                //if (lotAtt.ManufactureDate > DateTime.Now)
+        //                //{
+        //                //    ret.ResultCode = ReceivingResultCode.LOTINVALIDDATE;
+        //                //    return ret;
+        //                //}
+
+        //                // update product status if expired
+        //                //if (lotAtt.ExpiryDate <= DateTime.Now &&
+        //                //    lotAtt.ProductConditionId == (ProductCondition.GOOD).ToString())
+        //                //{
+        //                //    ret.ResultCode = ReceivingResultCode.INVALIDCONDITION;
+        //                //    return ret;
+        //                //}
+
+        //                // create inventory detail section
+
+        //                // get inventory next document number
+        //                string? invId = await IdNumberRepo.GetNxtDocNum("INV", invHead.UserAccountId);
+
+        //                // get lotattribute next document number (reuse lot id if similar detail exists)
+        //                bool createLot = false;
+        //                string? lotAttId = await LotAttRepo.GetLotAttributeIdWithSameDetail(lotAtt);
+        //                if (string.IsNullOrEmpty(lotAttId))
+        //                {
+        //                    lotAttId = await IdNumberRepo.GetNxtDocNum("LOT", invHead.UserAccountId);
+        //                    createLot = true;
+        //                }
+
+        //                // define lotatt detail's lot number
+        //                lotAtt.LotAttributeId = lotAttId;
+
+        //                // flag to print lotatt id label
+        //                labelsToPrint.Add(new BCodeLabelToPrintModel()
+        //                {
+        //                    DocType = PrinterDocType.LotAttId,
+        //                    DocTypeId = (PrinterDocType.LotAttId).ToString(),
+        //                    Description = lotAtt.LotAttributeId,
+        //                    BarcodeContent = lotAtt.LotAttributeId,
+        //                    EPC = lotAtt.LotAttributeId,
+        //                });
+
+        //                // get receiving next document number
+        //                string? receivingId = await IdNumberRepo.GetNxtDocNum("RCVING", invHead.UserAccountId);
+
+        //                // get putaway task next document number
+        //                string? putawayTaskId = await IdNumberRepo.GetNxtDocNum("PUTAWAY", invHead.UserAccountId);
+
+        //                // get TID To if asterisk/* is provided
+        //                string? tidTo = "*";
+        //                if (invDetail.TrackIdTo == "*" || string.IsNullOrEmpty(invDetail.TrackIdTo))
+        //                {
+        //                    tidTo = await IdNumberRepo.GetNxtDocNum("TRACE", invHead.UserAccountId);
+        //                    if (tidTo != "*")
+        //                    {
+        //                        invDetail.TrackIdTo = tidTo;
+
+        //                        // flag to print track id label
+        //                        labelsToPrint.Add(new BCodeLabelToPrintModel()
+        //                        {
+        //                            DocType = PrinterDocType.TrackId,
+        //                            DocTypeId = (PrinterDocType.TrackId).ToString(),
+        //                            Description = invDetail.TrackIdTo,
+        //                            BarcodeContent = invDetail.TrackIdTo,
+        //                            EPC = invDetail.TrackIdTo,
+        //                        });
+        //                    }
+        //                    else
+        //                    {
+        //                        ret.ResultCode = ReceivingResultCode.FAILED;
+        //                        return ret;
+        //                    }
+        //                }
+
+        //                // check if TID is in correct format
+        //                var tidPrefix = await IdNumberRepo.GetIdPrefix(db, (TranType.TRACE).ToString());
+
+        //                if (string.IsNullOrEmpty(tidPrefix))
+        //                {
+        //                    ret.ResultCode = ReceivingResultCode.FAILEDGETDOCIDPREFIX;
+        //                    return ret;
+        //                }
+
+        //                if (!string.IsNullOrEmpty(tidPrefix))
+        //                {
+        //                    if (!invDetail.TrackIdTo.Contains(tidPrefix))
+        //                    {
+        //                        ret.ResultCode = ReceivingResultCode.INVALIDTIDFORMAT;
+        //                        return ret;
+        //                    }
+        //                }
+
+        //                // check if TID has no any record yet
+        //                var isCleanTID = await InvHistoryRepo.CheckTrackIdExists(db, invDetail.TrackIdTo);
+        //                if (isCleanTID)
+        //                {
+        //                    ret.ResultCode = ReceivingResultCode.INVALIDTID;
+        //                    return ret;
+        //                }
+
+        //                // get LPN To if asterisk/* is provided
+        //                string? lpnTo = "*";
+        //                if (invDetail.LpnTo == "*")
+        //                {
+        //                    lpnTo = await IdNumberRepo.GetNxtDocNum("LPN", invHead.UserAccountId);
+        //                    if (lpnTo != "*")
+        //                    {
+        //                        invDetail.LpnTo = lpnTo;
+
+        //                        // flag to print lpn id label
+        //                        labelsToPrint.Add(new BCodeLabelToPrintModel()
+        //                        {
+        //                            DocType = PrinterDocType.LPNId,
+        //                            DocTypeId = (PrinterDocType.LPNId).ToString(),
+        //                            Description = invDetail.LpnTo,
+        //                            BarcodeContent = invDetail.LpnTo,
+        //                            EPC = invDetail.LpnTo
+        //                        });
+        //                    }
+        //                    else
+        //                    {
+
+        //                        ret.ResultCode = ReceivingResultCode.FAILED;
+        //                    }
+        //                }
+
+        //                // check if LPNTo is not in used by any location except INSTAGING
+        //                if (!string.IsNullOrEmpty(invDetail.LpnTo))
+        //                {
+        //                    var isLPNUsed = await InvHistoryRepo.ChkLPNIsUsedInStorage(db, invDetail.LpnTo);
+        //                    if (isLPNUsed)
+        //                    {
+        //                        ret.ResultCode = ReceivingResultCode.INVALIDLPNID;
+        //                        return ret;
+        //                    }
+
+        //                    // check if LPN Id is in correct format
+        //                    var lpnPrefix = await IdNumberRepo.GetIdPrefix(db, (TranType.LPN).ToString());
+        //                    if (string.IsNullOrEmpty(lpnPrefix))
+        //                    {
+        //                        ret.ResultCode = ReceivingResultCode.FAILEDGETDOCIDPREFIX;
+        //                        return ret;
+        //                    }
+
+        //                    if (!string.IsNullOrEmpty(lpnPrefix))
+        //                    {
+        //                        if (!invDetail.LpnTo.Contains(lpnPrefix))
+        //                        {
+        //                            ret.ResultCode = ReceivingResultCode.INVALIDLPNFORMAT;
+        //                            return ret;
+        //                        }
+        //                    }
+        //                }
+
+        //                if (!string.IsNullOrEmpty(invId) &&
+        //                    !string.IsNullOrEmpty(lotAttId) &&
+        //                    !string.IsNullOrEmpty(receivingId) &&
+        //                    !string.IsNullOrEmpty(putawayTaskId))
+        //                {
+        //                    // build inventory table data
+        //                    var inv = new InventoryModel()
+        //                    {
+        //                        InventoryId = invId,
+        //                        Sku = poDetail.Sku,
+        //                        InventoryStatusId = (InvStatus.REFERRED).ToString()
+        //                    };
+
+        //                    // save header to inventory table
+        //                    var invSaved = await InventoryRepo.CreateInventoryMod(db, inv, invHead.UserAccountId, TranType.RCVING);
+
+        //                    if (invSaved)
+        //                    {
+        //                        // check record conflict on inventoryhistory table --skipped this validation (may not be needed)
+
+        //                        // build inventory history detail defaults
+        //                        invDetail.InventoryId = invId;
+        //                        invDetail.SeqNum = 1;
+        //                        invDetail.DocumentRefId = poDetail.PoLineId;
+        //                        invDetail.QtyFrom = 0;
+        //                        invDetail.QtyTo = invHead.QtyToReceive;
+        //                        invDetail.LocationFrom = "*";
+        //                        invDetail.TrackIdFrom = "*";
+        //                        invDetail.LpnFrom = "*";
+        //                        invDetail.LotAttributeId = lotAttId;
+        //                        invDetail.TransactionTypeId = "RCVING";
+        //                        invDetail.CreatedBy = invHead.UserAccountId;
+
+        //                        // record lotattribute detail to lotattributedetail table if is new lotId
+        //                        bool lotSaved;
+        //                        if (createLot)
+        //                        {
+        //                            lotSaved = await LotAttRepo.CreateLotAttributeDetailMod(db, lotAtt, TranType.RCVING);
+        //                        }
+        //                        else
+        //                        {
+        //                            lotSaved = true;
+        //                        }
+
+        //                        if (lotSaved)
+        //                        {
+        //                            // record inventory detail to inventory history table
+        //                            bool dtlSaved = await InvHistoryRepo.CreateInventoryHistoryMod(db, invDetail, TranType.RCVING);
+
+        //                            if (dtlSaved)
+        //                            {
+        //                                // build receiving transaction detail
+        //                                var rcvDetail = new ReceivingModel()
+        //                                {
+        //                                    ReceivingId = receivingId,
+        //                                    DocLineId = poDetail.PoLineId,
+        //                                    InventoryId = invId,
+        //                                    SeqNum = 1,
+        //                                    ReceivingStatusId = (ReceivingStatus.CREATED).ToString(),
+        //                                    CreatedBy = invHead.UserAccountId,
+        //                                    ModifiedBy = invHead.UserAccountId
+        //                                };
+
+        //                                // record receiving detail to receving table
+        //                                bool rcvSaved = await CreateReceivingMod(db, rcvDetail, TranType.RCVING);
+
+        //                                if (rcvSaved)
+        //                                {
+        //                                    // build putaway task data
+        //                                    var putawayDtl = new PutawayTaskModel()
+        //                                    {
+        //                                        PutawayTaskId = putawayTaskId,
+        //                                        ReceivingId = receivingId,
+        //                                        InventoryId = invId,
+        //                                        SeqNum = 1,
+        //                                        PutawayStatusId = (PutawayStatus.CREATED).ToString(),
+        //                                        CreatedBy = invHead.UserAccountId,
+        //                                        ModifiedBy = invHead.UserAccountId
+        //                                    };
+
+        //                                    // record putaway task to putawaytask table
+        //                                    bool putawaySaved = await PutawayTaskRepo.CreatePutawayTaskMod(db, putawayDtl, TranType.RCVING);
+
+        //                                    if (putawaySaved)
+        //                                    {
+        //                                        // update InvMove detail status
+        //                                        poDetail.ModifiedBy = invHead.UserAccountId;
+        //                                        if (leftOverQty == 0)
+        //                                        {
+        //                                            poDetail.PoLineStatusId = (InvMoveLneStatus.FULLRCV).ToString();
+        //                                        }
+        //                                        else
+        //                                        {
+        //                                            poDetail.PoLineStatusId = (InvMoveLneStatus.PRTRCV).ToString();
+        //                                        }
+
+        //                                        // save updated InvMove detail record
+        //                                        var poDtlUpdated = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, poDetail, TranType.RCVING);
+        //                                        if (poDtlUpdated)
+        //                                        {
+        //                                            // update InvMove status
+        //                                            // get InvMove updated status
+        //                                            var poStatus = await InvMoveRepo.GetPoUpdatedStatus(db, po.PoId);
+
+        //                                            if (!string.IsNullOrEmpty(poStatus))
+        //                                            {
+        //                                                // save update po record
+        //                                                po.ModifiedBy = invHead.UserAccountId;
+        //                                                po.PoStatusId = poStatus;
+
+        //                                                var poUpdated = await InvMoveRepo.UpdateInvMove(db, po, TranType.RCVING);
+
+        //                                                if (poUpdated)
+        //                                                {
+        //                                                    // record captured serial numbers if there's any
+        //                                                    if (tags != null)
+        //                                                    {
+        //                                                        if (tags.Any())
+        //                                                        {
+        //                                                            // check if tags count meets to receive qty
+        //                                                            if (tags.Count() > invHead.QtyToReceive)
+        //                                                            {
+        //                                                                ret.ResultCode = ReceivingResultCode.UNIQTAGSEXCEEDSQTYTORCV;
+        //                                                                return ret;
+        //                                                            }
+
+        //                                                            // record unique tags
+        //                                                            var resTagAppend = await UniqueTagsRepo.CreateUniqueTagsMod(db,
+        //                                                                                                                        tags,
+        //                                                                                                                        tidTo,
+        //                                                                                                                        TranType.RCVING,
+        //                                                                                                                        po.PoId,
+        //                                                                                                                        poDetail.PoLineId,
+        //                                                                                                                        invHead.UserAccountId);
+
+        //                                                            // revert if recording of captured serials is failed
+        //                                                            if (resTagAppend != RecordTagResultCode.SUCCESS)
+        //                                                            {
+        //                                                                ret.ResultCode = ReceivingResultCode.UNIQUETAGSAVEFIALED;
+        //                                                                return ret;
+        //                                                            }
+
+        //                                                            // build EPC zpl ref to print data
+        //                                                            var epcs = await PrintHelperRepo.BuildEPCZpls(tags);
+
+        //                                                            // check if return tag sto print data is consistent in tags qty
+        //                                                            if (!epcs.Any() || (epcs.Count() != tags.Count()))
+        //                                                            {
+        //                                                                ret.ResultCode = ReceivingResultCode.SNTOPRINTBUILDFAILED;
+        //                                                                return ret;
+        //                                                            }
+
+        //                                                            // include EPC data on ZPL data to build
+        //                                                            labelsToPrint.AddRange(epcs);
+        //                                                        }
+        //                                                    }
+
+        //                                                    ret.ResultCode = ReceivingResultCode.SUCCESS;
+
+        //                                                    // build zpl print codes for label printing
+        //                                                    if (labelsToPrint.Any())
+        //                                                    {
+        //                                                        ret.LabelsToPrint = labelsToPrint;
+
+        //                                                        var printData = await PrintHelperRepo.BuildZplDetails(labelsToPrint);
+        //                                                        ret.ZplDetails = printData;
+
+        //                                                        return ret;
+        //                                                    }
+        //                                                }
+        //                                            }
+        //                                        }
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return ret;
+        //}
+
+        public async Task<int> GetInvMoveLineMvdQty(IDbConnection db, string invMoveDetailId)
         {
-            throw new NotImplementedException();
+            string strQry = @"CALL `spGetInvMoveLineMovedQty`(@invMoveDetailId)";
+
+            var param = new DynamicParameters();
+            param.Add("@invMoveDetailId", invMoveDetailId);
+
+            return await db.ExecuteScalarAsync<int>(strQry, param, commandType: CommandType.Text);
         }
 
         public async Task<bool> CreateMovementTask(MovementTaskModel movementTask)
@@ -362,16 +777,16 @@ namespace aims_api.Repositories.Implementation
                 // check if inv move detail is in movement status
                 if (invMvDetail.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString() ||
                     invMvDetail.InvMoveLineStatusId == (InvMoveLneStatus.FRCCLOSED).ToString() ||
-                    invMvDetail.InvMoveLineStatusId == (InvMoveLneStatus.COMPLETED).ToString())
+                    invMvDetail.InvMoveLineStatusId == (InvMoveLneStatus.CLOSED).ToString())
                 {
                     return CancelMvResultCode.INVMOVEDTLINCONSISTENCY;
                 }
 
-                // check if invmove is still not completed, cancelled or in create status
+                // check if invmove is still not closed, cancelled or in create status
                 if (invMoveHeader.InvMoveStatusId == (InvMoveStatus.CREATED).ToString() ||
                     invMoveHeader.InvMoveStatusId == (InvMoveStatus.CANCELLED).ToString() ||
                     invMoveHeader.InvMoveStatusId == (InvMoveStatus.FRCCLOSED).ToString() ||
-                    invMoveHeader.InvMoveStatusId == (InvMoveStatus.COMPLETED).ToString())
+                    invMoveHeader.InvMoveStatusId == (InvMoveStatus.CLOSED).ToString())
                 {
                     return CancelMvResultCode.INVMOVEINCONSISTENCY;
                 }
@@ -547,6 +962,43 @@ namespace aims_api.Repositories.Implementation
             param.Add("@inventoryId", inventoryId);
 
             return await db.QuerySingleOrDefaultAsync<MovementTaskModel>(strQry, param);
+        }
+
+        public async Task<bool> HasPendingMovementTask(IDbConnection db, string invMoveId)
+        {
+            string strQry = @"CALL `spCountInvMovePendingMovement`(@currInvMoveId);";
+
+            var param = new DynamicParameters();
+            param.Add("@currInvMoveId", invMoveId);
+
+            int res = await db.ExecuteScalarAsync<int>(strQry, param);
+
+            if (res == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public Task<MovementTaskResultModel> ProceedMovementTask(CommitMovementTaskModel data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<MovementTaskResultCode> PartialMovement(IDbConnection db, MovementContainerModel data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<MovementTaskResultCode> FullMovementInvMove(IDbConnection db, MovementContainerModel data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string?> DefineTranTypeByDocId(IDbConnection db, string docLineId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

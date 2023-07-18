@@ -18,6 +18,10 @@ namespace aims_api.Enums
         [Description("Invalid Location")]
         INVALIDLOCATION,
         [Description("Invalid LPN")]
-        INVALIDLPN
+        INVALIDLPN,
+        [Description("Inventory Move status inconsistency.")]
+        INVALIDINVMOVE,
+        [Description("Inventory Move detail status inconsistency.")]
+        INVALIDINVMOVELANE
     }
 }
