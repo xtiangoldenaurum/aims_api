@@ -21,6 +21,5 @@ namespace aims_api.Models
 		public string? Remarks { get; set; }
 		public int TotalReceived { get; set; }
 		public int QtyToReceived { get; set; }
-
 	}
 }

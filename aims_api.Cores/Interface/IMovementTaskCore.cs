@@ -17,11 +17,10 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> GetCancelableMvsByInvMoveId(string invMoveId, int pageNum, int pageItem);
         Task<RequestResponse> GetMovementTaskPgSrch(string searchKey, int pageNum, int pageItem);
         Task<RequestResponse> GetMovementTaskById(string movementTaskId);
-        //Task<RequestResponse> MovementTask(MovementTaskModelMod data);
+        Task<RequestResponse> ProceedMovementTask(MovementTaskModelMod data);
         Task<RequestResponse> CreateMovementTask(MovementTaskModel movementTask);
         Task<RequestResponse> UpdateMovementTask(MovementTaskModel movementTask);
         Task<RequestResponse> CancelMovementTask(string movementTaskId, string userAccountId);
         Task<RequestResponse> DeleteMovementTask(string movementTaskId);
-        //Task<RequestResponse> ProceedMovementTask(CommitMovementTaskModel data);
     }
 }

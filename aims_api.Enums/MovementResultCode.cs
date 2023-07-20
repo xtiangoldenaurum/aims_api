@@ -11,6 +11,14 @@ namespace aims_api.Enums
     {
         [Description("Movement completed successfuly.")]
         SUCCESS,
+        [Description("Invalid Quantity")]
+        INVALIDQTY,
+        [Description("Invalid Location")]
+        INVALIDLOC,
+        [Description("Inventory Move status inconsistency.")]
+        INVALIDINVMOVE,
+        [Description("Inventory Move detail status inconsistency.")]
+        INVALIDINVMOVELANE,
         [Description("Failed to lock inventory history record.")]
         FAILEDTOLOCKINVHIST,
         [Description("Failed to retreive inventory history record.")]

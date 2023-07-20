@@ -173,45 +173,20 @@ namespace aims_api.API.Controllers
             }
         }
 
-        //[HttpPost("movementtask")]
-        //public async Task<ActionResult> MovementTask(MovementTaskModelMod data)
-        //{
-        //    try
-        //    {
-        //        return Ok(await MovementTaskCore.MovementTask(data));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
-        //        return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
-        //        throw;
-        //    }
-        //}
-
-
-        //[HttpPost("proceedmovementtask")]
-        //public async Task<ActionResult> ProceedMovementTask(CommitMovementTaskModel data)
-        //{
-        //    try
-        //    {
-        //        if (data == null)
-        //        {
-        //            await DataValidator.AddErrorField("data");
-        //        }
-        //        if (DataValidator.Invalid)
-        //        {
-        //            return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
-        //        }
-
-        //        return Ok(await MovementTaskCore.ProceedMovementTask(data));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
-        //        return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
-        //        throw;
-        //    }
-        //}
+        [HttpPost("proceedmovementtask")]
+        public async Task<ActionResult> ProceedMovementTask(MovementTaskModelMod data)
+        {
+            try
+            {
+                return Ok(await MovementTaskCore.ProceedMovementTask(data));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+                throw;
+            }
+        }
 
         [HttpPost("createmovementtask")]
         public async Task<ActionResult> CreateMovementTask(MovementTaskModel movementTask)

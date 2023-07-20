@@ -54,13 +54,9 @@ namespace aims_api.Repositories.Implementation
 														    invMoveLineStatusId, 
                                                             inventoryId,
                                                             qtyTo,
-                                                            finalQty,
                                                             locationTo,
-                                                            finalLocation,
                                                             lpnTo,
-                                                            finalLpn,
                                                             trackIdTo,
-                                                            finalTrackId,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
@@ -69,13 +65,9 @@ namespace aims_api.Repositories.Implementation
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
                                                             @qtyTo,
-                                                            @finalQty,
                                                             @locationTo,
-                                                            @finalLocation,
                                                             @lpnTo,
-                                                            @finalLpn,
                                                             @trackIdTo,
-                                                            @finalTrackId,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -98,13 +90,9 @@ namespace aims_api.Repositories.Implementation
 														    invMoveLineStatusId, 
                                                             inventoryId,
                                                             qtyTo,
-                                                            finalQty,
                                                             locationTo,
-                                                            finalLocation,
                                                             lpnTo,
-                                                            finalLpn,
                                                             trackIdTo,
-                                                            finalTrackId,
 														    createdBy, 
 														    modifiedBy, 
 														    remarks)
@@ -113,13 +101,9 @@ namespace aims_api.Repositories.Implementation
                                                             @invMoveLineStatusId,
                                                             @inventoryId,
                                                             @qtyTo,
-                                                            @finalQty,
                                                             @locationTo,
-                                                            @finalLocation,
                                                             @lpnTo,
-                                                            @finalLpn,
                                                             @trackIdTo,
-                                                            @finalTrackId,
 														    @createdBy, 
 														    @modifiedBy, 
 														    @remarks)";
@@ -351,13 +335,9 @@ namespace aims_api.Repositories.Implementation
                                        OR imd.invMoveLineId LIKE @searchKey
                                        OR imd.invMoveId LIKE @searchKey
                                        OR imd.qtyTo LIKE @searchKey
-                                       OR imd.finalQty LIKE @searchKey
                                        OR imd.locationTo LIKE @searchKey
-                                       OR imd.finalLocation LIKE @searchKey
                                        OR imd.lpnTo LIKE @searchKey
-                                       OR imd.finalLpn LIKE @searchKey
                                        OR imd.trackIdTo LIKE @searchKey
-                                       OR imd.finalTrackId LIKE @searchKey
                                        OR imd.invMoveLineStatusId LIKE @searchKey
                                        OR imd.dateCreated LIKE @searchKey
                                        OR imd.dateModified LIKE @searchKey
@@ -458,13 +438,9 @@ namespace aims_api.Repositories.Implementation
 														invMoveLineStatusId = @invMoveLineStatusId, 
                                                         inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
-                                                        finalQty = @finalQty,
                                                         locationTo = @locationTo,
-                                                        finalLocation = @finalLocation,
                                                         lpnTo = @lpnTo,
-                                                        finalLpn = @finalLpn,
                                                         trackIdTo = @trackIdTo,
-                                                        finalTrackId = @finalTrackId,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";
@@ -487,13 +463,9 @@ namespace aims_api.Repositories.Implementation
 														invMoveLineStatusId = @invMoveLineStatusId, 
                                                         inventoryId = @inventoryId,
                                                         qtyTo = @qtyTo,
-                                                        finalQty = @finalQty,
                                                         locationTo = @locationTo,
-                                                        finalLocation = @finalLocation,
                                                         lpnTo = @lpnTo,
-                                                        finalLpn = @finalLpn,
                                                         trackIdTo = @trackIdTo,
-                                                        finalTrackId = @finalTrackId,
 														modifiedBy = @modifiedBy, 
 														remarks = @remarks where 
 														invMoveLineId = @invMoveLineId";

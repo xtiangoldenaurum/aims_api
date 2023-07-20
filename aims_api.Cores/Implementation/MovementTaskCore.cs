@@ -104,23 +104,23 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        //public async Task<RequestResponse> MovementTask(MovementTaskModelMod data)
-        //{
-        //    var res = await MovementTaskRepo.MovementTask(data);
+        public async Task<RequestResponse> ProceedMovementTask(MovementTaskModelMod data)
+        {
+            var res = await MovementTaskRepo.ProceedMovementTask(data);
 
-        //    if (res != null)
-        //    {
-        //        string resMsg = await EnumHelper.GetDescription(res.ResultCode);
-        //        if (res.ResultCode == MovementTaskResultCode.SUCCESS)
-        //        {
-        //            return new RequestResponse(ResponseCode.SUCCESS, resMsg, res);
-        //        }
+            if (res != null)
+            {
+                string resMsg = await EnumHelper.GetDescription(res.ResultCode);
+                if (res.ResultCode == MovementResultCode.SUCCESS)
+                {
+                    return new RequestResponse(ResponseCode.SUCCESS, resMsg, res);
+                }
 
-        //        return new RequestResponse(ResponseCode.FAILED, resMsg, res);
-        //    }
+                return new RequestResponse(ResponseCode.FAILED, resMsg, res);
+            }
 
-        //    return new RequestResponse(ResponseCode.FAILED, "Failed to process movement task.");
-        //}
+            return new RequestResponse(ResponseCode.FAILED, "Failed to process movement task.");
+        }
 
         public async Task<RequestResponse> CreateMovementTask(MovementTaskModel movementTask)
         {
@@ -174,26 +174,6 @@ namespace aims_api.Cores.Implementation
             }
 
             return new RequestResponse(ResponseCode.FAILED, "Failed to delete record.");
-        }
-
-        public async Task<RequestResponse> ProceedMovementTask(CommitMovementTaskModel data)
-        {
-            var res = await MovementTaskRepo.ProceedMovementTask(data);
-            string resMsg = await EnumHelper.GetDescription(res.ResultCode);
-
-            if (res.ResultCode == ProceedMovementResultCode.SUCCESS)
-            {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg);
-            }
-
-            // complete message in case specific TID issue
-            if (res.ResultCode == ProceedMovementResultCode.SPECIFICTIDISSUE &&
-                !string.IsNullOrEmpty(res.ConflictMsg))
-            {
-                resMsg += res.ConflictMsg;
-            }
-
-            return new RequestResponse(ResponseCode.FAILED, resMsg);
         }
     }
 }
