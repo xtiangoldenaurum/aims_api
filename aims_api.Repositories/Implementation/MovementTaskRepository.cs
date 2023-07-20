@@ -26,6 +26,8 @@ namespace aims_api.Repositories.Implementation
         IPagingRepository PagingRepo;
         IAuditTrailRepository AuditTrailRepo;
         MovementTaskAudit AuditBuilder;
+        IProductRepository ProductRepo;
+        ILocationRepository LocationRepo;
         public MovementTaskRepository(ITenantProvider tenantProvider,
                                     IAuditTrailRepository auditTrailRepo,
                                     IIdNumberRepository idNumberRepo,
@@ -33,7 +35,9 @@ namespace aims_api.Repositories.Implementation
                                     IInvMoveDetailRepository invMoveDetailRepo,
                                     IInventoryRepository inventoryRepo,
                                     IInventoryHistoryRepository invHistoryRepo,
-                                    ILotAttributeDetailRepository lotAttRepo)
+                                    ILotAttributeDetailRepository lotAttRepo,
+                                    IProductRepository productRepo,
+                                    ILocationRepository locationRepo)
         {
             ConnString = tenantProvider.GetTenant().SqlConnectionString;
             AuditTrailRepo = auditTrailRepo;
@@ -45,6 +49,8 @@ namespace aims_api.Repositories.Implementation
             LotAttRepo = lotAttRepo;
             PagingRepo = new PagingRepository();
             AuditBuilder = new MovementTaskAudit();
+            ProductRepo = productRepo;
+            LocationRepo = locationRepo;
         }
 
         public async Task<IEnumerable<MovementTaskModel>> GetMovementTaskPg(int pageNum, int pageItem)
@@ -238,11 +244,11 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        //public async Task<MovementTaskResultModel> MovementTask(MovementTaskModelMod data)
+        //public async Task<ProceedMovementResultModel> MovementTask(MovementTaskModelMod data)
         //{
         //    // init return object
-        //    var ret = new MovementTaskResultModel();
-        //    ret.ResultCode = MovementTaskResultCode.FAILED;
+        //    var ret = new ProceedMovementResultModel();
+        //    ret.ResultCode = ProceedMovementResultCode.FAILED;
 
         //    // check if required details is not null
         //    if (data.InvHead != null &&
@@ -270,7 +276,7 @@ namespace aims_api.Repositories.Implementation
         //                // check if qty to move is valid
         //                if (invHead.QtyToMove < 1 && invMoveDetail.QtyTo < invHead.QtyToMove)
         //                {
-        //                    ret.ResultCode = MovementTaskResultCode.INVALIDQTY;
+        //                    ret.ResultCode = ProceedMovementResultCode.INVALIDQTY;
         //                    return ret;
         //                }
 
@@ -282,7 +288,7 @@ namespace aims_api.Repositories.Implementation
         //                    invMove.InvMoveStatusId == (InvMoveStatus.CANCELLED).ToString() ||
         //                    invMove.InvMoveStatusId == (InvMoveStatus.CLOSED).ToString())
         //                {
-        //                    ret.ResultCode = MovementTaskResultCode.INVALIDINVMOVE;
+        //                    ret.ResultCode = ProceedMovementResultCode.INVALIDINVMOVE;
         //                    return ret;
         //                }
 
@@ -291,7 +297,7 @@ namespace aims_api.Repositories.Implementation
         //                var dtlValid = await InvMoveDetailRepo.InvMoveDetailMovable(invHead.InvMoveLineId);
         //                if (!dtlValid)
         //                {
-        //                    ret.ResultCode = MovementTaskResultCode.INVALIDINVMOVELANE;
+        //                    ret.ResultCode = ProceedMovementResultCode.INVALIDINVMOVELANE;
         //                    return ret;
         //                }
 
@@ -302,7 +308,7 @@ namespace aims_api.Repositories.Implementation
 
         //                if (availableQty < 1 || availableQty < invHead.QtyToMove)
         //                {
-        //                    ret.ResultCode = MovementTaskResultCode.INVALIDQTY;
+        //                    ret.ResultCode = ProceedMovementResultCode.INVALIDQTY;
         //                    return ret;
         //                }
 
@@ -348,11 +354,11 @@ namespace aims_api.Repositories.Implementation
         //                    EPC = lotAtt.LotAttributeId,
         //                });
 
-        //                // get receiving next document number
-        //                string? receivingId = await IdNumberRepo.GetNxtDocNum("RCVING", invHead.UserAccountId);
+        //                // get invMove next document number
+        //                string? invMoveId = await IdNumberRepo.GetNxtDocNum("RCVING", invHead.UserAccountId);
 
-        //                // get putaway task next document number
-        //                string? putawayTaskId = await IdNumberRepo.GetNxtDocNum("PUTAWAY", invHead.UserAccountId);
+        //                // get movement task next document number
+        //                string? movementTaskId = await IdNumberRepo.GetNxtDocNum("PUTAWAY", invHead.UserAccountId);
 
         //                // get TID To if asterisk/* is provided
         //                string? tidTo = "*";
@@ -462,8 +468,8 @@ namespace aims_api.Repositories.Implementation
 
         //                if (!string.IsNullOrEmpty(invId) &&
         //                    !string.IsNullOrEmpty(lotAttId) &&
-        //                    !string.IsNullOrEmpty(receivingId) &&
-        //                    !string.IsNullOrEmpty(putawayTaskId))
+        //                    !string.IsNullOrEmpty(invMoveId) &&
+        //                    !string.IsNullOrEmpty(movementTaskId))
         //                {
         //                    // build inventory table data
         //                    var inv = new InventoryModel()
@@ -511,10 +517,10 @@ namespace aims_api.Repositories.Implementation
 
         //                            if (dtlSaved)
         //                            {
-        //                                // build receiving transaction detail
+        //                                // build invMove transaction detail
         //                                var rcvDetail = new ReceivingModel()
         //                                {
-        //                                    ReceivingId = receivingId,
+        //                                    ReceivingId = invMoveId,
         //                                    DocLineId = poDetail.PoLineId,
         //                                    InventoryId = invId,
         //                                    SeqNum = 1,
@@ -523,27 +529,27 @@ namespace aims_api.Repositories.Implementation
         //                                    ModifiedBy = invHead.UserAccountId
         //                                };
 
-        //                                // record receiving detail to receving table
+        //                                // record invMove detail to receving table
         //                                bool rcvSaved = await CreateReceivingMod(db, rcvDetail, TranType.RCVING);
 
         //                                if (rcvSaved)
         //                                {
-        //                                    // build putaway task data
-        //                                    var putawayDtl = new PutawayTaskModel()
+        //                                    // build movement task data
+        //                                    var movementDtl = new MovementTaskModel()
         //                                    {
-        //                                        PutawayTaskId = putawayTaskId,
-        //                                        ReceivingId = receivingId,
+        //                                        MovementTaskId = movementTaskId,
+        //                                        ReceivingId = invMoveId,
         //                                        InventoryId = invId,
         //                                        SeqNum = 1,
-        //                                        PutawayStatusId = (PutawayStatus.CREATED).ToString(),
+        //                                        MovementStatusId = (MovementStatus.CREATED).ToString(),
         //                                        CreatedBy = invHead.UserAccountId,
         //                                        ModifiedBy = invHead.UserAccountId
         //                                    };
 
-        //                                    // record putaway task to putawaytask table
-        //                                    bool putawaySaved = await PutawayTaskRepo.CreatePutawayTaskMod(db, putawayDtl, TranType.RCVING);
+        //                                    // record movement task to movementtask table
+        //                                    bool movementSaved = await MovementTaskRepo.CreateMovementTaskMod(db, movementDtl, TranType.RCVING);
 
-        //                                    if (putawaySaved)
+        //                                    if (movementSaved)
         //                                    {
         //                                        // update InvMove detail status
         //                                        poDetail.ModifiedBy = invHead.UserAccountId;
@@ -769,7 +775,7 @@ namespace aims_api.Repositories.Implementation
                 }
 
                 // check if movement detail is still moveable
-                if (mvmntTaskDetail.MovementStatusId != (MovementTaskStatus.CREATED).ToString())
+                if (mvmntTaskDetail.MovementStatusId != (MovementStatus.CREATED).ToString())
                 {
                     return CancelMvResultCode.MVINCONSISTENCY;
                 }
@@ -817,7 +823,7 @@ namespace aims_api.Repositories.Implementation
                             if (invClosed)
                             {
                                 // update movement status to canceled 
-                                var rcvClosed = await SetMovementTaskStatus(db, movementTaskId, (MovementTaskStatus.CANCELLED).ToString(), TranType.CANCELRCV, userAccountId);
+                                var rcvClosed = await SetMovementTaskStatus(db, movementTaskId, (MovementStatus.CANCELLED).ToString(), TranType.CANCELRCV, userAccountId);
 
                                 if (rcvClosed)
                                 {
@@ -981,24 +987,465 @@ namespace aims_api.Repositories.Implementation
             return true;
         }
 
-        public Task<MovementTaskResultModel> ProceedMovementTask(CommitMovementTaskModel data)
-        {
-            throw new NotImplementedException();
-        }
+        //public async Task<ProceedMovementResult> ProceedMovementTask(CommitMovementTaskModel data)
+        //{
+        //    var ret = new ProceedMovementResult();
 
-        public Task<MovementTaskResultCode> PartialMovement(IDbConnection db, MovementContainerModel data)
-        {
-            throw new NotImplementedException();
-        }
+        //    using (IDbConnection db = new MySqlConnection(ConnString))
+        //    {
+        //        db.Open();
 
-        public Task<MovementTaskResultCode> FullMovementInvMove(IDbConnection db, MovementContainerModel data)
-        {
-            throw new NotImplementedException();
-        }
+        //        // success TID movement counter
+        //        int cntr = 0;
 
-        public Task<string?> DefineTranTypeByDocId(IDbConnection db, string docLineId)
-        {
-            throw new NotImplementedException();
-        }
+        //        if (!data.Contents.Any())
+        //        {
+        //            ret.ResultCode = ProceedMovementResultCode.INVALIDDATAGIVEN;
+        //            return ret;
+        //        }
+
+        //        foreach (var itm in data.Contents)
+        //        {
+        //            var tidDetails = await LPNMovementQryTIDDetails(itm.TrackIdTo);
+
+        //            // return failed result in case specific TID has conflict or issue
+        //            if (tidDetails.ResultCode != MovementResultCode.SUCCESS)
+        //            {
+        //                ret.ResultCode = ProceedMovementResultCode.SPECIFICTIDISSUE;
+        //                var resultMsg = (tidDetails.ResultCode).ToString();
+        //                ret.ConflictMsg = $"{itm.TrackIdTo} - {resultMsg}";
+        //                return ret;
+        //            }
+
+        //            if (tidDetails.Data == null)
+        //            {
+        //                ret.ResultCode = ProceedMovementResultCode.INVALIDDATAGIVEN;
+        //                return ret;
+        //            }
+
+        //            if (tidDetails.Data.MovementWinOne == null)
+        //            {
+        //                ret.ResultCode = ProceedMovementResultCode.INVALIDDATAGIVEN;
+        //                return ret;
+        //            }
+
+        //            // continue process as tidDetails result code is success
+        //            var winOneData = tidDetails.Data.MovementWinOne;
+
+        //            var winTwoData = new MovementWinTwoModel()
+        //            {
+        //                MovementQty = data.FinalQty,
+        //                MovementLocation = data.FinalLocation,
+        //                MovementTrackId = data.FinalTrackId,
+        //                MovementLPN = winOneData.CurrentLPN
+        //            };
+
+        //            var movementData = new MovementTaskProcModel()
+        //            {
+        //                MovementWinOne = winOneData,
+        //                MovementWinTwo = winTwoData,
+        //                UserAccountId = data.UserAccountId
+        //            };
+
+        //            var tidCommitRes = await CommitProceedMovement(db, movementData);
+
+        //            // check if commit transaction is completed properly
+        //            if (tidCommitRes.ResultCode != MovementResultCode.SUCCESS)
+        //            {
+        //                ret.ResultCode = ProceedMovementResultCode.SPECIFICTIDISSUE;
+        //                var resultMsg = (tidCommitRes.ResultCode).ToString();
+        //                ret.ConflictMsg = $"{itm.TrackIdTo} - {resultMsg}";
+        //                return ret;
+        //            }
+
+        //            // increase success TID movement counter
+        //            cntr += 1;
+
+        //            // proceed to next loop
+        //            continue;
+        //        }
+
+        //        if (cntr == data.Contents.Count())
+        //        {
+        //            // double check that there is procesed data
+        //            if (data.Contents.Count() > 0)
+        //            {
+        //                ret.ResultCode = ProceedMovementResultCode.SUCCESS;
+
+        //                // finally commit all completed transactions
+        //            }
+        //        }
+        //    }
+
+        //    return ret;
+        //}
+
+        //public Task<MovementResultCode> PartialMovement(IDbConnection db, MovementContainerModel data)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public Task<MovementResultCode> FullMovementInvMove(IDbConnection db, MovementContainerModel data)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public async Task<string?> DefineTranTypeByDocId(IDbConnection db, string docLineId)
+        //{
+        //    string strQry = @"CALL `spDefineDocTranOrigin`(@docLineId)";
+
+        //    var param = new DynamicParameters();
+        //    param.Add("@docLineId", docLineId);
+
+        //    return await db.ExecuteScalarAsync<string?>(strQry, param);
+        //}
+
+        //public async Task<MovementResultModel> LPNMovementQryTIDDetails(string trackId)
+        //{
+        //    // init return object
+        //    var ret = new MovementResultModel()
+        //    {
+        //        ResultCode = MovementResultCode.FAILED,
+        //    };
+
+        //    using (IDbConnection db = new MySqlConnection(ConnString))
+        //    {
+        //        db.Open();
+
+        //        // get inventory history detail by scanned track id and lock
+        //        var invDetail = await InvHistoryRepo.GetInvHistoryByTrackId(db, trackId);
+        //        if (invDetail == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
+        //            return ret;
+        //        }
+
+        //        // get and lock inventory header
+        //        var invHead = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
+        //        if (invHead == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
+        //            return ret;
+        //        }
+
+        //        // get and lock linked invMove tran
+        //        // get actual invMove service from Func<> service (bypassed circular dependency)
+        //        // var invMoveRepo = ReceivingRepo();
+
+        //        var invMoveDetail = await LockMovementTaskDetail(db, invDetail.DocumentRefId, invDetail.InventoryId);
+        //        if (invMoveDetail == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKMVDETAILS;
+        //            return ret;
+        //        }
+
+        //        // get and lock movement task
+        //        var movementDtl = await InvMoveDetailRepo.LockInvMoveDetail(db, invMoveDetail.);
+        //        if (movementDtl == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKMTask;
+        //            return ret;
+        //        }
+
+        //        // check if movement task is still in create status // ignore warning here
+        //        if (movementDtl.MovementStatusId != (MovementStatus.CREATED).ToString())
+        //        {
+        //            ret.ResultCode = MovementResultCode.INVALIDMOVEMENTTASKSTATUS;
+        //            return ret;
+        //        }
+
+        //        // get product lot attributes
+        //        var lotAtt = await LotAttRepo.GetLotAttributeDetailById(invDetail.LotAttributeId);
+        //        if (lotAtt == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOGETLOTATT;
+        //            return ret;
+        //        }
+
+        //        // process details to be displayed on handheld movement window 1
+
+        //        // get sku product description // ignore warning here
+        //        var prodDetails = await ProductRepo.GetProductById(invHead.Sku);
+        //        if (prodDetails == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOGETPRODDETAILS;
+        //            return ret;
+        //        }
+
+        //        // build details for movement window 1 display
+        //        var movementWinOne = new MovementWinOneModel()
+        //        {
+        //            TargetTrackId = invDetail.TrackIdTo,
+        //            Sku = invHead.Sku,
+        //            Barcode = prodDetails.Barcode,
+        //            Barcode2 = prodDetails.Barcode2,
+        //            Barcode3 = prodDetails.Barcode3,
+        //            Barcode4 = prodDetails.Barcode4,
+        //            ProductName = prodDetails.ProductName,
+        //            CurrentQty = invDetail.QtyTo,
+        //            CurrentLocation = invDetail.LocationTo,
+        //            CurrentLPN = invDetail.LpnTo,
+        //            ManufactureDate = lotAtt.ManufactureDate,
+        //            ExpiryDate = lotAtt.ExpiryDate,
+        //            WarehousingDate = lotAtt.WarehousingDate,
+        //            ProductConditionId = lotAtt.ProductConditionId
+        //        };
+
+        //        // details for movement window 2 is null by default
+
+        //        var data = new MovementTaskProcModel()
+        //        {
+        //            MovementWinOne = movementWinOne
+        //        };
+
+        //        // append success result code and data to ret object
+        //        ret.ResultCode = MovementResultCode.SUCCESS;
+        //        ret.Data = data;
+        //        return ret;
+        //    };
+        //}
+        //public async Task<MovementResultModel> CommitProceedMovement(IDbConnection db, MovementTaskProcModel data)
+        //{
+        //    // init return object
+        //    var ret = new MovementResultModel()
+        //    {
+        //        ResultCode = MovementResultCode.FAILED,
+        //    };
+
+        //    // split data
+        //    var winOneData = data.MovementWinOne;
+        //    var winTwoData = data.MovementWinTwo;
+
+        //    if (winOneData != null && winTwoData != null)
+        //    {
+        //        // check if current and target location is not the same
+        //        if (winOneData.CurrentLocation == winTwoData.MovementLocation)
+        //        {
+        //            ret.ResultCode = MovementResultCode.TARGETLOCCONFLICT;
+        //            return ret;
+        //        }
+
+        //        // define if putaway if partial or full
+        //        bool isPartial;
+        //        var qtyLeft = winOneData.CurrentQty - winTwoData.MovementQty;
+
+        //        if (qtyLeft == 0)
+        //        {
+        //            isPartial = false;
+        //        }
+        //        else if (qtyLeft > 0)
+        //        {
+        //            isPartial = true;
+        //        }
+        //        else
+        //        {
+        //            // exit process due to putaway qty exceeds original
+        //            ret.ResultCode = MovementResultCode.QTYEXCEEDS;
+        //            return ret;
+        //        }
+
+        //        // get inventory history detail by scanned track id and lock
+        //        var invDetail = await InvHistoryRepo.GetInvHistoryByTrackId(db, winOneData.TargetTrackId);
+        //        if (invDetail == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOGETINVHIST;
+        //            return ret;
+        //        }
+
+        //        var invDtlLock = await InvHistoryRepo.LockInvHistDetail(db, invDetail.InventoryId, invDetail.SeqNum);
+        //        if (invDtlLock == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
+        //            return ret;
+        //        }
+
+        //        // get and lock inventory header
+        //        var invHead = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
+        //        if (invHead == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
+        //            return ret;
+        //        }
+
+        //        // get and lock linked receiving tran
+        //        // get actual receiving service from Func<> service (bypassed circular dependency)
+        //        //var receivingRepo = ReceivingRepo();
+        //        var rcvDetail = await ReceivingRepo.LockReceiveDetailRefMulti(db, invDetail.DocumentRefId, invDetail.InventoryId);
+        //        if (rcvDetail == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKRCVDETAILS;
+        //            return ret;
+        //        }
+
+        //        // get and lock putaway task
+        //        var putawayDtl = await LockMovementTaskDtl(db, rcvDetail.ReceivingId);
+        //        if (putawayDtl == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOLOCKPTask;
+        //            return ret;
+        //        }
+
+        //        // check if putaway task is still in create status // ignore warning here
+        //        if (putawayDtl.MovementStatusId != (MovementStatus.CREATED).ToString())
+        //        {
+        //            ret.ResultCode = MovementResultCode.INVALIDPUTAWAYTASKSTATUS;
+        //            return ret;
+        //        }
+
+        //        // get product lot attributes
+        //        var lotAtt = await LotAttRepo.GetLotAttributeDetailById(invDetail.LotAttributeId);
+        //        if (lotAtt == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOGETLOTATT;
+        //            return ret;
+        //        }
+
+        //        // get linked PO detail then lock
+
+        //        // process details to be displayed on handheld putaway window 1
+
+        //        // get sku product description // ignore warning here
+        //        var prodDetails = await ProductRepo.GetProductById(invHead.Sku);
+        //        if (prodDetails == null)
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTOGETPRODDETAILS;
+        //            return ret;
+        //        }
+
+        //        // build details for putaway window 1 display
+        //        var putawayWinOne = new MovementWinOneModel()
+        //        {
+        //            TargetTrackId = invDetail.TrackIdTo,
+        //            Sku = invHead.Sku,
+        //            Barcode = prodDetails.Barcode,
+        //            Barcode2 = prodDetails.Barcode2,
+        //            Barcode3 = prodDetails.Barcode3,
+        //            Barcode4 = prodDetails.Barcode4,
+        //            ProductName = prodDetails.ProductName,
+        //            CurrentQty = invDetail.QtyTo,
+        //            CurrentLocation = invDetail.LocationTo,
+        //            CurrentLPN = invDetail.LpnTo,
+        //            ManufactureDate = lotAtt.ManufactureDate,
+        //            ExpiryDate = lotAtt.ExpiryDate,
+        //            WarehousingDate = lotAtt.WarehousingDate,
+        //            ProductConditionId = lotAtt.ProductConditionId
+        //        };
+
+        //        // compare putaway prev. and current putaway win data
+        //        if (!winOneData.Equals(putawayWinOne))
+        //        {
+        //            ret.ResultCode = MovementResultCode.RECORDINCONSISTENCY;
+        //            return ret;
+        //        }
+
+        //        // check if LPNTo is not in used by any location except INSTAGING
+        //        if (!string.IsNullOrEmpty(winTwoData.MovementLPN))
+        //        {
+        //            var isLPNUsed = await InvHistoryRepo.ChkLPNIsUsedInStorage(winTwoData.MovementLPN);
+        //            if (isLPNUsed)
+        //            {
+        //                ret.ResultCode = MovementResultCode.LPNISALREADYUSED;
+        //                return ret;
+        //            }
+
+        //            // check if LPN Id is in correct format
+        //            var lpnPrefix = await IdNumberRepo.GetIdPrefix(db, (TranType.LPN).ToString());
+        //            if (!string.IsNullOrEmpty(lpnPrefix))
+        //            {
+        //                if (!winTwoData.MovementLPN.Contains(lpnPrefix))
+        //                {
+        //                    ret.ResultCode = MovementResultCode.INVALIDLPNFORMAT;
+        //                    return ret;
+        //                }
+        //            }
+        //        }
+
+        //        // check if pallet is same on current receiving pallet
+        //        if (winOneData.CurrentLPN != winTwoData.MovementLPN)
+        //        {
+        //            ret.ResultCode = MovementResultCode.CANNOTUSEOTHERLPN;
+        //            return ret;
+        //        }
+
+        //        // re-validate target putaway location
+        //        var targetLocChk = await LocationRepo.DefineTargetLocByLocId(winTwoData.MovementLocation);
+        //        if (targetLocChk.ResultCode != MovementResultCode.SUCCESS)
+        //        {
+        //            ret.ResultCode = targetLocChk.ResultCode;
+        //            return ret;
+        //        }
+
+        //        // location LPN insist condition checking
+        //        if (targetLocChk.TargetLoc != null)
+        //        {
+        //            var insistedLPNTO = targetLocChk.TargetLoc.LPNTo;
+        //            if (!string.IsNullOrEmpty(insistedLPNTO))
+        //            {
+        //                if (insistedLPNTO != winTwoData.MovementLPN)
+        //                {
+        //                    ret.ResultCode = MovementResultCode.INVALIDLPNTO;
+        //                    return ret;
+        //                }
+        //            }
+        //        }
+
+        //        // define if its either PO, Returns or Transfer type putaway
+        //        var docTypeOrigin = await DefineTranTypeByDocId(db, invDetail.DocumentRefId);
+        //        if (string.IsNullOrEmpty(docTypeOrigin) || docTypeOrigin == "ERR")
+        //        {
+        //            ret.ResultCode = MovementResultCode.FAILEDTODEFINEDOCORIGINTYPE;
+        //            return ret;
+        //        }
+
+        //        // build putaway details container object
+        //        var container = new MovementContainerModel()
+        //        {
+        //            Sku = invHead.Sku,
+        //            ReceivingId = rcvDetail.ReceivingId,
+        //            MovementTaskId = putawayDtl.MovementTaskId,
+        //            UserAccountId = data.UserAccountId,
+        //            InvHistory = invDetail,
+        //            WinData = data,
+        //            LotAtt = lotAtt
+        //        };
+
+        //        // init final result holder
+        //        var tempResult = MovementResultCode.FAILED;
+
+        //        if (!isPartial)
+        //        {
+        //            // proceed to PO full putaway
+        //            tempResult = await ProceedFullMovementByDoc(db, container, docTypeOrigin);
+        //        }
+        //        else
+        //        {
+        //            // lock parent documents first
+        //            var docLockRes = await PartialMovementDocLocker(db, docTypeOrigin, invDetail.DocumentRefId);
+        //            if (docLockRes != MovementResultCode.SUCCESS)
+        //            {
+        //                ret.ResultCode = docLockRes;
+        //                return ret;
+        //            }
+
+        //            // proceed partial putaway
+        //            tempResult = await PartialMovement(db, container);
+        //        }
+
+        //        ret.ResultCode = tempResult;
+
+        //        // check tempresult status
+        //        if (tempResult == MovementResultCode.SUCCESS)
+        //        {
+        //            // append updated data on return object
+        //            ret.Data = data;
+
+        //            // removed commit
+        //            // commit and release db transaction
+        //            // tran.Commit();
+        //        }
+        //    }
+
+        //    return ret;
+        //}
     }
 }

@@ -11,6 +11,7 @@ namespace aims_api.Models
         public IEnumerable<MovementContentModel>? Contents { get; set; }
         public int FinalQty { get; set; }
         public string? FinalLocation { get; set; }
+        public string? FinalTrackId { get; set; }
         public string? FinalLpn { get; set; }
         public string? UserAccountId { get; set; }
     }

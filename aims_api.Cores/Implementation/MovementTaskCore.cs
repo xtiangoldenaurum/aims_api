@@ -181,9 +181,16 @@ namespace aims_api.Cores.Implementation
             var res = await MovementTaskRepo.ProceedMovementTask(data);
             string resMsg = await EnumHelper.GetDescription(res.ResultCode);
 
-            if (res.ResultCode == MovementTaskResultCode.SUCCESS)
+            if (res.ResultCode == ProceedMovementResultCode.SUCCESS)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, resMsg);
+            }
+
+            // complete message in case specific TID issue
+            if (res.ResultCode == ProceedMovementResultCode.SPECIFICTIDISSUE &&
+                !string.IsNullOrEmpty(res.ConflictMsg))
+            {
+                resMsg += res.ConflictMsg;
             }
 
             return new RequestResponse(ResponseCode.FAILED, resMsg);

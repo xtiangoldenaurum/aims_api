@@ -13,7 +13,7 @@ namespace aims_api.Models
         public string? MovementTaskId { get; set; }
         public string? UserAccountId { get; set; }
         public InventoryHistoryModel? InvHistory { get; set; }
-        //public PutawayTaskProcModel? WinData { get; set; }
-        //public LotAttributeDetailModel? LotAtt { get; set; }
+        public MovementTaskProcModel? WinData { get; set; }
+        public LotAttributeDetailModel? LotAtt { get; set; }
     }
 }

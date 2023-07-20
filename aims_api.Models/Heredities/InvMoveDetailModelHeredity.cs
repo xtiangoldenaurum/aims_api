@@ -14,6 +14,7 @@ namespace aims_api.Models.Heredities
         public string? InvMoveLineStatus { get; set; }
         public string? LocationFrom { get; set; } // original name from database: 'LocationTo; 
         public string? LpnFrom { get; set; } // original name from database: 'LpnTo; 
+        public string? TrackIdFrom { get; set; } //original name from db : 'TrackIdTo'
         //public int? QtyTo { get; set; } // original name from database: 'QtyTo'
     }
 }

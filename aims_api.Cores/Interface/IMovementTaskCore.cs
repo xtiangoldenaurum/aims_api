@@ -22,6 +22,6 @@ namespace aims_api.Cores.Interface
         Task<RequestResponse> UpdateMovementTask(MovementTaskModel movementTask);
         Task<RequestResponse> CancelMovementTask(string movementTaskId, string userAccountId);
         Task<RequestResponse> DeleteMovementTask(string movementTaskId);
-        Task<RequestResponse> ProceedMovementTask(CommitMovementTaskModel data);
+        //Task<RequestResponse> ProceedMovementTask(CommitMovementTaskModel data);
     }
 }

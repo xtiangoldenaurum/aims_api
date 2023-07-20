@@ -31,11 +31,12 @@ namespace aims_api.Repositories.Interface
         Task<bool> DeleteMovementTask(string movementTaskId);
         Task<MovementTaskModel> LockMovementTaskDetailRefMulti(IDbConnection db, string invMoveLineId, string inventoryId);
         Task<bool> HasPendingMovementTask(IDbConnection db, string invMoveId);
-        Task<MovementTaskResultCode> PartialMovement(IDbConnection db, MovementContainerModel data);
-        //Task<MovementTaskResultCode> CommitPartialMovement(IDbConnection db, PartialMovementRefIdModel refIds, MovementTaskProcModel winData);
-        Task<MovementTaskResultCode> FullMovementInvMove(IDbConnection db, MovementContainerModel data);
-        //Task<MovementTaskResultModel> CommitMovement(IDbConnection db, MovementTaskProcModel data);
-        Task<MovementTaskResultModel> ProceedMovementTask(CommitMovementTaskModel data);
-        Task<string?> DefineTranTypeByDocId(IDbConnection db, string docLineId);
+        //Task<MovementResultCode> PartialMovement(IDbConnection db, MovementContainerModel data);
+        ////Task<MovementTaskResultCode> CommitPartialMovement(IDbConnection db, PartialMovementRefIdModel refIds, MovementTaskProcModel winData);
+        //Task<MovementResultCode> FullMovementInvMove(IDbConnection db, MovementContainerModel data);
+        ////Task<MovementTaskResultModel> CommitMovement(IDbConnection db, MovementTaskProcModel data);
+        //Task<ProceedMovementResult> ProceedMovementTask(CommitMovementTaskModel data);
+        //Task<string?> DefineTranTypeByDocId(IDbConnection db, string docLineId);
+        //Task<MovementResultModel> LPNMovementQryTIDDetails(string trackId);
     }
 }

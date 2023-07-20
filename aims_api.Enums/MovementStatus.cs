@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace aims_api.Enums
 {
-    public enum MovementTaskStatus
+    public enum MovementStatus
     {
         CREATED,
         CANCELLED,

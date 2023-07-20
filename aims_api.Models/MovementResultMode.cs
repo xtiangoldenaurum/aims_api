@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace aims_api.Models
 {
-    public class MovementTaskResultModel
+    public class MovementResultMode
     {
-        public MovementTaskResultCode ResultCode { get; set; }
+        public MovementResultCode ResultCode { get; set; }
+        public MovementTaskProcModel? Data { get; set; }
     }
 }

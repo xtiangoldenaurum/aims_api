@@ -15,8 +15,8 @@ namespace aims_api.Models
         public string? LocationTo { get; set; }
         public string? LotAttributeId { get; set; }
         public string? LpnTo { get; set; }
-        public string? ReceivingId { get; set; }
-        public string? ReceivingStatusId { get; set; }
+        public string? InvMoveId { get; set; }
+        public string? InvMoveStatusId { get; set; }
         public string? InventoryStatusId { get; set; }
         public string? Sku { get; set; }
         public string? ProductName { get; set; }

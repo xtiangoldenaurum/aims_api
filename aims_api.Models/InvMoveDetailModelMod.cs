@@ -17,6 +17,8 @@ namespace aims_api.Models
         public int? FinalQty { get; set; }
         public string? LocationTo { get; set; }
         public string? FinalLocation { get; set; }
+        public string? TrackIdTo { get; set; }
+        public string? FinalTrackId { get; set; }
         public string? LpnTo { get; set; }
         public string? FinalLpn { get; set; }
         public DateTime DateCreated { get; set; }
