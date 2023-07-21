@@ -22,7 +22,5 @@ namespace aims_api.Models
         public string? CreatedBy { get; set; }
         public string? ModifiedBy { get; set; }
         public string? Remarks { get; set; }
-        public int TotalMoved { get; set; }
-        public int QtyToMoved { get; set; }
     }
 }
