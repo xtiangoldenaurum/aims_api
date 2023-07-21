@@ -701,7 +701,7 @@ namespace aims_api.Repositories.Implementation
                                     return ret;
                                 }
 
-                                // build inventory history detail defaults
+                                // build new sequnce of inventory history detail
                                 invDetail.SeqNum += 1;
                                 invDetail.QtyFrom = invDetail.QtyTo;
                                 invDetail.QtyTo = -invHead.QtyToMove;
@@ -712,97 +712,90 @@ namespace aims_api.Repositories.Implementation
 
                                 if (dtlSaved)
                                 {
-                                    // build movement transaction detail
-                                    var mvDetail = new MovementTaskModel()
+                                    // build new inventory history from inventory move
+                                    invDetail.InventoryId = invId;
+                                    invDetail.SeqNum = 1;
+                                    invDetail.DocumentRefId = invMoveDetail.InvMoveLineId;
+                                    invDetail.QtyFrom = 0;
+                                    invDetail.QtyTo = invHead.QtyToMove;
+                                    invDetail.LocationFrom = invHead.LocationToMove;
+                                    invDetail.TrackIdFrom = invHead.TrackIdToMove;
+                                    invDetail.LpnFrom = invHead.LpnToMove;
+                                    invDetail.TransactionTypeId = "INVMOV";
+                                    invDetail.CreatedBy = invHead.UserAccountId;
+
+                                    // record new inventory detail to inventory history table
+                                    bool newInvHistory = await InvHistoryRepo.CreateInventoryHistoryMod(db, invDetail, TranType.INVMOV);
+
+                                    if (newInvHistory)
                                     {
-                                        MovementTaskId = movementTaskId,
-                                        DocLineId = invMoveDetail.InvMoveLineId,
-                                        InventoryId = invId,
-                                        SeqNum = 1,
-                                        MovementStatusId = (MovementStatus.CREATED).ToString(),
-                                        CreatedBy = invHead.UserAccountId,
-                                        ModifiedBy = invHead.UserAccountId
-                                    };
-
-                                    // record receiving detail to movement table
-                                    bool mvSaved = await CreateMovementTaskMod(db, mvDetail, TranType.INVMOV);
-
-                                    if (mvSaved)
-                                    {
-                                        if (leftOverQty == 0)
+                                        // build movement transaction detail
+                                        var mvDetail = new MovementTaskModel()
                                         {
-                                            invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.PRTMV).ToString();
-                                        }
-                                        else
+                                            MovementTaskId = movementTaskId,
+                                            DocLineId = invMoveDetail.InvMoveLineId,
+                                            InventoryId = invId,
+                                            SeqNum = 1,
+                                            MovementStatusId = (MovementStatus.CREATED).ToString(),
+                                            CreatedBy = invHead.UserAccountId,
+                                            ModifiedBy = invHead.UserAccountId
+                                        };
+
+                                        // record receiving detail to movement table
+                                        bool mvSaved = await CreateMovementTaskMod(db, mvDetail, TranType.INVMOV);
+
+                                        if (mvSaved)
                                         {
-                                            invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.PRTMV).ToString();
-                                        }
-
-
-                                        // save updated Inv Move detail record
-                                        var invMoveDtlUpdated = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.INVMOV);
-
-
-
-                                        var invDtlLock = await InvHistoryRepo.LockInvHistDetail(db, invDetail.InventoryId, invDetail.SeqNum);
-                                        if (invDtlLock == null)
-                                        {
-                                            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
-                                            return ret;
-                                        }
-
-                                        // get and lock inventory header
-                                        var invHeader = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
-                                        if (invHeader == null)
-                                        {
-                                            ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
-                                            return ret;
-                                        }
-
-                                        if (invMoveDtlUpdated)
-                                        {
-                                            // update Inv Move status
-                                            // get Inv Move updated status
-                                            var invMoveStatus = await InvMoveRepo.GetInvMoveUpdatedStatus(db, invMove.InvMoveId);
-
-                                            if (!string.IsNullOrEmpty(invMoveStatus))
+                                            if (leftOverQty == 0)
                                             {
-                                                // save update po record
-                                                invMove.ModifiedBy = invHead.UserAccountId;
-                                                invMove.InvMoveStatusId = invMoveStatus;
+                                                invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.COMPLETED).ToString();
+                                            }
+                                            else
+                                            {
+                                                invMoveDetail.InvMoveLineStatusId = (InvMoveLneStatus.PRTMV).ToString();
+                                            }
 
-                                                var invMoveUpdated = await InvMoveRepo.UpdateInvMove(db, invMove, TranType.INVMOV);
+                                            // save updated Inv Move detail record
+                                            var invMoveDtlUpdated = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.INVMOV);
 
-                                                if (invMoveUpdated)
+                                            var invDtlLock = await InvHistoryRepo.LockInvHistDetail(db, invDetail.InventoryId, invDetail.SeqNum);
+                                            if (invDtlLock == null)
+                                            {
+                                                ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
+                                                return ret;
+                                            }
+
+                                            // get and lock inventory header
+                                            var invHeader = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
+                                            if (invHeader == null)
+                                            {
+                                                ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
+                                                return ret;
+                                            }
+
+                                            if (invMoveDtlUpdated)
+                                            {
+                                                // update Inv Move status
+                                                // get Inv Move updated status
+                                                var invMoveStatus = await InvMoveRepo.GetInvMoveUpdatedStatus(db, invMove.InvMoveId);
+
+                                                if (!string.IsNullOrEmpty(invMoveStatus))
                                                 {
-                                                    ret.ResultCode = MovementResultCode.SUCCESS;
+                                                    // save update po record
+                                                    invMove.ModifiedBy = invHead.UserAccountId;
+                                                    invMove.InvMoveStatusId = invMoveStatus;
+
+                                                    var invMoveUpdated = await InvMoveRepo.UpdateInvMove(db, invMove, TranType.INVMOV);
+
+                                                    if (invMoveUpdated)
+                                                    {
+                                                        ret.ResultCode = MovementResultCode.SUCCESS;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-
-                                // check record conflict on inventoryhistory table --skipped this validation (may not be needed)
-
-                                // get product lot attributes
-                                var lotAtt = await LotAttRepo.GetLotAttributeDetailById(invDetail.LotAttributeId);
-                                if (lotAtt == null)
-                                {
-                                    ret.ResultCode = MovementResultCode.FAILEDTOGETLOTATT;
-                                    return ret;
-                                }
-
-                                // build inventory history detail defaults
-                                invDetail.InventoryId = invId;
-                                invDetail.SeqNum = 1;
-                                invDetail.DocumentRefId = invMoveDetail.InvMoveLineId;
-                                invDetail.QtyFrom = 0;
-                                invDetail.QtyTo = invHead.QtyToMove;
-                                invDetail.LocationFrom = invHead.LocationToMove;
-                                invDetail.TrackIdFrom = invHead.TrackIdToMove;
-                                invDetail.LpnFrom = invHead.LpnToMove;
-                                invDetail.TransactionTypeId = "INVMOV";
-                                invDetail.CreatedBy = invHead.UserAccountId;
                             }
                         }
                     }
