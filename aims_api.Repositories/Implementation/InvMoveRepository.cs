@@ -618,7 +618,13 @@ namespace aims_api.Repositories.Implementation
                                 var detail = details[i];
                                 bool dtlSaved = false;
 
-                                if (detail.InvMoveLineId == null)
+                                // check if current and target location is not the same
+                                if (detail.LocationTo == detail.LocationFrom)
+                                {
+                                    return InvMoveTranResultCode.TARGETLOCCONFLICT;
+                                }
+
+                                    if (detail.InvMoveLineId == null)
                                 {
                                     // check if similar Inventory exists under this InvMove
                                     var invIDExists = await InvIDExistsInInvMove(db, detail.InventoryId, invMove.InvMoveHeader.InvMoveId);

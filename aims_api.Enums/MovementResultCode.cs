@@ -15,10 +15,16 @@ namespace aims_api.Enums
         INVALIDQTY,
         [Description("Invalid Location")]
         INVALIDLOC,
+        [Description("Invalid Track Id")]
+        INVALIDTRACKID,
+        [Description("Invalid Lpn")]
+        INVALIDLPN,
         [Description("Inventory Move status inconsistency.")]
         INVALIDINVMOVE,
         [Description("Inventory Move detail status inconsistency.")]
         INVALIDINVMOVELANE,
+        [Description("Movement qty exceeeds.")]
+        QTYEXCEEDS,
         [Description("Failed to lock inventory history record.")]
         FAILEDTOLOCKINVHIST,
         [Description("Failed to retreive inventory history record.")]
@@ -43,8 +49,6 @@ namespace aims_api.Enums
         FAILEDTOLOCKINVMOVEDETAIL,
         [Description("Failed to lock linked Inventory Move header.")]
         FAILEDTOLOCKINVMOVEHEADER,
-        [Description("Movement qty exceeeds.")]
-        QTYEXCEEDS,
         [Description("Inventory Move detail status is not valid.")]
         INVMOVEDETAILSSTATUSNOTVALID,
         [Description("Inventory Move header status is not valid.")]

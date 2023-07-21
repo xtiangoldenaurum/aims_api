@@ -588,13 +588,12 @@ namespace aims_api.Repositories.Implementation
 
             // check if required details is not null
             if (data.InvHead != null &&
-                data.InvDetail != null &&
-                data.LotAtt != null)
+                data.InvMoveDetail != null)
             {
                 // init objects
                 var invHead = data.InvHead;
-                var invDetail = data.InvDetail;
-                var lotAtt = data.LotAtt;
+                //var invDetail = data.InvDetail;
+                //var lotAtt = data.LotAtt;
 
                 using (IDbConnection db = new MySqlConnection(ConnString))
                 {
@@ -611,16 +610,8 @@ namespace aims_api.Repositories.Implementation
                         invMove.InvMoveId != null &&
                         invMove.InvMoveId == invHead.InvMoveId)
                     {
-
-                        // check if qty to move is valid
-                        if (invHead.QtyToMove < 1 && invMoveDetail.QtyTo < invHead.QtyToMove)
-                        {
-                            ret.ResultCode = MovementResultCode.INVALIDQTY;
-                            return ret;
-                        }
-
                         // check if location to move is valid
-                        if(invHead.LocationToMove == invMoveDetail.LocationTo)
+                        if (invHead.LocationToMove == invMoveDetail.LocationTo)
                         {
                             ret.ResultCode = MovementResultCode.INVALIDLOC;
                             return ret;
@@ -629,7 +620,21 @@ namespace aims_api.Repositories.Implementation
                         // check if track id to move is valid
                         if (invHead.TrackIdToMove == invMoveDetail.TrackIdTo)
                         {
-                            ret.ResultCode = MovementResultCode.INVALIDLOC;
+                            ret.ResultCode = MovementResultCode.INVALIDTRACKID;
+                            return ret;
+                        }
+
+                        // check if lpn id to move is valid
+                        if (invHead.LpnToMove == invMoveDetail.LpnTo)
+                        {
+                            ret.ResultCode = MovementResultCode.INVALIDLPN;
+                            return ret;
+                        }
+
+                        // check if qty to move is valid
+                        if (invHead.QtyToMove < 1 && invMoveDetail.QtyTo < invHead.QtyToMove)
+                        {
+                            ret.ResultCode = MovementResultCode.INVALIDQTY;
                             return ret;
                         }
 
@@ -645,7 +650,7 @@ namespace aims_api.Repositories.Implementation
                             return ret;
                         }
 
-                        // check detail itself if still in movvable status
+                        // check detail itself if still in movable status
                         var dtlValid = await InvMoveDetailRepo.InvMoveDetailMovable(invHead.InvMoveLineId);
                         if (!dtlValid)
                         {
@@ -653,15 +658,125 @@ namespace aims_api.Repositories.Implementation
                             return ret;
                         }
 
-                        // check if po detail has movable qty left
+                        // check if inv move detail has movable qty left
                         int qtyMoved = await GetInvMoveLineMvdQty(db, invMoveDetail.InvMoveLineId);
-                        int availableQty = invMoveDetail.QtyTo - qtyMoved;
-                        int leftOverQty = availableQty - invHead.QtyToMove;
+                        int qtyLeft = invHead.QtyToMove - qtyMoved;
 
-                        if (availableQty < 1 || availableQty < invHead.QtyToMove)
+                        if (invHead.QtyToMove < 1 || qtyMoved < invHead.QtyToMove)
                         {
                             ret.ResultCode = MovementResultCode.INVALIDQTY;
                             return ret;
+                        }
+
+                        if (qtyLeft == 0)
+                        {
+                            invMoveDetail.InvMoveLineStatus = (InvMoveLneStatus.COMPLETED).ToString();
+                        }
+                        else if (qtyLeft > 0)
+                        {
+                            invMoveDetail.InvMoveLineStatus = (InvMoveLneStatus.PRTMV).ToString();
+                        }
+                        else
+                        {
+                            //exit process due to movement qty exceeds original
+                            ret.ResultCode = MovementResultCode.QTYEXCEEDS;
+                            return ret;
+                        }
+
+                        // create inventory detail section
+
+                        // get inventory next document number
+                        string? invId = await IdNumberRepo.GetNxtDocNum("INV", invHead.UserAccountId);
+
+                        // get movement next document number
+                        string? movementTaskId = await IdNumberRepo.GetNxtDocNum("INVMOV", invHead.UserAccountId);
+
+                        if (!string.IsNullOrEmpty(invId) &&
+                            !string.IsNullOrEmpty(movementTaskId))
+                        {
+                            // build inventory table data
+                            var inv = new InventoryModel()
+                            {
+                                InventoryId = invId,
+                                Sku = invMoveDetail.Sku,
+                                InventoryStatusId = (InvStatus.AVAILABLE).ToString()
+                            };
+
+                            // save header to inventory table
+                            var invSaved = await InventoryRepo.CreateInventoryMod(db, inv, invHead.UserAccountId, TranType.INVMOV);
+
+                            if (invSaved)
+                            {
+                                // get inventory history detail by scanned track id and lock
+                                var invDetail = await InvHistoryRepo.GetInvHistoryMaxSeqByInvId(db, invMoveDetail.InventoryId);
+                                if (invDetail == null)
+                                {
+                                    ret.ResultCode = MovementResultCode.FAILEDTOGETINVHIST;
+                                    return ret;
+                                }
+
+
+                                var invDtlLock = await InvHistoryRepo.LockInvHistDetail(db, invDetail.InventoryId, invDetail.SeqNum);
+                                if (invDtlLock == null)
+                                {
+                                    ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
+                                    return ret;
+                                }
+
+                                // get and lock inventory header
+                                var invHeader = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
+                                if (invHeader == null)
+                                {
+                                    ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
+                                    return ret;
+                                }
+
+                                // save updated Inv Move detail record
+                                var invMoveDtlUpdated = await InvMoveDetailRepo.UpdateInvMoveDetailMod(db, invMoveDetail, TranType.INVMOV);
+
+                                if (invMoveDtlUpdated)
+                                {
+                                    // update Inv Move status
+                                    // get Inv Move updated status
+                                    var invMoveStatus = await InvMoveRepo.GetInvMoveUpdatedStatus(db, invMove.InvMoveId);
+
+                                    if (!string.IsNullOrEmpty(invMoveStatus))
+                                    {
+                                        // save update po record
+                                        invMove.ModifiedBy = invHead.UserAccountId;
+                                        invMove.InvMoveStatusId = invMoveStatus;
+
+                                        var invMoveUpdated = await InvMoveRepo.UpdateInvMove(db, invMove, TranType.INVMOV);
+
+                                        if (invMoveUpdated)
+                                        {
+                                            ret.ResultCode = MovementResultCode.SUCCESS;
+                                        }
+                                    }
+                                }
+
+                                // check record conflict on inventoryhistory table --skipped this validation (may not be needed)
+
+                                // get product lot attributes
+                                var lotAtt = await LotAttRepo.GetLotAttributeDetailById(invDetail.LotAttributeId);
+                                if (lotAtt == null)
+                                {
+                                    ret.ResultCode = MovementResultCode.FAILEDTOGETLOTATT;
+                                    return ret;
+                                }
+
+                                // build inventory history detail defaults
+                                invDetail.InventoryId = invId;
+                                invDetail.SeqNum = 1;
+                                invDetail.DocumentRefId = invMoveDetail.InvMoveLineId;
+                                invDetail.QtyFrom = 0;
+                                invDetail.QtyTo = invHead.QtyToMove;
+                                invDetail.LocationFrom = invHead.LocationToMove;
+                                invDetail.TrackIdFrom = invHead.TrackIdToMove;
+                                invDetail.LpnFrom = invHead.LpnToMove;
+                                invDetail.TransactionTypeId = "INVMOV";
+                                invDetail.CreatedBy = invHead.UserAccountId;
+                            }
                         }
                     }
                 }

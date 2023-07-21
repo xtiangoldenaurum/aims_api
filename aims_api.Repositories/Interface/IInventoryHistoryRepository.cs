@@ -25,5 +25,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> CheckTrackIdExists(IDbConnection db, string trackId);
         Task<bool> ChkLPNIsUsedInStorage(IDbConnection db, string lpnId);
         Task<bool> ChkLPNIsUsedInStorage(string lpnId);
+        Task<InventoryHistoryModel> GetInvHistoryMaxSeqByInvId(IDbConnection db, string inventoryId);
     }
 }

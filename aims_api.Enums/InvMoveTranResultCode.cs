@@ -20,6 +20,8 @@ namespace aims_api.Enums
         [Description("Failed to process current Movement Document.")]
         FAILED,
         [Description("Movement Qty should be less than or equal to Actual Qty.")]
-        INVALIDQTY
+        INVALIDQTY,
+        [Description("Target location is same in the current location.")]
+        TARGETLOCCONFLICT
     }
 }

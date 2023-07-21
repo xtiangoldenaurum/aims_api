@@ -14,6 +14,7 @@ namespace aims_api.Models
         public string? LocationToMove { get; set; }
         public string? TrackIdToMove { get; set; }
         public string? LpnToMove { get; set; }
+        public string? LotAttributeId { get; set; }
         public string? UserAccountId { get; set; }
     }
 }
