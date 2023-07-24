@@ -587,13 +587,12 @@ namespace aims_api.Repositories.Implementation
             ret.ResultCode = MovementResultCode.FAILED;
 
             // check if required details is not null
-            if (data.InvHead != null &&
-                data.InvMoveDetail != null)
+            //if (data.InvHead != null &&
+            //    data.InvMoveDetail != null)
+            if (data.InvHead != null)
             {
                 // init objects
                 var invHead = data.InvHead;
-                //var invDetail = data.InvDetail;
-                //var lotAtt = data.LotAtt;
 
                 using (IDbConnection db = new MySqlConnection(ConnString))
                 {
@@ -611,21 +610,21 @@ namespace aims_api.Repositories.Implementation
                         invMove.InvMoveId == invHead.InvMoveId)
                     {
                         // check if location to move is valid
-                        if (invHead.LocationToMove == invMoveDetail.LocationTo)
+                        if (invHead.LocationToMove != invMoveDetail.LocationTo)
                         {
                             ret.ResultCode = MovementResultCode.INVALIDLOC;
                             return ret;
                         }
 
                         // check if track id to move is valid
-                        if (invHead.TrackIdToMove == invMoveDetail.TrackIdTo)
+                        if (invHead.TrackIdToMove != invMoveDetail.TrackIdTo)
                         {
                             ret.ResultCode = MovementResultCode.INVALIDTRACKID;
                             return ret;
                         }
 
                         // check if lpn id to move is valid
-                        if (invHead.LpnToMove == invMoveDetail.LpnTo)
+                        if (invHead.LpnToMove != invMoveDetail.LpnTo)
                         {
                             ret.ResultCode = MovementResultCode.INVALIDLPN;
                             return ret;
@@ -677,6 +676,8 @@ namespace aims_api.Repositories.Implementation
                         // get movement next document number
                         string? movementTaskId = await IdNumberRepo.GetNxtDocNum("INVMOV", invHead.UserAccountId);
 
+                        var getInvId = await InventoryRepo.GetInventoryByIdMod(db, invMoveDetail.InventoryId);
+
                         if (!string.IsNullOrEmpty(invId) &&
                             !string.IsNullOrEmpty(movementTaskId))
                         {
@@ -684,7 +685,7 @@ namespace aims_api.Repositories.Implementation
                             var inv = new InventoryModel()
                             {
                                 InventoryId = invId,
-                                Sku = invMoveDetail.Sku,
+                                Sku = getInvId.Sku,
                                 InventoryStatusId = (InvStatus.AVAILABLE).ToString()
                             };
 
@@ -693,7 +694,7 @@ namespace aims_api.Repositories.Implementation
 
                             if (invSaved)
                             {
-                                // get inventory history detail by scanned track id and lock
+                                // get inventory history detail by scanned inventory id and lock
                                 var invDetail = await InvHistoryRepo.GetInvHistoryMaxSeqByInvId(db, invMoveDetail.InventoryId);
                                 if (invDetail == null)
                                 {
@@ -762,14 +763,6 @@ namespace aims_api.Repositories.Implementation
                                             if (invDtlLock == null)
                                             {
                                                 ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHIST;
-                                                return ret;
-                                            }
-
-                                            // get and lock inventory header
-                                            var invHeader = await InventoryRepo.LockInventoryByInvId(db, invDetail.InventoryId);
-                                            if (invHeader == null)
-                                            {
-                                                ret.ResultCode = MovementResultCode.FAILEDTOLOCKINVHEAD;
                                                 return ret;
                                             }
 

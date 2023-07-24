@@ -4,12 +4,11 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://192.168.1.130:5001", //dito magreredirect (ping ng pc and unique port na hindi ginagamit ng iba)
-      "applicationUrl2": "http://192.168.1.146:5001",
-      "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "http://192.168.1.130:5001", //dito magreredirect (ping ng pc and unique port na hindi ginagamit ng iba)
+      "dotnetRunMessages": true
     },
     "IIS Express": {
       "commandName": "IISExpress",
