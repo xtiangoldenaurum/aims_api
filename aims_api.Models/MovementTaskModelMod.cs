@@ -9,6 +9,5 @@ namespace aims_api.Models
     public class MovementTaskModelMod
     {
         public InventoryMovementModelMod? InvHead { get; set; }
-        public InvMoveDetailModel? InvMoveDetail { get; set; }
     }
 }

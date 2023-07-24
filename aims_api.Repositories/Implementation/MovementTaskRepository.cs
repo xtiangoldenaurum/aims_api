@@ -586,9 +586,6 @@ namespace aims_api.Repositories.Implementation
             var ret = new MovementResultModel();
             ret.ResultCode = MovementResultCode.FAILED;
 
-            // check if required details is not null
-            //if (data.InvHead != null &&
-            //    data.InvMoveDetail != null)
             if (data.InvHead != null)
             {
                 // init objects
