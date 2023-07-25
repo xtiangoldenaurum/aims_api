@@ -75,17 +75,17 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem)
-        {
-            var data = await InvAdjustDetailRepo.GetInvAdjustDetailByInvAdjustIDPaged(invAdjustId, pageNum, pageItem);
+        //public async Task<RequestResponse> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem)
+        //{
+        //    var data = await InvAdjustDetailRepo.GetInvAdjustDetailByInvAdjustIDPaged(invAdjustId, pageNum, pageItem);
 
-            if (data != null && data.Pagination != null)
-            {
-                return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
-            }
+        //    if (data != null && data.Pagination != null)
+        //    {
+        //        return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
+        //    }
 
-            return new RequestResponse(ResponseCode.FAILED, "No record found.");
-        }
+        //    return new RequestResponse(ResponseCode.FAILED, "No record found.");
+        //}
 
         public async Task<RequestResponse> GetInvAdjustDetailByInvAdjustIDPagedMod(string invAdjustId, int pageNum, int pageItem)
         {

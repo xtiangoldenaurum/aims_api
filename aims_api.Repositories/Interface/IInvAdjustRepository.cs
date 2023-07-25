@@ -31,6 +31,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> DeleteInvAdjust(string invAdjustId);
         Task<CancelInvAdjustResultCode> CancelInvAdjust(string invAdjustId, string userAccountId);
         Task<CancelInvAdjustResultCode> ForceCancelInvAdjust(string invAdjustId, string userAccountId);
-        Task<InvAdjustTranResultCode> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust);
+        Task<InvAdjustTranResultCode> UpdateInvAdjustApprovedMod(AdjustmentModelMod data);
     }
 }

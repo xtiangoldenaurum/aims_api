@@ -269,20 +269,20 @@ namespace aims_api.API.Controllers
         }
 
         [HttpPost("updateinvadjustapproved")]
-        public async Task<ActionResult> UpdateInvAdjustApprovedMod(InvAdjustModelMod invAdjust)
+        public async Task<ActionResult> UpdateInvAdjustApprovedMod(AdjustmentModelMod data)
         {
             try
             {
-                if (invAdjust == null)
+                if (data == null)
                 {
-                    await DataValidator.AddErrorField("invAdjust");
+                    await DataValidator.AddErrorField("data");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvAdjustCore.UpdateInvAdjustApprovedMod(invAdjust));
+                return Ok(await InvAdjustCore.UpdateInvAdjustApprovedMod(data));
             }
             catch (Exception ex)
             {

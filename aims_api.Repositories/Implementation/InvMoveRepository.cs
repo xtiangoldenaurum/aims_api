@@ -648,7 +648,7 @@ namespace aims_api.Repositories.Implementation
                                     // update existing details
                                     var prevDetail = await InvMoveDetailRepo.GetInvMoveDetailByIdMod(db, detail.InvMoveLineId);
 
-                                    if (prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString() || prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.PRTMV).ToString())
+                                    if (prevDetail.InvMoveLineStatusId == (InvMoveLneStatus.CREATED).ToString())
                                     {
                                         if (prevDetail != detail)
                                         {
@@ -885,7 +885,7 @@ namespace aims_api.Repositories.Implementation
                 db.Open();
                 string strQry = @"select count(invMoveId) from InvMove where 
                                                         (invMoveStatusId = 'CREATED' or 
-                                                        invMoveStatusId = 'PARTMV') and 
+                                                        invMoveStatusId = 'PRTMV') and 
 														invMoveId = @invMoveId";
 
                 var param = new DynamicParameters();

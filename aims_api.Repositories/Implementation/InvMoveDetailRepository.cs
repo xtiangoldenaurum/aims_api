@@ -393,7 +393,7 @@ namespace aims_api.Repositories.Implementation
                 db.Open();
                 string strQry = @"select count(invMoveLineId) from InvMoveDetail where 
                                                         (invMoveLineStatusId = 'CREATED' or 
-                                                        invMoveLineStatusId = 'PRTRCV') and 
+                                                        invMoveLineStatusId = 'PRTMV') and 
 														invMoveLineId = @invMoveLineId";
 
                 var param = new DynamicParameters();

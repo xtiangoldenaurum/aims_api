@@ -296,7 +296,7 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        public async Task<bool> UpdateinvAdjustUField(IDbConnection db, string invAdjustId, string createdBy, dynamic data)
+        public async Task<bool> UpdateInvAdjustUField(IDbConnection db, string invAdjustId, string createdBy, dynamic data)
         {
             // default sku insert then fields update from null will be executed
             var qryHelper = new QryHelper();
@@ -354,7 +354,7 @@ namespace aims_api.Repositories.Implementation
             return false;
         }
 
-        public async Task<bool> UpdateinvAdjustUFieldMOD(IDbConnection db, string invAdjustId, string modifiedBy, dynamic data)
+        public async Task<bool> UpdateInvAdjustUFieldMOD(IDbConnection db, string invAdjustId, string modifiedBy, dynamic data)
         {
             // default sku insert then fields update from null will be executed
             var qryHelper = new QryHelper();

@@ -11,7 +11,7 @@ namespace aims_api.Repositories.Interface
 {
     public interface IInvAdjustDetailRepository
     {
-        Task<InvAdjustDetailPagedMdl?> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem);
+        //Task<InvAdjustDetailPagedMdl?> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem);
         Task<InvAdjustDetailPagedMdlMod?> GetInvAdjustDetailByInvAdjustIDPagedMod(string invAdjustId, int pageNum, int pageItem);
         Task<Pagination?> GetInvAdjustDetailPageDetail(IDbConnection db, string InvAdjustId, int pageNum, int pageItem, int rowCount);
         Task<Pagination?> GetInvAdjustDetailPageDetailMod(IDbConnection db, string poId, int pageNum, int pageItem, int rowCount);

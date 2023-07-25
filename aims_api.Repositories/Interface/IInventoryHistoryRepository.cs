@@ -26,5 +26,6 @@ namespace aims_api.Repositories.Interface
         Task<bool> ChkLPNIsUsedInStorage(IDbConnection db, string lpnId);
         Task<bool> ChkLPNIsUsedInStorage(string lpnId);
         Task<InventoryHistoryModel> GetInvHistoryMaxSeqByInvId(IDbConnection db, string inventoryId);
+        Task<InventoryHistoryModel> GetInvHistoryMaxSeqByDocRefId(IDbConnection db, string documentRefId);
     }
 }

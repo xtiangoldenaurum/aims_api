@@ -210,37 +210,37 @@ namespace aims_api.Repositories.Implementation
             return await db.QuerySingleOrDefaultAsync<InvAdjustDetailModel>(strQry, param, commandType: CommandType.Text);
         }
 
-        public async Task<InvAdjustDetailPagedMdl?> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem)
-        {
-            // pagination setup
-            int offset = (pageNum - 1) * pageItem;
-            using (IDbConnection db = new MySqlConnection(ConnString))
-            {
-                db.Open();
-                string strQry = "select * from InvAdjustDetail where invAdjustId = @invAdjustId limit @pageItem offset @offset";
+        //public async Task<InvAdjustDetailPagedMdl?> GetInvAdjustDetailByInvAdjustIDPaged(string invAdjustId, int pageNum, int pageItem)
+        //{
+        //    // pagination setup
+        //    int offset = (pageNum - 1) * pageItem;
+        //    using (IDbConnection db = new MySqlConnection(ConnString))
+        //    {
+        //        db.Open();
+        //        string strQry = "select * from InvAdjustDetail where invAdjustId = @invAdjustId limit @pageItem offset @offset";
 
-                var param = new DynamicParameters();
-                param.Add("@invAdjustId", invAdjustId);
-                param.Add("@pageItem", pageItem);
-                param.Add("@offset", offset);
+        //        var param = new DynamicParameters();
+        //        param.Add("@invAdjustId", invAdjustId);
+        //        param.Add("@pageItem", pageItem);
+        //        param.Add("@offset", offset);
 
-                var ret = await db.QueryAsync<InvAdjustDetailModel>(strQry, param, commandType: CommandType.Text);
+        //        var ret = await db.QueryAsync<InvAdjustDetailModel>(strQry, param, commandType: CommandType.Text);
 
-                if (ret != null && ret.Any())
-                {
-                    // build pagination detail
-                    var pageDetail = await GetInvAdjustDetailPageDetail(db, invAdjustId, pageNum, pageItem, ret.Count());
+        //        if (ret != null && ret.Any())
+        //        {
+        //            // build pagination detail
+        //            var pageDetail = await GetInvAdjustDetailPageDetail(db, invAdjustId, pageNum, pageItem, ret.Count());
 
-                    return new InvAdjustDetailPagedMdl()
-                    {
-                        Pagination = pageDetail,
-                        InvAdjustDetailModel = ret
-                    };
-                }
-            }
+        //            return new InvAdjustDetailPagedMdl()
+        //            {
+        //                Pagination = pageDetail,
+        //                InvAdjustDetailModel = ret
+        //            };
+        //        }
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         public async Task<InvAdjustDetailPagedMdlMod?> GetInvAdjustDetailByInvAdjustIDPagedMod(string invAdjustId, int pageNum, int pageItem)
         {

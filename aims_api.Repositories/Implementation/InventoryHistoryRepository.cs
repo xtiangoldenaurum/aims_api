@@ -365,5 +365,15 @@ namespace aims_api.Repositories.Implementation
             return await db.QuerySingleOrDefaultAsync<InventoryHistoryModel>(strQry, param);
         }
 
+        public async Task<InventoryHistoryModel> GetInvHistoryMaxSeqByDocRefId(IDbConnection db, string documentRefId)
+        {
+            // hold currentr eceive transaction
+            string strQry = @"CALL `spGetTopInvHistDetailByDocRefId`(@currDocumentRefId)";
+
+            var param = new DynamicParameters();
+            param.Add("@currDocumentRefId", documentRefId);
+
+            return await db.QuerySingleOrDefaultAsync<InventoryHistoryModel>(strQry, param);
+        }
     }
 }

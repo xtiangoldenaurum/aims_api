@@ -8,6 +8,7 @@ using Serilog;
 
 namespace aims_api.API.Controllers
 {
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class InvMoveController : ControllerBase
