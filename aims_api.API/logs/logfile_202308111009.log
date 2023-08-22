@@ -1,0 +1,7 @@
+2023-08-11 10:09:00.588 +08:00 [ERR] ERR500: Fatal error encountered during command execution. @192.168.1.146:5012    at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 473
+   at aims_api.Repositories.Implementation.InvCountRepository.GetInvCountById(String invCountId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Repositories\Implementation\InvCountRepository.cs:line 336
+   at aims_api.Cores.Implementation.InvCountCore.GetInvCountById(String invMoveId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Cores\Implementation\InvCountCore.cs:line 99
+   at aims_api.API.Controllers.InvCountController.GetInvCountHeaderById(String invMoveId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.API\Controllers\InvCountController.cs:line 107

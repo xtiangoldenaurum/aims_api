@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace aims_api.Enums
 {
-    public enum InvMoveDetailDelResultCode
+    public enum InvCountDetailDelResultCode
     {
         // TO REVIEW ALL OF THIS ENUM
         [Description("Failed to delete record.")]
         FAILED,
         [Description("Record deleted successfully.")]
         SUCCESS,
-        [Description("Inventory Movement detail is used or lock by other transaction.")]
-        INVMOVEDTAILINUSED,
-        [Description("Inventory Movement Detail status is modified.")]
+        [Description("Inventory Count detail is used or lock by other transaction.")]
+        INVCOUNTTAILINUSED,
+        [Description("Inventory Count Detail status is modified.")]
         DETAILSTATUSMODIFIED
     }
 }

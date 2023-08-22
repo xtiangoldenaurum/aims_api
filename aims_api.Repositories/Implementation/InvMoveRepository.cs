@@ -387,6 +387,7 @@ namespace aims_api.Repositories.Implementation
 
             return await db.ExecuteScalarAsync<string?>(strQry, param);
         }
+
         public async Task<InvMoveCreateTranResult> CreateInvMoveMod(InvMoveModelMod invMove)
         {
             // get InvMove id number
@@ -495,6 +496,7 @@ namespace aims_api.Repositories.Implementation
                 ResultCode = InvMoveTranResultCode.FAILED
             };
         }
+
         public async Task<bool> CreateInvMove(IDbConnection db, InvMoveModel invMove)
         {
             // define InvMove status
@@ -532,6 +534,7 @@ namespace aims_api.Repositories.Implementation
 
             return false;
         }
+
         public async Task<bool> InvIDExistsInInvMove(IDbConnection db, string inventoryId, string invMoveId)
         {
             string strQry = @"select count(inventoryId) from invMoveDetail 
@@ -551,6 +554,7 @@ namespace aims_api.Repositories.Implementation
             // default true to ensure no conflict will occur on error
             return true;
         }
+
         private async Task<bool> MoveQtyIsValid(IDbConnection db, string inventoryId, int? qtyTo)
         {
             string strQry = @"SELECT count(inventoryId)
@@ -573,7 +577,7 @@ namespace aims_api.Repositories.Implementation
 
         public async Task<InvMoveTranResultCode> UpdateInvMoveMod(InvMoveModelMod invMove)
         {
-            if (invMove.InvMoveHeader != null)
+            if (invMove.InvMoveHeader != null )
             {
                 using (IDbConnection db = new MySqlConnection(ConnString))
                 {
@@ -857,6 +861,7 @@ namespace aims_api.Repositories.Implementation
 
             return CancelInvMoveResultCode.FAILED;
         }
+
         private async Task<bool> ChkInvMoveDtlsCanFClose(IEnumerable<InvMoveDetailModel>? invMoveDetails)
         {
             return await Task.Run(() =>
@@ -878,6 +883,7 @@ namespace aims_api.Repositories.Implementation
                 return false;
             });
         }
+
         public async Task<bool> InvMoveMovable(string invMoveId)
         {
             using (IDbConnection db = new MySqlConnection(ConnString))

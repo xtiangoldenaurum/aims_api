@@ -1,0 +1,12 @@
+2023-08-17 15:27:51.461 +08:00 [ERR] ERR500: Cannot delete or update a parent row: a foreign key constraint fails (`aims_mariadb`.`invcountdetail`, CONSTRAINT `FK_invcountdetail_invcount` FOREIGN KEY (`invCountId`) REFERENCES `invcount` (`invCountId`) ON DELETE NO ACTION ON UPDATE NO ACTION) @192.168.1.146:5012    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 646
+   at aims_api.Repositories.Implementation.InvCountRepository.DeleteInvCount(String invCountId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Repositories\Implementation\InvCountRepository.cs:line 701
+   at aims_api.Cores.Implementation.InvCountCore.DeleteInvCount(String invCountId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Cores\Implementation\InvCountCore.cs:line 159
+   at aims_api.API.Controllers.InvCountController.DeleteInvCount(String invCountId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.API\Controllers\InvCountController.cs:line 204

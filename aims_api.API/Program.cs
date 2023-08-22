@@ -120,6 +120,18 @@ builder.Services.AddTransient<IInventoryHistoryRepository, InventoryHistoryRepos
 builder.Services.AddTransient<IInventoryStatusCore, InventoryStatusCore>();
 builder.Services.AddTransient<IInventoryStatusRepository, InventoryStatusRepository>();
 
+builder.Services.AddTransient<IInvCountCore, InvCountCore>();
+builder.Services.AddTransient<IInvCountRepository, InvCountRepository>();
+builder.Services.AddTransient<IInvCountDetailCore, InvCountDetailCore>();
+builder.Services.AddTransient<IInvCountDetailRepository, InvCountDetailRepository>();
+//builder.Services.AddTransient<IInvMoveLineStatusCore, InvMoveLineStatusCore>();
+//builder.Services.AddTransient<IInvMoveLineStatusRepository, InvMoveLineStatusRepository>();
+//builder.Services.AddTransient<IInvMoveStatusCore, InvMoveStatusCore>();
+//builder.Services.AddTransient<IInvMoveStatusRepository, InvMoveStatusRepository>();
+//builder.Services.AddTransient<IInvMoveUserFieldCore, InvMoveUserFieldCore>();
+//builder.Services.AddTransient<IInvCountUserFieldRepository, InvCountUserFieldRepository>();
+//builder.Services.AddTransient<IMovementTaskCore, MovementTaskCore>();
+
 builder.Services.AddTransient<IInvMoveCore, InvMoveCore>();
 builder.Services.AddTransient<IInvMoveRepository, InvMoveRepository>();
 builder.Services.AddTransient<IInvMoveDetailCore, InvMoveDetailCore>();

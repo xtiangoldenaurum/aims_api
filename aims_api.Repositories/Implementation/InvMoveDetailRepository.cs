@@ -193,7 +193,7 @@ namespace aims_api.Repositories.Implementation
             return InvMoveDetailDelResultCode.FAILED;
         }
 
-        public async Task<InvMoveDetailModel> GetInvMoveDetailById(string invMoveLineId)
+        public async Task<InvMoveDetailModelMod> GetInvMoveDetailById(string invMoveLineId)
         {
             // pagination setup
             using (IDbConnection db = new MySqlConnection(ConnString))
@@ -205,7 +205,7 @@ namespace aims_api.Repositories.Implementation
 
                 var param = new DynamicParameters();
                 param.Add("@currInvMoveLineId", invMoveLineId);
-                return await db.QuerySingleOrDefaultAsync<InvMoveDetailModel>(strQry, param, commandType: CommandType.Text);
+                return await db.QuerySingleOrDefaultAsync<InvMoveDetailModelMod>(strQry, param, commandType: CommandType.Text);
             }
         }
 

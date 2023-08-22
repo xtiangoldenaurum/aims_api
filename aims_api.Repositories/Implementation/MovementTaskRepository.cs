@@ -802,12 +802,9 @@ namespace aims_api.Repositories.Implementation
                                 invMove.ModifiedBy = invHead.UserAccountId;
                                 invMove.InvMoveStatusId = invMoveStatus;
 
-                                var invMoveUpdated = await InvMoveRepo.UpdateInvMove(db, invMove, TranType.INVMOV);
+                                await InvMoveRepo.UpdateInvMove(db, invMove, TranType.INVMOV);
 
-                                if (invMoveUpdated)
-                                {
                                     ret.ResultCode = MovementResultCode.SUCCESS;
-                                }
                             }
                         }
                     }

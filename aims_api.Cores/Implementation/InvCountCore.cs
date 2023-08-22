@@ -11,43 +11,42 @@ using System.Threading.Tasks;
 
 namespace aims_api.Cores.Implementation
 {
-    public class InvMoveCore : IInvMoveCore
+    public class InvCountCore : IInvCountCore
     {
-        private IInvMoveRepository InvMoveRepo { get; set; }
-        private IInvMoveUserFieldRepository InvMoveUFieldRepo { get; set; }
+
+        private IInvCountRepository InvCountRepo { get; set; }
         public EnumHelper EnumHelper { get; set; }
-        public InvMoveCore(IInvMoveRepository invMoveRepo, IInvMoveUserFieldRepository invMoveUserFieldRepo, EnumHelper enumHelper)
+        public InvCountCore(IInvCountRepository invCountRepo, EnumHelper enumHelper)
         {
-            InvMoveRepo = invMoveRepo;
-            InvMoveUFieldRepo = invMoveUserFieldRepo;
+            InvCountRepo = invCountRepo;
             EnumHelper = enumHelper;
         }
 
-        public async Task<RequestResponse> GetInvMoveSpecial(InvMoveFilteredMdl filter, string? searchKey, int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvCountSpecial(InvCountFilteredMdl filter, string? searchKey, int pageNum, int pageItem)
         {
-            InvMovePagedMdl? data = null;
+            InvCountPagedMdl? data = null;
             bool skip = false;
 
             // do filtered query
-            if (!string.IsNullOrEmpty(filter.InvMoveId) ||
-                !string.IsNullOrEmpty(filter.InvMoveStatusId) ||
+            if (!string.IsNullOrEmpty(filter.InvCountId) ||
+                !string.IsNullOrEmpty(filter.InvCountStatusId) ||
                 filter.DateCreated != null)
             {
-                data = await InvMoveRepo.GetInvMoveFilteredPaged(filter, pageNum, pageItem);
+                data = await InvCountRepo.GetInvCountFilteredPaged(filter, pageNum, pageItem);
                 skip = true;
             }
 
             // do search query
             if (!string.IsNullOrEmpty(searchKey) && !skip)
             {
-                data = await InvMoveRepo.GetInvMoveSrchPaged(searchKey, pageNum, pageItem);
+                data = await InvCountRepo.GetInvCountSrchPaged(searchKey, pageNum, pageItem);
                 skip = true;
             }
 
             // else do get all query
             if (!skip)
             {
-                data = await InvMoveRepo.GetInvMovePaged(pageNum, pageItem);
+                data = await InvCountRepo.GetInvCountPaged(pageNum, pageItem);
             }
 
             // return result if there is
@@ -59,9 +58,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveForMvPaged(int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvCountForCntPaged(int pageNum, int pageItem)
         {
-            var data = await InvMoveRepo.GetInvMoveForMvPaged(pageNum, pageItem);
+            var data = await InvCountRepo.GetInvCountForCntPaged(pageNum, pageItem);
 
             if (data != null && data.Pagination != null)
             {
@@ -71,9 +70,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMovePg(int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvCountPg(int pageNum, int pageItem)
         {
-            var data = await InvMoveRepo.GetInvMovePg(pageNum, pageItem);
+            var data = await InvCountRepo.GetInvCountPg(pageNum, pageItem);
 
             if (data != null && data.Any())
             {
@@ -83,9 +82,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMovePgSrch(string searchKey, int pageNum, int pageItem)
+        public async Task<RequestResponse> GetInvCountPgSrch(string searchKey, int pageNum, int pageItem)
         {
-            var data = await InvMoveRepo.GetInvMovePgSrch(searchKey, pageNum, pageItem);
+            var data = await InvCountRepo.GetInvCountPgSrch(searchKey, pageNum, pageItem);
 
             if (data != null && data.Any())
             {
@@ -95,9 +94,9 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveById(string invMoveId)
+        public async Task<RequestResponse> GetInvCountById(string invCountId)
         {
-            var data = await InvMoveRepo.GetInvMoveById(invMoveId);
+            var data = await InvCountRepo.GetInvCountById(invCountId);
 
             if (data != null)
             {
@@ -107,17 +106,17 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> GetInvMoveByIdMod(string invMoveId)
+        public async Task<RequestResponse> GetInvCountByIdMod(string invCountId)
         {
-            var invMoveHeader = await InvMoveRepo.GetInvMoveById(invMoveId);
-            var userFields = await InvMoveUFieldRepo.GetInvMoveUserFieldById(invMoveId);
+            var invCountHeader = await InvCountRepo.GetInvCountById(invCountId);
+            //var userFields = await InvCountUFieldRepo.GetInvMoveUserFieldById(invCountId);
 
-            if (invMoveHeader != null)
+            if (invCountHeader != null)
             {
-                var data = new InvMoveModelMod()
+                var data = new InvCountModelMod()
                 {
-                    InvMoveHeader = invMoveHeader,
-                    InvMoveUfields = userFields
+                    InvCountHeader = invCountHeader,
+                    //InvCountUfields = userFields
                 };
 
                 return new RequestResponse(ResponseCode.SUCCESS, "Record found.", data);
@@ -126,26 +125,26 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "No record found.");
         }
 
-        public async Task<RequestResponse> CreateInvMoveMod(InvMoveModelMod invMove)
+        public async Task<RequestResponse> CreateInvCountMod(InvCountModelMod invCount)
         {
-            var res = await InvMoveRepo.CreateInvMoveMod(invMove);
+            var res = await InvCountRepo.CreateInvCountMod(invCount);
             string resMsg = await EnumHelper.GetDescription(res.ResultCode);
 
-            if (res.ResultCode == InvMoveTranResultCode.SUCCESS)
+            if (res.ResultCode == InvCountTranResultCode.SUCCESS)
             {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.InvMoveId);
+                return new RequestResponse(ResponseCode.SUCCESS, resMsg, res.InvCountId);
             }
 
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res.ResultCode).ToString());
 
         }
 
-        public async Task<RequestResponse> UpdateInvMoveMod(InvMoveModelMod invMove)
+        public async Task<RequestResponse> UpdateInvCountMod(InvCountModelMod invCount)
         {
-            var res = await InvMoveRepo.UpdateInvMoveMod(invMove);
+            var res = await InvCountRepo.UpdateInvCountMod(invCount);
             string resMsg = await EnumHelper.GetDescription(res);
 
-            if (res == InvMoveTranResultCode.SUCCESS)
+            if (res == InvCountTranResultCode.SUCCESS)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
             }
@@ -153,11 +152,11 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
         }
 
-        public async Task<RequestResponse> DeleteInvMove(string invMoveId)
+        public async Task<RequestResponse> DeleteInvCount(string invCountId)
         {
             // place item in use validator here
 
-            bool res = await InvMoveRepo.DeleteInvMove(invMoveId);
+            bool res = await InvCountRepo.DeleteInvCount(invCountId);
             if (res)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, "Record deleted successfully.");
@@ -166,12 +165,12 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, "Failed to delete record.");
         }
 
-        public async Task<RequestResponse> CancelInvMove(string invMoveId, string userAccountId)
+        public async Task<RequestResponse> CancelInvCount(string invCountId, string userAccountId)
         {
-            var res = await InvMoveRepo.CancelInvMove(invMoveId, userAccountId);
+            var res = await InvCountRepo.CancelInvCount(invCountId, userAccountId);
             string resMsg = await EnumHelper.GetDescription(res);
 
-            if (res == CancelInvMoveResultCode.SUCCESS)
+            if (res == CancelInvCountResultCode.SUCCESS)
             {
                 return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
             }
@@ -179,17 +178,19 @@ namespace aims_api.Cores.Implementation
             return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
         }
 
-        public async Task<RequestResponse> ForceCancelInvMove(string invMoveId, string userAccountId)
-        {
-            var res = await InvMoveRepo.ForceCancelInvMove(invMoveId, userAccountId);
-            string resMsg = await EnumHelper.GetDescription(res);
+        #region ForceCancelInvMove
+        //public async Task<RequestResponse> ForceCancelInvMove(string invMoveId, string userAccountId)
+        //{
+        //    var res = await InvMoveRepo.ForceCancelInvMove(invMoveId, userAccountId);
+        //    string resMsg = await EnumHelper.GetDescription(res);
 
-            if (res == CancelInvMoveResultCode.SUCCESS)
-            {
-                return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
-            }
+        //    if (res == CancelInvMoveResultCode.SUCCESS)
+        //    {
+        //        return new RequestResponse(ResponseCode.SUCCESS, resMsg, (res).ToString());
+        //    }
 
-            return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
-        }
+        //    return new RequestResponse(ResponseCode.FAILED, resMsg, (res).ToString());
+        //}
+        #endregion
     }
 }

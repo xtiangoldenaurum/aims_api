@@ -1,0 +1,13 @@
+2023-07-26 15:58:02.126 +08:00 [ERR] ERR500: Duplicate entry 'INV-00000002' for key 'PRIMARY' @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 646
+   at aims_api.Repositories.Implementation.InventoryRepository.CreateInventoryMod(IDbConnection db, InventoryModel inventory, String userAccountId, TranType tranTyp) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\InventoryRepository.cs:line 147
+   at aims_api.Repositories.Implementation.MovementTaskRepository.ProceedMovementTask(MovementTaskModelMod data) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\MovementTaskRepository.cs:line 724
+   at aims_api.Cores.Implementation.MovementTaskCore.ProceedMovementTask(MovementTaskModelMod data) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\MovementTaskCore.cs:line 109
+   at aims_api.API.Controllers.MovementTaskController.ProceedMovementTask(MovementTaskModelMod data) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\MovementTaskController.cs:line 181

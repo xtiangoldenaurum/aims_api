@@ -1,0 +1,13 @@
+2023-08-17 10:15:36.671 +08:00 [ERR] ERR500: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AND invCountLineStatusId = 'CREATED'' at line 3 @192.168.1.146:5012    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteScalar()
+   at System.Data.Common.DbCommand.ExecuteScalarAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteScalarImplAsync[T](IDbConnection cnn, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 1210
+   at aims_api.Repositories.Implementation.InvCountRepository.InvIDExistsInInvCount(IDbConnection db, String inventoryId) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Repositories\Implementation\InvCountRepository.cs:line 531
+   at aims_api.Repositories.Implementation.InvCountRepository.CreateInvCountMod(InvCountModelMod invCount) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Repositories\Implementation\InvCountRepository.cs:line 442
+   at aims_api.Cores.Implementation.InvCountCore.CreateInvCountMod(InvCountModelMod invCount) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Cores\Implementation\InvCountCore.cs:line 130
+   at aims_api.API.Controllers.InvCountController.CreateInvCountMod(InvCountModelMod invCount) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.API\Controllers\InvCountController.cs:line 155

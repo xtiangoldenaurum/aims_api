@@ -11,6 +11,7 @@ namespace aims_api.Models
     {
         public string? InvCountLineId { get; set; }
         public string? InvCountId { get; set; }
+        public string? InvCountLineStatusId { get; set; }
         public string? InventoryId { get; set; }
         public int? QtyCount { get; set; }
         public DateTime? DateCreated { get; set; }

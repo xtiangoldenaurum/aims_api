@@ -1,0 +1,12 @@
+2023-08-18 11:02:21.436 +08:00 [ERR] ERR500: Column 'invCountLineId' cannot be null @192.168.1.146:5012    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteNonQuery()
+   at System.Data.Common.DbCommand.ExecuteNonQueryAsync(CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.ExecuteImplAsync(IDbConnection cnn, CommandDefinition command, Object param) in /_/Dapper/SqlMapper.Async.cs:line 646
+   at aims_api.Repositories.Implementation.InvCountDetailRepository.CreateInvCountDetail(InvCountDetailModel invCountDetail) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Repositories\Implementation\InvCountDetailRepository.cs:line 230
+   at aims_api.Cores.Implementation.InvCountDetailCore.CreateInvCountDetail(InvCountDetailModel invCountDetail) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.Cores\Implementation\InvCountDetailCore.cs:line 94
+   at aims_api.API.Controllers.InvCountDetailController.CreateInvCountDetail(InvCountDetailModel invCountDetail) in D:\_Tantan\AIMS (Backup files)\API\aims_api_main_v10\aims_api.API\Controllers\InvCountDetailController.cs:line 151

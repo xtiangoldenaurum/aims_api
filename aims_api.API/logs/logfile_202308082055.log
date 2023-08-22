@@ -1,0 +1,15 @@
+2023-08-08 20:55:10.191 +08:00 [ERR] ERR500: One or more errors occurred. (No connection could be made because the target machine actively refused it.) @192.168.1.146:5012    at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
+   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
+   at MySql.Data.Common.StreamCreator.GetTcpStream(MySqlConnectionStringBuilder settings, MyNetworkStream& networkStream)
+   at MySql.Data.MySqlClient.NativeDriver.Open()
+   at MySql.Data.MySqlClient.Driver.Open()
+   at MySql.Data.MySqlClient.Driver.Create(MySqlConnectionStringBuilder settings)
+   at MySql.Data.MySqlClient.MySqlPool.CreateNewPooledConnection()
+   at MySql.Data.MySqlClient.MySqlPool.GetPooledConnection()
+   at MySql.Data.MySqlClient.MySqlPool.TryToGetDriver()
+   at MySql.Data.MySqlClient.MySqlPool.GetConnection()
+   at MySql.Data.MySqlClient.MySqlConnection.Open()
+   at aims_api.Repositories.Implementation.UserAccountRepository.GetUserAccWithPassById(String userAccountId) in C:\Users\xtian\OneDrive\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\UserAccountRepository.cs:line 328
+   at aims_api.Repositories.Implementation.UserAccountRepository.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\xtian\OneDrive\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\UserAccountRepository.cs:line 763
+   at aims_api.Cores.Implementation.UserAccountCore.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\xtian\OneDrive\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\UserAccountCore.cs:line 245
+   at aims_api.API.Controllers.UserAccountController.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\xtian\OneDrive\Desktop\aims_api_main_v10\aims_api.API\Controllers\UserAccountController.cs:line 419

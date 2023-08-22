@@ -1,0 +1,133 @@
+2023-07-26 13:21:02.178 +08:00 [ERR] ERR500: Table 'aims_mariadb.organization' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.OrganizationRepository.GetOrgPaged(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\OrganizationRepository.cs:line 61
+   at aims_api.Cores.Implementation.OrganizationCore.GetOrgSpecial(OrganizationFilterMdl filter, String searchKey, Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\OrganizationCore.cs:line 45
+   at aims_api.API.Controllers.OrganizationController.GetOrgSpecial(OrganizationFilterMdl filter, String searchKey, Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\OrganizationController.cs:line 32
+2023-07-26 13:21:03.258 +08:00 [ERR] ERR500: Table 'aims_mariadb.area' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.AreaRepository.GetAllArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\AreaRepository.cs:line 32
+   at aims_api.Cores.Implementation.AreaCore.GetAllArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\AreaCore.cs:line 48
+   at aims_api.API.Controllers.AreaController.GetArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\AreaController.cs:line 48
+2023-07-26 13:21:03.503 +08:00 [ERR] ERR500: Table 'aims_mariadb.locationgroup' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationGroupRepository.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationGroupRepository.cs:line 41
+   at aims_api.Cores.Implementation.LocationGroupCore.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationGroupCore.cs:line 24
+   at aims_api.API.Controllers.LocationGroupController.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationGroupController.cs:line 32
+2023-07-26 13:21:03.516 +08:00 [ERR] ERR500: Table 'aims_mariadb.location' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationRepository.GetLocationPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationRepository.cs:line 55
+   at aims_api.Cores.Implementation.LocationCore.GetLocationPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationCore.cs:line 65
+   at aims_api.API.Controllers.LocationController.GetLocationPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationController.cs:line 48
+2023-07-26 13:21:03.558 +08:00 [ERR] ERR500: Table 'aims_mariadb.locationtype' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationTypeRepository.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationTypeRepository.cs:line 41
+   at aims_api.Cores.Implementation.LocationTypeCore.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationTypeCore.cs:line 24
+   at aims_api.API.Controllers.LocationTypeController.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationTypeController.cs:line 32
+2023-07-26 13:21:03.589 +08:00 [ERR] ERR500: Table 'aims_mariadb.location' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationRepository.GetDIstinctBay() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationRepository.cs:line 314
+   at aims_api.Cores.Implementation.LocationCore.GetDIstinctBay() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationCore.cs:line 161
+   at aims_api.API.Controllers.LocationController.GetDIstinctBay() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationController.cs:line 195
+2023-07-26 13:21:03.589 +08:00 [ERR] ERR500: Table 'aims_mariadb.location' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationRepository.GetDIstinctAisle() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationRepository.cs:line 304
+   at aims_api.Cores.Implementation.LocationCore.GetDIstinctAisle() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationCore.cs:line 149
+   at aims_api.API.Controllers.LocationController.GetDIstinctAisle() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationController.cs:line 180
+2023-07-26 13:21:03.590 +08:00 [ERR] ERR500: Table 'aims_mariadb.area' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.AreaRepository.GetAllArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\AreaRepository.cs:line 32
+   at aims_api.Cores.Implementation.AreaCore.GetAllArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\AreaCore.cs:line 48
+   at aims_api.API.Controllers.AreaController.GetArea() in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\AreaController.cs:line 48
+2023-07-26 13:21:03.668 +08:00 [ERR] ERR500: Table 'aims_mariadb.locationgroup' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationGroupRepository.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationGroupRepository.cs:line 41
+   at aims_api.Cores.Implementation.LocationGroupCore.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationGroupCore.cs:line 24
+   at aims_api.API.Controllers.LocationGroupController.GetLocationGroupPg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationGroupController.cs:line 32
+2023-07-26 13:21:03.692 +08:00 [ERR] ERR500: Table 'aims_mariadb.locationtype' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.LocationTypeRepository.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\LocationTypeRepository.cs:line 41
+   at aims_api.Cores.Implementation.LocationTypeCore.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\LocationTypeCore.cs:line 24
+   at aims_api.API.Controllers.LocationTypeController.GetLocationTypePg(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\LocationTypeController.cs:line 32
+2023-07-26 13:21:04.152 +08:00 [ERR] ERR500: Table 'aims_mariadb.organization' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryAsync[T](IDbConnection cnn, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 418
+   at aims_api.Repositories.Implementation.OrganizationRepository.GetOrgPaged(Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\OrganizationRepository.cs:line 61
+   at aims_api.Cores.Implementation.OrganizationCore.GetOrgSpecial(OrganizationFilterMdl filter, String searchKey, Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\OrganizationCore.cs:line 45
+   at aims_api.API.Controllers.OrganizationController.GetOrgSpecial(OrganizationFilterMdl filter, String searchKey, Int32 pageNum, Int32 pageItem) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\OrganizationController.cs:line 32
+2023-07-26 13:21:07.359 +08:00 [ERR] ERR500: Table 'aims_mariadb.useraccount' doesn't exist @192.168.1.146:5001    at MySql.Data.MySqlClient.MySqlStream.ReadPacket()
+   at MySql.Data.MySqlClient.NativeDriver.GetResult(Int32& affectedRow, Int64& insertedId)
+   at MySql.Data.MySqlClient.Driver.NextResult(Int32 statementId, Boolean force)
+   at MySql.Data.MySqlClient.MySqlDataReader.NextResult()
+   at MySql.Data.MySqlClient.MySqlCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
+--- End of stack trace from previous location ---
+   at Dapper.SqlMapper.QueryRowAsync[T](IDbConnection cnn, Row row, Type effectiveType, CommandDefinition command) in /_/Dapper/SqlMapper.Async.cs:line 473
+   at aims_api.Repositories.Implementation.UserAccountRepository.GetUserAccWithPassById(String userAccountId) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\UserAccountRepository.cs:line 349
+   at aims_api.Repositories.Implementation.UserAccountRepository.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Repositories\Implementation\UserAccountRepository.cs:line 763
+   at aims_api.Cores.Implementation.UserAccountCore.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.Cores\Implementation\UserAccountCore.cs:line 245
+   at aims_api.API.Controllers.UserAccountController.UserAccountValidationWeb(LoginCredentailsModel account) in C:\Users\GASSI-DEV\Desktop\aims_api_main_v10\aims_api.API\Controllers\UserAccountController.cs:line 419

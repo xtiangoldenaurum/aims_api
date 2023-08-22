@@ -17,7 +17,7 @@ namespace aims_api.Repositories.Interface
         Task<Pagination?> GetInvMoveDetailPageDetailMod(IDbConnection db, string poId, int pageNum, int pageItem, int rowCount);
         Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPg(int pageNum, int pageItem);
         Task<IEnumerable<InvMoveDetailModel>> GetInvMoveDetailPgSrch(string searchKey, int pageNum, int pageItem);
-        Task<InvMoveDetailModel> GetInvMoveDetailById(string invMoveLineId);
+        Task<InvMoveDetailModelMod> GetInvMoveDetailById(string invMoveLineId);
         Task<InvMoveDetailModel> GetInvMoveDetailByIdMod(IDbConnection db, string invMoveLineId);
         Task<string> GetInvMoveDtlCancelMvUpdatedStatus(IDbConnection db, string invMoveDetailId, string invMoveId);
         Task<bool> InvMoveDetailExists(string InvMoveLineId);

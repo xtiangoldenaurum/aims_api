@@ -1,9 +1,8 @@
-﻿using aims_api.Cores.Interface;
+﻿using aims_api.Cores.Implementation;
+using aims_api.Cores.Interface;
 using aims_api.Enums;
 using aims_api.Models;
 using aims_api.Utilities;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -12,21 +11,22 @@ namespace aims_api.API.Controllers
     //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class InvMoveController : ControllerBase
+    public class InvCountController : ControllerBase
     {
-        private IInvMoveCore InvMoveCore { get; set; }
+        private IInvCountCore InvCountCore { get; set; }
         DataValidator DataValidator;
-        public InvMoveController(IInvMoveCore invMoveCore)
+        public InvCountController(IInvCountCore invCountCore)
         {
-            InvMoveCore = invMoveCore;
+            InvCountCore = invCountCore;
             DataValidator = new DataValidator();
         }
-        [HttpPost("getinvmovespecial")]
-        public async Task<ActionResult> GetInvMoveSpecial(InvMoveFilteredMdl filter, string? searchKey, int pageNum = 1, int pageItem = 100)
+
+        [HttpPost("getinvcountspecial")]
+        public async Task<ActionResult> GetInvCountSpecial(InvCountFilteredMdl filter, string? searchKey, int pageNum = 1, int pageItem = 100)
         {
             try
             {
-                return Ok(await InvMoveCore.GetInvMoveSpecial(filter, searchKey, pageNum, pageItem));
+                return Ok(await InvCountCore.GetInvCountSpecial(filter, searchKey, pageNum, pageItem));
             }
             catch (Exception ex)
             {
@@ -36,12 +36,12 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvmoveformvpaged")]
-        public async Task<ActionResult> GetInvMoveForMvPaged(int pageNum = 1, int pageItem = 100)
+        [HttpGet("getinvcountforcntpaged")]
+        public async Task<ActionResult> GetInvCountForMvPaged(int pageNum = 1, int pageItem = 100)
         {
             try
             {
-                return Ok(await InvMoveCore.GetInvMoveForMvPaged(pageNum, pageItem));
+                return Ok(await InvCountCore.GetInvCountForCntPaged(pageNum, pageItem));
             }
             catch (Exception ex)
             {
@@ -51,12 +51,12 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvmovepg")]
-        public async Task<ActionResult> GetInvMovePg(int pageNum = 1, int pageItem = 100)
+        [HttpGet("getinvcountpg")]
+        public async Task<ActionResult> GetInvCountPg(int pageNum = 1, int pageItem = 100)
         {
             try
             {
-                return Ok(await InvMoveCore.GetInvMovePg(pageNum, pageItem));
+                return Ok(await InvCountCore.GetInvCountPg(pageNum, pageItem));
             }
             catch (Exception ex)
             {
@@ -66,8 +66,8 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvmovepgsrch")]
-        public async Task<ActionResult> GetInvMovePgSrch(string searchKey, int pageNum = 1, int pageItem = 100)
+        [HttpGet("getinvcountpgsrch")]
+        public async Task<ActionResult> GetInvCountPgSrch(string searchKey, int pageNum = 1, int pageItem = 100)
         {
             try
             {
@@ -80,7 +80,7 @@ namespace aims_api.API.Controllers
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.GetInvMovePgSrch(searchKey, pageNum, pageItem));
+                return Ok(await InvCountCore.GetInvCountPgSrch(searchKey, pageNum, pageItem));
             }
             catch (Exception ex)
             {
@@ -90,21 +90,21 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvmoveheaderbyid")]
-        public async Task<ActionResult> GetInvMoveHeaderById(string invMoveId)
+        [HttpGet("getinvcountheaderbyid")]
+        public async Task<ActionResult> GetInvCountHeaderById(string invCountId)
         {
             try
             {
-                if (string.IsNullOrEmpty(invMoveId))
+                if (string.IsNullOrEmpty(invCountId))
                 {
-                    await DataValidator.AddErrorField("invMoveId");
+                    await DataValidator.AddErrorField("invCountId");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.GetInvMoveById(invMoveId));
+                return Ok(await InvCountCore.GetInvCountById(invCountId));
             }
             catch (Exception ex)
             {
@@ -114,21 +114,21 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpGet("getinvmovebyid")]
-        public async Task<ActionResult> GetInvMoveById(string invMoveId)
+        [HttpGet("getinvcountbyid")]
+        public async Task<ActionResult> GetInvCountById(string invCountId)
         {
             try
             {
-                if (string.IsNullOrEmpty(invMoveId))
+                if (string.IsNullOrEmpty(invCountId))
                 {
-                    await DataValidator.AddErrorField("invMoveId");
+                    await DataValidator.AddErrorField("invCountId");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.GetInvMoveByIdMod(invMoveId));
+                return Ok(await InvCountCore.GetInvCountByIdMod(invCountId));
             }
             catch (Exception ex)
             {
@@ -138,21 +138,21 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("createinvmovemod")]
-        public async Task<ActionResult> CreateInvMoveMod(InvMoveModelMod invMove)
+        [HttpPost("createinvcountmod")]
+        public async Task<ActionResult> CreateInvCountMod(InvCountModelMod invCount)
         {
             try
             {
-                if (invMove == null)
+                if (invCount == null)
                 {
-                    await DataValidator.AddErrorField("invMove");
+                    await DataValidator.AddErrorField("invCount");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.CreateInvMoveMod(invMove));
+                return Ok(await InvCountCore.CreateInvCountMod(invCount));
             }
             catch (Exception ex)
             {
@@ -162,21 +162,21 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("updateinvmovemod")]
-        public async Task<ActionResult> UpdateInvMoveMod(InvMoveModelMod invMove)
+        [HttpPost("updateinvcountmod")]
+        public async Task<ActionResult> UpdateInvCountMod(InvCountModelMod invCount)
         {
             try
             {
-                if (invMove == null)
+                if (invCount == null)
                 {
-                    await DataValidator.AddErrorField("invMove");
+                    await DataValidator.AddErrorField("invCount");
                 }
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.UpdateInvMoveMod(invMove));
+                return Ok(await InvCountCore.UpdateInvCountMod(invCount));
             }
             catch (Exception ex)
             {
@@ -186,21 +186,22 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpDelete("deleteinvmove")]
-        public async Task<ActionResult> DeleteInvMove(string invMoveId)
+        [HttpDelete("deleteinvcount")]
+        public async Task<ActionResult> DeleteInvCount(string invCountId)
         {
             try
             {
-                if (string.IsNullOrEmpty(invMoveId))
+                if (string.IsNullOrEmpty(invCountId))
                 {
-                    await DataValidator.AddErrorField("invMoveId");
+                    await DataValidator.AddErrorField("invCountId");
                 }
+
                 if (DataValidator.Invalid)
                 {
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.DeleteInvMove(invMoveId));
+                return Ok(await InvCountCore.DeleteInvCount(invCountId));
             }
             catch (Exception ex)
             {
@@ -210,14 +211,15 @@ namespace aims_api.API.Controllers
             }
         }
 
-        [HttpPost("cancelinvmove")]
-        public async Task<ActionResult> CancelInvMove(string invMoveId, string userAccountId)
+        #region cancelinvmove
+        [HttpPost("cancelinvcount")]
+        public async Task<ActionResult> CancelInvCount(string invCountId, string userAccountId)
         {
             try
             {
-                if (string.IsNullOrEmpty(invMoveId))
+                if (string.IsNullOrEmpty(invCountId))
                 {
-                    await DataValidator.AddErrorField("invMoveId");
+                    await DataValidator.AddErrorField("invCountId");
                 }
                 if (string.IsNullOrEmpty(userAccountId))
                 {
@@ -228,7 +230,7 @@ namespace aims_api.API.Controllers
                     return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
                 }
 
-                return Ok(await InvMoveCore.CancelInvMove(invMoveId, userAccountId));
+                return Ok(await InvCountCore.CancelInvCount(invCountId, userAccountId));
             }
             catch (Exception ex)
             {
@@ -237,34 +239,37 @@ namespace aims_api.API.Controllers
                 throw;
             }
         }
+        #endregion
 
+        #region forcecancelinvmove
+        //[HttpPost("forcecancelinvcount")]
+        //public async Task<ActionResult> ForceCancelInvCount(string invCountId, string userAccountId)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrEmpty(invCountId))
+        //        {
+        //            await DataValidator.AddErrorField("invCountId");
+        //        }
+        //        if (string.IsNullOrEmpty(userAccountId))
+        //        {
+        //            await DataValidator.AddErrorField("userAccountId");
+        //        }
+        //        if (DataValidator.Invalid)
+        //        {
+        //            return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
+        //        }
 
-        [HttpPost("forcecancelinvmove")]
-        public async Task<ActionResult> ForceCancelInvMove(string invMoveId, string userAccountId)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(invMoveId))
-                {
-                    await DataValidator.AddErrorField("invMoveId");
-                }
-                if (string.IsNullOrEmpty(userAccountId))
-                {
-                    await DataValidator.AddErrorField("userAccountId");
-                }
-                if (DataValidator.Invalid)
-                {
-                    return BadRequest(new RequestResponse(ResponseCode.FAILED, "Invalid Request Data", DataValidator.ErrorFields));
-                }
+        //        return Ok(await InvCountCore.ForceCancelInvCount(invCountId, userAccountId));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
+        //        return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
+        //        throw;
+        //    }
+        //}
+        #endregion
 
-                return Ok(await InvMoveCore.ForceCancelInvMove(invMoveId, userAccountId));
-            }
-            catch (Exception ex)
-            {
-                Log.Logger.Error($"ERR500: {ex.Message} @{HttpContext.Request.Host} {ex.StackTrace}");
-                return StatusCode(500, new RequestResponse(ResponseCode.FAILED, ex.Message));
-                throw;
-            }
-        }
     }
 }
